@@ -1,0 +1,77 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "logo",
+      "attrs": {
+        "src": "/brand/logo.png",
+        "alt": null,
+        "title": null,
+        "size": "md",
+        "alignment": "left"
+      }
+    },
+    { "type": "spacer", "attrs": { "height": "xl" } },
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [
+        {
+          "type": "text",
+          "marks": [{ "type": "bold" }],
+          "text": "Welcome to Temply"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "This is your first template. Temply makes it easy to build responsive, beautiful emails using drag-and-drop blocks — no HTML required."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Try editing this text, adding a button, or dropping in an image. Everything you see here is built from components on the left."
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "attrs": {
+        "text": "Get Started →",
+        "url": "",
+        "alignment": "left",
+        "variant": "filled",
+        "borderRadius": "round",
+        "buttonColor": null,
+        "textColor": null,
+        "paddingTop": null,
+        "paddingRight": null,
+        "paddingBottom": null,
+        "paddingLeft": null
+      }
+    },
+    { "type": "spacer", "attrs": { "height": "xl" } },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Temply is open-source and built with modern web standards. Templates render cleanly across all major email clients, including Outlook."
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "Happy building!" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@temply/shared",
+  "type": "module",
+  "main": "./schema.ts",
+  "types": "./schema.ts",
+  "exports": {
+    "./schema": "./schema.ts",
+    "./theme": "./theme.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
+  }
+}
