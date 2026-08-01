@@ -11,10 +11,10 @@ export function PreviewTextInfo() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger className="bg-transparent">
-          <Info className="h-3.5 w-3.5 text-gray-500" />
+          <Info className="h-3.5 w-3.5 text-muted" />
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             The preview text is the snippet of text that is pulled into the{' '}
             <u>inbox preview</u> of an email client, usually right after the
             subject line.

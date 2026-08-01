@@ -1,34 +1,37 @@
 'use client';
 
-import { useAuth, SignInButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { ThemeToggle } from '~/components/theme-toggle';
 import { UserMenu } from '~/components/dashboard/user-menu';
+import { Button } from '~/components/ui/button';
 
 export function Header() {
   const { isSignedIn } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-black/80">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 sm:px-10">
-        <Link href="/" className="text-lg font-bold tracking-tight">
+    <header className="sticky top-0 z-50 border-b border-line bg-surface/85 backdrop-blur-md">
+      <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-5">
+        <Link href="/" className="text-base font-semibold tracking-tight text-ink">
           Temply
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
 
           {isSignedIn ? (
-            <div className="hidden sm:block">
-              <UserMenu align="end" />
-            </div>
+            <>
+              <Button asChild>
+                <Link href="/dashboard/templates">Dashboard</Link>
+              </Button>
+              <div className="hidden sm:block">
+                <UserMenu align="end" showLabel={false} />
+              </div>
+            </>
           ) : (
-            <Link
-              href="/login"
-              className="rounded-lg bg-black px-4 py-1.5 text-sm font-medium text-white transition-all hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-            >
-              Sign in
-            </Link>
+            <Button asChild variant="primary">
+              <Link href="/login">Sign in</Link>
+            </Button>
           )}
         </div>
       </div>

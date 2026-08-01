@@ -27,15 +27,15 @@ import {
 } from './api-key-config-dialog';
 import { VersionHistoryDialog } from './version-history-dialog';
 const pillBtn =
-  'inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700';
+  'inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
 
 const primaryBtn =
-  'inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200';
+  'inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
 
 const inputClass =
-  'w-full rounded-xl border border-gray-200 bg-white/80 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 focus:outline-none transition-all dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500/20';
+  'w-full rounded-xl border border-line bg-raised/80 px-4 py-2.5 text-sm text-ink placeholder:text-faint focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 focus:outline-none transition-all';
 
-const labelClass = 'text-sm font-medium text-gray-700 dark:text-zinc-300';
+const labelClass = 'text-sm font-medium text-ink';
 
 type UpdateTemplateData = {
   title: string;
@@ -157,7 +157,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   return (
     <div className="space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-raised p-3">
         <div className="flex flex-wrap items-center gap-2">
           {showSaveButton && (
             <button
@@ -174,7 +174,12 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             </button>
           )}
 
-          <PreviewEmailDialog editor={editor} previewText={previewText} />
+          <PreviewEmailDialog
+            editor={editor}
+            previewText={previewText}
+            subject={subject}
+            from={from}
+          />
           <VersionHistoryDialog templateId={template?.id} />
           <ApiKeyConfigDialog />
         </div>
@@ -192,16 +197,16 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
       {/* Short code */}
       {template?.short_code && (
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="flex items-center gap-3 rounded-xl border border-line bg-raised p-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-gray-400 dark:text-zinc-500">Short Code</span>
-            <code className="rounded-md bg-gray-100 px-2 py-1 text-sm font-mono text-gray-800 dark:bg-zinc-800 dark:text-zinc-200">
+            <span className="text-xs font-medium text-faint">Short Code</span>
+            <code className="rounded-md bg-hover px-2 py-1 text-sm font-mono text-ink">
               {template.short_code}
             </code>
           </div>
           <button
             onClick={copyShortCode}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
           >
             {shortCodeCopied ? (
               <><CheckIcon className="h-3.5 w-3.5" /> Copied</>
@@ -213,7 +218,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             href={`/api/public/v1/templates/${template.short_code}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto text-xs text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline dark:text-zinc-500 dark:hover:text-zinc-300"
+            className="ml-auto text-xs text-faint underline-offset-2 hover:text-gray-600 hover:underline"
           >
             API URL
           </a>
@@ -221,8 +226,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       )}
 
       {/* Email fields card */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-white/10 dark:bg-white/[0.03]">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+      <div className="rounded-xl border border-line bg-raised p-5 sm:p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-faint">
           Email Details
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -265,7 +270,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             <div className="flex items-center justify-between">
               <Label className={labelClass} htmlFor="replyTo">Reply To</Label>
               <button
-                className="text-xs font-medium text-gray-400 transition-colors hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+                className="text-xs font-medium text-faint transition-colors hover:text-gray-600"
                 onClick={() => setShowReplyTo(!showReplyTo)}
               >
                 {showReplyTo ? '— Remove' : '+ Add'}
@@ -296,7 +301,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       </div>
 
       {/* Editor */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="overflow-hidden rounded-xl border border-line bg-raised shadow-sm">
         <EmailEditor
           autofocus={autofocus}
           defaultContent={editorContent}

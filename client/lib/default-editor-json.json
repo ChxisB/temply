@@ -37,7 +37,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Try editing this text, adding a button, or dropping in an image. Everything you see here is built from components on the left."
+          "text": "Try editing this text, adding a button, or dropping in an image. Press / anywhere to insert a new block."
         }
       ]
     },

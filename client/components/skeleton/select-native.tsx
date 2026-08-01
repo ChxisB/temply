@@ -3,6 +3,12 @@ import * as React from 'react';
 
 import { cn } from '~/lib/classname';
 
+/**
+ * This component is why the token layer exists. It set `text-black` with no
+ * dark counterpart and no background of its own, so in dark mode the page
+ * showed through and three controls in the editor rendered black on black —
+ * measured contrast 1.00. A semantic token cannot be light-only.
+ */
 export function SelectNative(props: React.ComponentProps<'select'>) {
   const { className, children, ...rest } = props;
   return (
@@ -10,19 +16,18 @@ export function SelectNative(props: React.ComponentProps<'select'>) {
       <select
         data-slot="select-native"
         className={cn(
-          'aria-invalid:ring-red-500/20 dark:aria-invalid:ring-red-500/40 aria-invalid:border-red-500 peer inline-flex w-full cursor-pointer appearance-none items-center rounded-lg border border-gray-200 text-sm text-black outline-none transition-[color,box-shadow] focus-visible:border-gray-500 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 has-[option[disabled]:checked]:text-gray-500',
-          props.multiple
-            ? '[&_option:checked]:bg-accent py-1 *:px-3 *:py-1'
-            : 'h-9 pe-8 ps-3',
-          className
+          'peer inline-flex w-full cursor-pointer appearance-none items-center rounded-sm border border-line bg-raised text-sm text-ink transition-colors outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45',
+          'aria-invalid:border-danger has-[option[disabled]:checked]:text-muted',
+          props.multiple ? 'py-1 *:px-3 *:py-1' : 'h-8 pe-8 ps-2.5',
+          className,
         )}
         {...rest}
       >
         {children}
       </select>
       {!props.multiple && (
-        <span className="peer-aria-invalid:text-red-500/80 pointer-events-none absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center text-gray-500/80 peer-disabled:opacity-50">
-          <ChevronDownIcon size={16} aria-hidden="true" />
+        <span className="pointer-events-none absolute inset-y-0 end-0 flex h-full w-8 items-center justify-center text-faint peer-disabled:opacity-45">
+          <ChevronDownIcon size={14} aria-hidden="true" />
         </span>
       )}
     </div>

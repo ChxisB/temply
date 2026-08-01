@@ -28,8 +28,8 @@ export function processVariables(
   } else if (typeof variables === 'function') {
     return variables(options);
   } else {
-    throw new Error(`Invalid variables type. Expected 'Array' or 'Function', but received '${typeof variables}'.
-
-You can check out the documentation for more information: https://github.com/arikchakma/maily.to/blob/main/packages/core/readme.md`);
+    throw new Error(
+      `Invalid variables type. Expected 'Array' or 'Function', but received '${typeof variables}'.`,
+    );
   }
 }

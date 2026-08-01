@@ -53,7 +53,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      // Clerk otherwise titles its screens after the instance name, so the
+      // sign-in page for Temply read "Sign in to My Application".
+      localization={{
+        signIn: {
+          start: {
+            title: 'Sign in to Temply',
+            subtitle: 'Pick up where you left off.',
+          },
+        },
+        signUp: {
+          start: {
+            title: 'Create your Temply account',
+            subtitle: 'Save the emails you build and send them from your own app.',
+          },
+        },
+      }}
+    >
       <html
         lang="en"
         suppressHydrationWarning

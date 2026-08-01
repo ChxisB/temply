@@ -36,10 +36,10 @@ export function CopyEmailHtml(props: CopyEmailHtmlProps) {
   return (
     <button
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700',
+        'inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50',
         isCopied
           ? 'bg-green-200 text-green-600'
-          : 'bg-white disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-300'
+          : 'bg-raised disabled:opacity-50'
       )}
       onClick={async (e) => {
         if (!editor) {
@@ -52,10 +52,10 @@ export function CopyEmailHtml(props: CopyEmailHtmlProps) {
         if (isSafari()) {
           toast.custom(
             (t) => (
-              <div className="rounded-md border border-gray-200 bg-white p-2 text-sm shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
+              <div className="rounded-md border border-line bg-raised p-2 text-sm shadow-sm">
                 Please{' '}
                 <button
-                  className="inline-flex items-center rounded-md bg-black px-1 text-white dark:bg-white dark:text-black"
+                  className="inline-flex items-center rounded-md bg-black px-1 text-white"
                   onClick={async () => {
                     toast.dismiss(t);
                     const success = await copy(data.html);

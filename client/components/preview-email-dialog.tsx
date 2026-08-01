@@ -17,6 +17,9 @@ import { toast } from 'sonner';
 type PreviewEmailDialogProps = {
   subject?: string;
   previewText?: string;
+  /** Shown as the sender in the inbox mock. Previously hardcoded to a name
+   *  carried over from the project this was forked from. */
+  from?: string;
   editor: Editor | null;
 };
 
@@ -25,7 +28,10 @@ type PreviewEmailResponse = {
 };
 
 export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
-  const { subject = '', previewText = '', editor } = props;
+  const { subject = '', previewText = '', from = '', editor } = props;
+
+  const senderName = from.trim() || 'Your sender address';
+  const senderInitial = (from.trim()[0] ?? '?').toUpperCase();
 
   const [open, setOpen] = useState(false);
   const [html, setHtml] = useState('');
@@ -82,16 +88,15 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="shadow-xs flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-3">
-            <div className="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-sm">
-              AC
+          <div className="flex items-start gap-3 rounded-lg border border-line bg-raised p-3 shadow-xs">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-hover text-sm font-medium text-muted">
+              {senderInitial}
             </div>
-            <div className="flex flex-col gap-0.5">
-              <h3 className="font-medium">Arik Chakma</h3>
-              <h4 className="text-sm">{subject || 'Your Subject Goes Here'}</h4>
-              <p className="text-sm text-gray-500">
-                {previewText ||
-                  'This is a preview text of your email, that will be shown in the inbox preview...'}
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <h3 className="truncate text-sm font-medium text-ink">{senderName}</h3>
+              <h4 className="truncate text-sm text-ink">{subject || 'No subject yet'}</h4>
+              <p className="truncate text-sm text-muted">
+                {previewText || 'No preview text — inbox clients will show the opening line instead.'}
               </p>
             </div>
           </div>

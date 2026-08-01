@@ -39,7 +39,7 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
   return (
     <Dialog>
       <DialogTrigger
-        className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:border-red-300 hover:bg-red-100 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 dark:hover:border-red-800/50 dark:hover:bg-red-900/30"
+        className="inline-flex items-center gap-1.5 rounded-full border border-line bg-danger-wash px-4 py-2 text-sm font-medium text-danger-ink transition-all hover:border-line-strong hover:bg-danger-wash active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isDeleteTemplatePending || !templateId}
       >
         {isDeleteTemplatePending ? (
@@ -62,7 +62,7 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
         <div className="grid grid-cols-2 gap-2">
           <DialogClose>
             <button
-              className="flex min-h-[28px] w-full cursor-pointer items-center justify-center rounded-md bg-gray-100 px-2 py-1.5 text-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[28px] w-full cursor-pointer items-center justify-center rounded-md bg-hover px-2 py-1.5 text-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               disabled={isDeleteTemplatePending}
             >

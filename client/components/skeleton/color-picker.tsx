@@ -34,7 +34,7 @@ export function ColorPicker(props: ColorPickerProps) {
           className="flex shrink-0 cursor-pointer items-center justify-center focus:outline-none"
         >
           <div
-            className="h-4 w-4 shrink-0 rounded-md border border-gray-200"
+            className="h-4 w-4 shrink-0 rounded-md border border-line"
             style={{
               backgroundColor: color,
             }}
@@ -46,7 +46,7 @@ export function ColorPicker(props: ColorPickerProps) {
         className="w-full rounded-none border-0 !bg-transparent !p-0 shadow-none drop-shadow-md"
         sideOffset={8}
       >
-        <div className="min-w-[260px] rounded-xl border border-gray-200 bg-white p-4">
+        <div className="min-w-[260px] rounded-xl border border-line bg-raised p-4">
           <HexColorPicker
             color={color}
             onChange={handleColorChange}
@@ -56,7 +56,7 @@ export function ColorPicker(props: ColorPickerProps) {
             alpha={true}
             color={color}
             onChange={handleColorChange}
-            className="mt-4 w-full min-w-0 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm uppercase focus-visible:border-gray-400 focus-visible:outline-none"
+            className="mt-4 w-full min-w-0 rounded-lg border border-line bg-raised px-2 py-1.5 text-sm uppercase focus-visible:border-gray-400 focus-visible:outline-none"
             prefixed
           />
         </div>

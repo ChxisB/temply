@@ -61,7 +61,6 @@ export const DEFAULT_SLASH_COMMANDS: BlockGroupItem[] = [
         description: 'Add pre-designed headers block',
         searchTerms: ['header', 'headers'],
         icon: <Heading1 className="mly:h-4 mly:w-4" />,
-        preview: 'https://cdn.usemaily.com/previews/header-preview-xyz.png',
         commands: [
           headerLogoWithTextVertical,
           headerLogoWithTextHorizontal,

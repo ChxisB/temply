@@ -191,53 +191,6 @@ export const footerCompanySignature: BlockItem = {
             },
           ],
         },
-        {
-          type: 'paragraph',
-          attrs: { textAlign: 'center', showIfKey: null },
-          content: [
-            {
-              type: 'inlineImage',
-              attrs: {
-                height: 20,
-                width: 20,
-                src: 'https://cdn.usemaily.com/images/icons/linkedin.png',
-                isSrcVariable: false,
-                alt: null,
-                title: null,
-                externalLink: 'https://www.linkedin.com/in/arikchakma/',
-                isExternalLinkVariable: false,
-              },
-            },
-            { type: 'text', text: '  ' },
-            {
-              type: 'inlineImage',
-              attrs: {
-                height: 20,
-                width: 20,
-                src: 'https://cdn.usemaily.com/images/icons/youtube.png',
-                isSrcVariable: false,
-                alt: null,
-                title: null,
-                externalLink: 'https://www.youtube.com/arikchakma',
-                isExternalLinkVariable: false,
-              },
-            },
-            { type: 'text', text: '  ' },
-            {
-              type: 'inlineImage',
-              attrs: {
-                height: 20,
-                width: 20,
-                src: 'https://cdn.usemaily.com/images/icons/twitter.png',
-                isSrcVariable: false,
-                alt: null,
-                title: null,
-                externalLink: 'https://x.com/imarikchakma',
-                isExternalLinkVariable: false,
-              },
-            },
-          ],
-        },
       ])
       .run();
   },
