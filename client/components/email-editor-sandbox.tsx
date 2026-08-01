@@ -26,14 +26,16 @@ import {
   apiKeyQueryOptions,
 } from './api-key-config-dialog';
 import { VersionHistoryDialog } from './version-history-dialog';
+import { TemplateThemePanel } from './template-theme-panel';
+import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
 const pillBtn =
   'inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
 
 const primaryBtn =
-  'inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
 
 const inputClass =
-  'w-full rounded-xl border border-line bg-raised/80 px-4 py-2.5 text-sm text-ink placeholder:text-faint focus:border-gray-900 focus:ring-1 focus:ring-gray-900/10 focus:outline-none transition-all';
+  'w-full rounded-xl border border-line bg-raised/80 px-4 py-2.5 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none transition-colors';
 
 const labelClass = 'text-sm font-medium text-ink';
 
@@ -41,6 +43,7 @@ type UpdateTemplateData = {
   title: string;
   previewText: string;
   content: string;
+  theme: string;
 };
 
 type SaveTemplateResponse = {
@@ -67,6 +70,16 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [showReplyTo, setShowReplyTo] = useState(false);
   const [replyTo, setReplyTo] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [theme, setTheme] = useState<RendererThemeOptions>(() => {
+    if (template?.theme) {
+      try {
+        return JSON.parse(template.theme) as RendererThemeOptions;
+      } catch {
+        // A malformed stored theme should not stop the editor opening.
+      }
+    }
+    return structuredClone(DEFAULT_RENDERER_THEME);
+  });
 
   const { mutateAsync: updateTemplate, isPending: isUpdateTemplatePending } =
     useMutation({
@@ -121,10 +134,11 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
   const handleSave = async () => {
     const content = JSON.stringify(editor?.getJSON());
+    const serialisedTheme = JSON.stringify(theme);
     if (template?.id) {
-      await updateTemplate({ title: subject, previewText, content });
+      await updateTemplate({ title: subject, previewText, content, theme: serialisedTheme });
     } else {
-      await createTemplate({ title: subject, previewText, content });
+      await createTemplate({ title: subject, previewText, content, theme: serialisedTheme });
     }
   };
 
@@ -136,6 +150,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     const content = JSON.stringify(editor?.getJSON());
     try {
       await httpPost('/api/v1/emails/send', {
+        theme,
         previewText, subject, from, replyTo, to, content,
       });
       toast.success('Email sent successfully.');
@@ -179,6 +194,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             previewText={previewText}
             subject={subject}
             from={from}
+            theme={theme}
           />
           <VersionHistoryDialog templateId={template?.id} />
           <ApiKeyConfigDialog />
@@ -218,7 +234,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             href={`/api/public/v1/templates/${template.short_code}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto text-xs text-faint underline-offset-2 hover:text-gray-600 hover:underline"
+            className="ml-auto text-xs text-faint underline-offset-2 hover:text-muted hover:underline"
           >
             API URL
           </a>
@@ -270,7 +286,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             <div className="flex items-center justify-between">
               <Label className={labelClass} htmlFor="replyTo">Reply To</Label>
               <button
-                className="text-xs font-medium text-faint transition-colors hover:text-gray-600"
+                className="text-xs font-medium text-faint transition-colors hover:text-muted"
                 onClick={() => setShowReplyTo(!showReplyTo)}
               >
                 {showReplyTo ? '— Remove' : '+ Add'}
@@ -290,15 +306,20 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         </div>
 
         <div className="mt-4">
-          <label className={`mb-1.5 block ${labelClass}`}>Preview Text</label>
+          <label className={`mb-1.5 block ${labelClass}`} htmlFor="previewText">
+            Preview Text
+          </label>
           <input
             className={inputClass}
+            id="previewText"
             onChange={(e) => setPreviewText(e.target.value)}
             placeholder="Preview text shown in inbox..."
             value={previewText}
           />
         </div>
       </div>
+
+      <TemplateThemePanel theme={theme} onChange={setTheme} />
 
       {/* Editor */}
       <div className="overflow-hidden rounded-xl border border-line bg-raised shadow-sm">

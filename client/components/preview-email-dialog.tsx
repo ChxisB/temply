@@ -21,6 +21,8 @@ type PreviewEmailDialogProps = {
   /** Shown as the sender in the inbox mock. Previously hardcoded to a name
    *  carried over from the project this was forked from. */
   from?: string;
+  /** The brand settings being edited, so the preview matches what will send. */
+  theme?: unknown;
   editor: Editor | null;
 };
 
@@ -29,7 +31,7 @@ type PreviewEmailResponse = {
 };
 
 export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
-  const { subject = '', previewText = '', from = '', editor } = props;
+  const { subject = '', previewText = '', from = '', theme, editor } = props;
 
   const senderName = from.trim() || 'Your sender address';
   const senderInitial = (from.trim()[0] ?? '?').toUpperCase();
@@ -46,6 +48,7 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
       return httpPost<PreviewEmailResponse>('/api/v1/emails/preview', {
         content: JSON.stringify(json),
         previewText,
+        theme,
       });
     },
     onSuccess: (data) => {

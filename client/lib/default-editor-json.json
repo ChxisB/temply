@@ -63,7 +63,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Temply is open-source and built with modern web standards. Templates render cleanly across all major email clients, including Outlook."
+          "text": "Built with table-based HTML, so it holds together in the email clients that still parse like it is 2005."
         }
       ]
     },

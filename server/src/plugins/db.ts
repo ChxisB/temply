@@ -28,6 +28,16 @@ export function initTables(sqlite: Database) {
     current_period_end TEXT,
     created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
   )`);
+
+  addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
+}
+
+/** SQLite has no `ADD COLUMN IF NOT EXISTS`, and existing installs already have
+ *  the table, so widen it here rather than in the CREATE above. */
+function addColumnIfMissing(sqlite: Database, table: string, column: string, type: string) {
+  const columns = sqlite.query(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (columns.some((c) => c.name === column)) return;
+  sqlite.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
 }
 
 const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';

@@ -6,6 +6,8 @@ export const mails = sqliteTable('mails', {
   title: text('title').notNull(),
   preview_text: text('preview_text'),
   content: text('content').notNull(),
+  /** Serialised RendererThemeOptions. Null means the shipped defaults. */
+  theme: text('theme'),
   short_code: text('short_code').unique(),
   created_at: text('created_at'),
   updated_at: text('updated_at'),

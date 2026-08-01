@@ -22,17 +22,17 @@ export const templatesRoutes = new Elysia()
     if (!ctx.userId) return unauthorized();
     const limit = await checkTemplateLimit(ctx.db, ctx.userId);
     if (!limit.allowed) return paymentRequired(limit.message!);
-    const { title, previewText, content } = ctx.body;
+    const { title, previewText, content, theme } = ctx.body;
     const id = crypto.randomUUID();
     const shortCode = generateShortCode();
-    await ctx.db.insert(mails).values({ id, user_id: ctx.userId, title, preview_text: previewText ?? null, content, short_code: shortCode });
+    await ctx.db.insert(mails).values({ id, user_id: ctx.userId, title, preview_text: previewText ?? null, content, theme: theme ?? null, short_code: shortCode });
     const [inserted] = await ctx.db.select().from(mails).where(eq(mails.id, id)).limit(1);
     return json({ template: inserted });
-  }, { body: t.Object({ title: t.String({ minLength: 3 }), previewText: t.Optional(t.String()), content: t.String() }) })
+  }, { body: t.Object({ title: t.String({ minLength: 3 }), previewText: t.Optional(t.String()), content: t.String(), theme: t.Optional(t.String()) }) })
 
   .post('/api/v1/templates/:id', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();
-    const { title, previewText, content } = ctx.body;
+    const { title, previewText, content, theme } = ctx.body;
     const { id } = ctx.params;
     if (await shouldSnapshot(ctx.db, ctx.userId)) {
       const [current] = await ctx.db.select().from(mails).where(and(eq(mails.id, id), eq(mails.user_id, ctx.userId))).limit(1);
@@ -43,9 +43,13 @@ export const templatesRoutes = new Elysia()
         await ctx.db.delete(templateVersions).where(sql`${templateVersions.id} NOT IN (SELECT id FROM (SELECT ${templateVersions.id} FROM ${templateVersions} WHERE ${templateVersions.template_id} = ${id} ORDER BY ${templateVersions.created_at} DESC LIMIT 10)) AND ${templateVersions.template_id} = ${id}`);
       }
     }
-    await ctx.db.update(mails).set({ title, preview_text: previewText ?? null, content }).where(and(eq(mails.id, id), eq(mails.user_id, ctx.userId)));
+    // `theme` is omitted rather than null when the client is not editing it,
+    // so an absent field must not wipe a theme the template already has.
+    const patch: Record<string, unknown> = { title, preview_text: previewText ?? null, content };
+    if (theme !== undefined) patch.theme = theme;
+    await ctx.db.update(mails).set(patch).where(and(eq(mails.id, id), eq(mails.user_id, ctx.userId)));
     return json({ status: 'ok' });
-  }, { body: t.Object({ title: t.String({ minLength: 3 }), previewText: t.Optional(t.String()), content: t.String() }) })
+  }, { body: t.Object({ title: t.String({ minLength: 3 }), previewText: t.Optional(t.String()), content: t.String(), theme: t.Optional(t.String()) }) })
 
   .delete('/api/v1/templates/:id', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();

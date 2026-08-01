@@ -52,11 +52,12 @@ export default function Home() {
       <section className="mx-auto max-w-5xl px-5 pt-16 pb-20 sm:pt-24">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
-            Build the email, not the table layout.
+            Write the email. We handle the HTML.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-muted">
-            Temply is a block editor for transactional email. Compose at the
-            600&nbsp;pixels every inbox gives you, then send it from your own app.
+            Drag blocks into place and Temply produces email that holds together
+            in real inboxes. No code needed — and an API waiting for you if you
+            ever want one.
           </p>
 
           <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
@@ -86,8 +87,8 @@ export default function Home() {
             Everything you need to build emails
           </h2>
           <p className="mt-1.5 max-w-xl text-base text-muted">
-            No coding. No templates that break in Outlook. Just a clean block
-            editor that produces rock-solid HTML.
+            A block editor that outputs table-based HTML, so your email arrives
+            looking the way you built it.
           </p>
 
           <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
