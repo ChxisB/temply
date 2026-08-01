@@ -4,6 +4,7 @@ import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { PaletteIcon, RotateCcwIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { ThemeWarnings } from '~/components/theme-warnings';
 import { cn } from '~/lib/classname';
 
 /**
@@ -196,6 +197,8 @@ export function TemplateThemePanel({
           />
         </div>
       </div>
+
+      <ThemeWarnings theme={theme} />
     </section>
   );
 }
