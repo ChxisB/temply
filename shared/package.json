@@ -8,6 +8,7 @@
     "./theme": "./theme.ts"
   },
   "dependencies": {
+    "@tiptap/core": "^2.11.5",
     "drizzle-orm": "^0.45.2"
   }
 }
