@@ -5,7 +5,7 @@ import { Elysia } from 'elysia';
 
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-function initTables(sqlite: Database) {
+export function initTables(sqlite: Database) {
   sqlite.run(`CREATE TABLE IF NOT EXISTS mails (
     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL,
     preview_text TEXT, content TEXT NOT NULL, short_code TEXT UNIQUE,
@@ -38,7 +38,7 @@ function simpleShortCode(): string {
   return code;
 }
 
-function backfillShortCodes(sqlite: Database) {
+export function backfillShortCodes(sqlite: Database) {
   const row = sqlite.prepare("SELECT COUNT(*) as count FROM mails WHERE short_code IS NULL").get() as { count: number };
   if (!row?.count) return;
   const rows = sqlite.prepare("SELECT id FROM mails WHERE short_code IS NULL").all() as { id: string }[];
