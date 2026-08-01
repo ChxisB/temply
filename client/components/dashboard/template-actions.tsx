@@ -1,9 +1,10 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { CopyIcon, ExternalLinkIcon, Trash2Icon } from 'lucide-react';
+import { CopyIcon, Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Button } from '~/components/ui/button';
 import { httpDelete, httpPost } from '~/lib/http';
 
 type TemplateActionsProps = {
@@ -40,29 +41,29 @@ export function TemplateActions({ templateId }: TemplateActionsProps) {
   });
 
   return (
-    <div className="flex items-center gap-1">
-      <button
+    <div className="flex shrink-0 items-center gap-0.5">
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={() => duplicateTemplate()}
         disabled={isDuplicating}
-        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-        title="Duplicate"
+        aria-label="Duplicate template"
       >
-        <CopyIcon className="h-3.5 w-3.5" />
-        Duplicate
-      </button>
-      <button
+        <CopyIcon />
+      </Button>
+      <Button
+        variant="danger-quiet"
+        size="icon-sm"
         onClick={() => {
-          if (confirm('Are you sure you want to delete this template?')) {
+          if (confirm('Delete this template? This cannot be undone.')) {
             deleteTemplate();
           }
         }}
         disabled={isDeleting}
-        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-400/10"
-        title="Delete"
+        aria-label="Delete template"
       >
-        <Trash2Icon className="h-3.5 w-3.5" />
-        Delete
-      </button>
+        <Trash2Icon />
+      </Button>
     </div>
   );
 }

@@ -2,9 +2,149 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   Design tokens — "workbench and artifact"
+
+   The email canvas must render white, because that is how a mail client will
+   show it. So the canvas is the artifact and every other surface is the bench
+   it sits on. `canvas` is therefore the one value that does NOT change between
+   themes.
+
+   Contrast ratios in the comments are measured, not estimated. `faint` sits
+   below 4.5:1 in both themes by design: it is for borders and icons and must
+   never carry text. Anything meant to be read uses `ink` or `muted`.
+--------------------------------------------------------------------------- */
+
+:root {
+  --ds-surface: #f6f7f9;
+  --ds-raised: #ffffff;
+  --ds-canvas: #ffffff;
+  /* The canvas never changes with the theme, so neither can its foreground.
+     Chrome drawn on top of the canvas uses this, not `ink`. */
+  --ds-canvas-ink: #12141a;   /* 18.4:1 on canvas, in both themes */
+
+  --ds-ink: #12141a;          /* 17.2:1 on surface */
+  --ds-muted: #5b6170;        /*  5.8:1 on surface */
+  --ds-faint: #868c9b;        /*  3.1:1 — never text */
+
+  --ds-line: #e3e6eb;
+  --ds-line-strong: #cfd4dd;
+  --ds-hover: #edeff3;
+  --ds-active: #e2e6ec;
+
+  /* The accent is the default link colour of the emails you build here
+     (--mly-link-color in core/styles/_editor.css). */
+  --ds-accent: #346fe4;       /* fill; white text on it = 4.6:1 */
+  --ds-accent-ink: #2b5fd9;   /* accent as text = 5.2:1 on surface */
+  --ds-accent-hover: #2454c7;
+  --ds-accent-wash: #eef3fd;
+
+  --ds-danger: #c0304a;       /* 5.2:1 on surface; white on it = 5.6:1 */
+  --ds-danger-ink: #b4293f;   /* 5.9:1 on surface */
+  --ds-danger-wash: #fdeef1;
+
+  --ds-success-ink: #166b47;  /* 6.1:1 on surface */
+  --ds-success-wash: #e8f5ee;
+
+  --ds-shadow-canvas: 0 1px 2px rgb(18 20 26 / 0.04), 0 8px 24px rgb(18 20 26 / 0.06);
+  color-scheme: light;
+}
+
+.dark {
+  --ds-surface: #16181d;
+  --ds-raised: #1d2026;
+  --ds-canvas: #ffffff;       /* unchanged on purpose — see note above */
+  --ds-canvas-ink: #12141a;   /* likewise unchanged */
+
+  --ds-ink: #f2f3f5;          /* 16.0:1 on surface */
+  --ds-muted: #a2a9b8;        /*  7.5:1 on surface */
+  --ds-faint: #6e7686;        /*  3.9:1 — never text */
+
+  --ds-line: #2c3038;
+  --ds-line-strong: #3a3f4a;
+  --ds-hover: #262a32;
+  --ds-active: #2f343d;
+
+  --ds-accent: #2b5fd9;       /* fill; white text on it = 5.6:1 */
+  --ds-accent-ink: #5b8cf0;   /* accent as text = 5.5:1 on surface */
+  --ds-accent-hover: #6d9bf5;
+  --ds-accent-wash: #1b2436;
+
+  /* The fill stays dark enough to carry a white label in either theme; only the
+     text-coloured variant lightens. */
+  --ds-danger: #c0304a;       /* white on it = 5.6:1 */
+  --ds-danger-ink: #ff7a8a;   /* 7.1:1 on surface */
+  --ds-danger-wash: #2a1c20;
+
+  --ds-success-ink: #5fd3a0;  /* 9.6:1 on surface */
+  --ds-success-wash: #16241e;
+
+  --ds-shadow-canvas: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 32px rgb(0 0 0 / 0.45);
+  color-scheme: dark;
+}
+
+/* `inline` keeps utilities pointing at the variable instead of copying its
+   value, which is what lets them react to the theme class at runtime. */
+@theme inline {
+  --color-surface: var(--ds-surface);
+  --color-raised: var(--ds-raised);
+  --color-canvas: var(--ds-canvas);
+  --color-canvas-ink: var(--ds-canvas-ink);
+
+  --color-ink: var(--ds-ink);
+  --color-muted: var(--ds-muted);
+  --color-faint: var(--ds-faint);
+
+  --color-line: var(--ds-line);
+  --color-line-strong: var(--ds-line-strong);
+  --color-hover: var(--ds-hover);
+  --color-active: var(--ds-active);
+
+  --color-accent: var(--ds-accent);
+  --color-accent-ink: var(--ds-accent-ink);
+  --color-accent-hover: var(--ds-accent-hover);
+  --color-accent-wash: var(--ds-accent-wash);
+
+  --color-danger: var(--ds-danger);
+  --color-danger-ink: var(--ds-danger-ink);
+  --color-danger-wash: var(--ds-danger-wash);
+
+  --color-success-ink: var(--ds-success-ink);
+  --color-success-wash: var(--ds-success-wash);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --shadow-canvas: var(--ds-shadow-canvas);
+}
+
+/* Dense chrome. Generosity is spent on the canvas and the marketing surface,
+   not on the tool: fewer scrolls beats more whitespace when you work here daily. */
 @theme {
-  --color-soft-gray: #f4f5f6;
-  --color-midnight-gray: #333333;
+  --text-2xs: 0.6875rem;   /* 11px — table meta, badges */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;      /* 12px */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;    /* 13px — default UI text */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;   /* 14px — body */
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;         /* 16px */
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem;      /* 20px — page titles */
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 2rem;        /* 32px — marketing only */
+  --text-3xl--line-height: 2.375rem;
+  --text-4xl: 2.75rem;     /* 44px — marketing hero */
+  --text-4xl--line-height: 3rem;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 }
 
 @layer base {
@@ -13,7 +153,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--ds-line);
   }
 
   button:not(:disabled),
@@ -22,6 +162,29 @@
   }
 
   body {
-    @apply bg-white text-black dark:bg-black dark:text-white;
+    background-color: var(--ds-surface);
+    color: var(--ds-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One focus treatment, defined once, inherited everywhere. The previous UI
+     defined focus styles in 24% of files and left the rest on the browser
+     default. */
+  :focus-visible {
+    outline: 2px solid var(--ds-accent-ink);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

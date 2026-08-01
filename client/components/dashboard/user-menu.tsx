@@ -40,25 +40,30 @@ export function UserMenu({ align = 'end', showLabel = true }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-lg p-1.5 text-sm text-gray-700 transition-all hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 text-xs font-bold text-white">
+        <button
+          type="button"
+          className="flex w-full items-center gap-2 rounded-sm p-1.5 text-sm text-ink transition-colors hover:bg-hover"
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">
             {initials}
-          </div>
+          </span>
           {showLabel && (
-            <div className="hidden flex-col items-start text-left sm:flex">
-              <span className="text-sm font-medium leading-tight">{user?.fullName ?? 'User'}</span>
-              <span className="text-xs text-gray-500 dark:text-zinc-500">
+            <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
+              <span className="w-full truncate text-sm leading-tight font-medium">
+                {user?.fullName ?? 'User'}
+              </span>
+              <span className="w-full truncate text-xs text-muted">
                 {user?.emailAddresses?.[0]?.emailAddress ?? ''}
               </span>
-            </div>
+            </span>
           )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col">
-            <span className="font-medium">{user?.fullName ?? 'User'}</span>
-            <span className="text-xs font-normal text-gray-500 dark:text-zinc-500">
+            <span className="font-medium text-ink">{user?.fullName ?? 'User'}</span>
+            <span className="text-xs font-normal text-muted">
               {user?.emailAddresses?.[0]?.emailAddress ?? ''}
             </span>
           </div>

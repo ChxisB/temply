@@ -13,9 +13,47 @@
 @import 'tailwindcss/utilities.css' layer(utilities) prefix(mly);
 @import './_editor.css';
 
-@theme {
-  --color-soft-gray: #f4f5f6;
-  --color-midnight-gray: #333333;
+/* ---------------------------------------------------------------------------
+   Token bridge for the vendored editor.
+
+   The editor's chrome (toolbars, bubble menus, the properties panel) is styled
+   with `mly:`-prefixed utilities, which compile to --mly-color-*. Pointing that
+   scale at the app tokens gets ~70 editor components onto the design system
+   without editing any of them.
+
+   Two things are deliberately NOT remapped:
+   - `white` / `black`, because some chrome sits directly on the email canvas
+     and must stay canvas-coloured rather than follow the app theme;
+   - the 33 --mly-* variables in _editor.css, which describe the email being
+     authored (container width, body colour, link colour). Those belong to the
+     user's template, not to our UI.
+--------------------------------------------------------------------------- */
+@theme inline {
+  --color-soft-gray: var(--ds-hover);
+  --color-midnight-gray: var(--ds-ink);
+
+  --color-gray-50: var(--ds-surface);
+  --color-gray-100: var(--ds-hover);
+  --color-gray-200: var(--ds-line);
+  --color-gray-300: var(--ds-line-strong);
+  --color-gray-400: var(--ds-faint);
+  --color-gray-500: var(--ds-muted);
+  --color-gray-600: var(--ds-muted);
+  --color-gray-700: var(--ds-ink);
+  --color-gray-900: var(--ds-ink);
+
+  --color-slate-400: var(--ds-faint);
+  --color-slate-500: var(--ds-muted);
+  --color-slate-600: var(--ds-muted);
+  --color-slate-700: var(--ds-ink);
+
+  --color-rose-500: var(--ds-danger);
+  --color-rose-600: var(--ds-danger-ink);
+  --color-rose-800: var(--ds-danger-ink);
+
+  --color-red-100: var(--ds-danger-wash);
+  --color-red-200: var(--ds-danger-wash);
+  --color-red-600: var(--ds-danger-ink);
 }
 
 /*

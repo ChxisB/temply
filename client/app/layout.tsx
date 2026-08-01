@@ -1,9 +1,27 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { GoogleAnalytics } from '~/components/google-analytics';
 import { Providers } from './providers';
 import '../core/styles/index.css';
 import './globals.css';
+
+// Self-hosted and subset at build time, so no render-blocking request to a
+// third-party origin. Mono is not decorative: this product shows short codes,
+// curl commands, API URLs and hex values, and those want a real monospace.
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-plex-sans',
+  display: 'swap',
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Temply - Beautiful email templates, built fast',
@@ -36,14 +54,12 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={`${plexSans.variable} ${plexMono.variable}`}
+      >
         <head>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-          />
           <GoogleAnalytics />
           <script
             dangerouslySetInnerHTML={{

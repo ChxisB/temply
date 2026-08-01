@@ -3,6 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Loader2Icon, PlusIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '~/components/ui/button';
 import { httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
@@ -30,17 +31,9 @@ export function NewTemplateButton() {
   });
 
   return (
-    <button
-      onClick={() => createTemplate()}
-      disabled={isPending}
-      className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gray-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-    >
-      {isPending ? (
-        <Loader2Icon className="h-4 w-4 animate-spin" />
-      ) : (
-        <PlusIcon className="h-4 w-4" />
-      )}
-      New Template
-    </button>
+    <Button variant="primary" onClick={() => createTemplate()} disabled={isPending}>
+      {isPending ? <Loader2Icon className="animate-spin" /> : <PlusIcon />}
+      New template
+    </Button>
   );
 }
