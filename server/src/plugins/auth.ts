@@ -1,13 +1,35 @@
 import { verifyToken, createClerkClient } from '@clerk/backend';
 import { Elysia } from 'elysia';
+import { timingSafeEqual } from 'node:crypto';
+
+/**
+ * Shared secret proving a request really came from our own Next.js proxy.
+ * Without it an `x-user-id` header is just an unauthenticated string, so it is
+ * ignored and the request falls through to real Clerk verification.
+ */
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? '';
+
+function proxyTokenIsValid(presented: string | null): boolean {
+  if (!INTERNAL_API_SECRET || !presented) return false;
+  const a = Buffer.from(presented);
+  const b = Buffer.from(INTERNAL_API_SECRET);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
 
 export const authPlugin = new Elysia({ name: 'auth' })
-  .derive(async ({ request }) => {
-    // Trust x-user-id header when proxied through Next.js
+  // `as: 'global'` is required. Elysia's default `local` scope keeps the derive
+  // on this instance, so every route module mounted alongside it in index.ts
+  // would receive `userId: undefined` and reject every request.
+  .derive({ as: 'global' }, async ({ request }) => {
+    // Accept a forwarded user id ONLY from our own proxy, proven by the shared
+    // secret. An x-user-id header on its own is attacker-controlled input.
     const forwardedUserId = request.headers.get('x-user-id');
     if (forwardedUserId) {
-      console.log('[auth] trusted x-user-id:', forwardedUserId.substring(0, 20));
-      return { userId: forwardedUserId };
+      if (proxyTokenIsValid(request.headers.get('x-internal-token'))) {
+        return { userId: forwardedUserId };
+      }
+      console.warn('[auth] rejected x-user-id without a valid proxy token');
     }
 
     const cookieHeader = request.headers.get('cookie') || '';

@@ -29,7 +29,9 @@ const app = new Elysia()
       headers: { 'Content-Type': 'application/json' },
     });
   })
-  .listen(3001);
+  // Bind to loopback only: this service trusts a proxy-forwarded user id and
+  // must never be reachable directly from the network.
+  .listen({ port: 3001, hostname: '127.0.0.1' });
 
-console.log('🦊 Elysia server running on http://localhost:3001');
+console.log('🦊 Elysia server running on http://127.0.0.1:3001');
 export type App = typeof app;
