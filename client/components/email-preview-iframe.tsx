@@ -9,11 +9,33 @@ type EmailPreviewIFrameProps = {
   isServer?: boolean;
   showOpenInNewTab?: boolean;
   wrapperClassName?: string;
+  /** Render the email the way a client that forces dark mode would. */
+  forceDark?: boolean;
 } & React.HTMLProps<HTMLIFrameElement>;
+
+/**
+ * Approximates an aggressive client-side dark-mode transform. It is not a
+ * reproduction of any particular email client — different clients invert,
+ * blend, or leave the message alone, and several ignore CSS entirely. This is
+ * the worst case: if a design survives here, the gentler transforms are safe.
+ *
+ * The counter-filter on media matters. Without it every image renders as a
+ * negative, which would make the preview lie in the other direction.
+ */
+const FORCE_DARK_STYLE = `
+  html {
+    filter: invert(1) hue-rotate(180deg);
+    background-color: #ffffff;
+  }
+  img, video, picture, svg, [style*="background-image"] {
+    filter: invert(1) hue-rotate(180deg);
+  }
+`;
 
 function renderHTMLToIFrame(
   ref: RefObject<HTMLIFrameElement | null>,
-  html: string
+  html: string,
+  forceDark = false
 ) {
   if (!ref || !ref?.current) {
     return;
@@ -32,6 +54,7 @@ function renderHTMLToIFrame(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+        ${forceDark ? `<style>${FORCE_DARK_STYLE}</style>` : ''}
       </head>
       <body>
         ${html}
@@ -47,6 +70,7 @@ export function EmailPreviewIFrame(props: EmailPreviewIFrameProps) {
     isServer,
     showOpenInNewTab = true,
     wrapperClassName,
+    forceDark = false,
     ...defaultProps
   } = props;
 
@@ -57,8 +81,8 @@ export function EmailPreviewIFrame(props: EmailPreviewIFrameProps) {
       return;
     }
 
-    renderHTMLToIFrame(iframeRef, innerHTML);
-  }, [innerHTML, iframeRef, isServer]);
+    renderHTMLToIFrame(iframeRef, innerHTML, forceDark);
+  }, [innerHTML, iframeRef, isServer, forceDark]);
 
   function handleOpen() {
     if (innerHTML.trim().length === 0) {
@@ -90,7 +114,7 @@ export function EmailPreviewIFrame(props: EmailPreviewIFrameProps) {
             return;
           }
 
-          renderHTMLToIFrame(iframeRef, innerHTML);
+          renderHTMLToIFrame(iframeRef, innerHTML, forceDark);
         }}
         ref={iframeRef}
         srcDoc={isServer ? innerHTML : ''}
@@ -98,7 +122,7 @@ export function EmailPreviewIFrame(props: EmailPreviewIFrameProps) {
 
       {showOpenInNewTab ? (
         <Button
-          className="absolute bottom-0 right-0 h-8 cursor-pointer gap-1.5 rounded-none rounded-tl-md border-l border-t border-gray-200 text-sm font-normal hover:bg-gray-50"
+          className="absolute right-0 bottom-0 h-8 gap-1.5 rounded-none rounded-tl-md border-t border-l border-line text-sm font-normal"
           onClick={handleOpen}
           type="button"
           variant="secondary"

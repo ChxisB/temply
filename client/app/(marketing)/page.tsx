@@ -16,8 +16,8 @@ const features = [
   },
   {
     icon: PaintbrushIcon,
-    title: 'Dark mode support',
-    desc: 'Templates that respect reader preferences. Built-in dark mode handling out of the box.',
+    title: 'Dark mode preview',
+    desc: 'See how your email holds up in a client that forces dark mode — before you send it.',
   },
   {
     icon: BoxIcon,

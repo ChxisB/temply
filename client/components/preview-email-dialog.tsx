@@ -11,6 +11,7 @@ import { httpPost } from '~/lib/http';
 import type { Editor } from '@tiptap/core';
 import { useState } from 'react';
 import { EmailPreviewIFrame } from './email-preview-iframe';
+import { cn } from '~/lib/classname';
 import { EyeIcon, Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,6 +36,9 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
 
   const [open, setOpen] = useState(false);
   const [html, setHtml] = useState('');
+  // Scoped to this dialog: checking dark survival is not an editing state, so
+  // it never touches the canvas or the saved template.
+  const [forceDark, setForceDark] = useState(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -54,9 +58,15 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setForceDark(false);
+      }}
+    >
       <DialogTrigger
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-45"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -101,11 +111,40 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
             </div>
           </div>
 
-          <div className="shadow-xs flex min-h-[75vh] w-full grow overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-raised px-3 py-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink">Forced dark</p>
+              <p className="text-xs text-muted">
+                Approximates the most aggressive transform a client can apply. Not a
+                reproduction of any one client.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={forceDark}
+              aria-label="Preview as a client that forces dark mode"
+              onClick={() => setForceDark((current) => !current)}
+              className={cn(
+                'relative h-5 w-9 shrink-0 rounded-full transition-colors',
+                forceDark ? 'bg-accent' : 'bg-line-strong',
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-0.5 size-4 rounded-full bg-white transition-[left]',
+                  forceDark ? 'left-[18px]' : 'left-0.5',
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="flex min-h-[70vh] w-full grow overflow-hidden rounded-lg border border-line bg-canvas shadow-xs">
             <EmailPreviewIFrame
               wrapperClassName="w-full"
               className="h-full w-full grow"
               innerHTML={html}
+              forceDark={forceDark}
             />
           </div>
         </DialogContent>
