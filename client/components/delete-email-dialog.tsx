@@ -32,7 +32,7 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
         router.refresh();
       },
       onSuccess: () => {
-        router.push('/templates');
+        router.push('/dashboard/templates');
       },
     });
 

@@ -6,12 +6,14 @@ export default async function SignInPage() {
   const user = await currentUser();
 
   if (user) {
-    redirect('/templates');
+    redirect('/dashboard/templates');
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <SignIn signUpForceRedirectUrl="/templates" />
+      {/* Point straight at the destination. Bouncing through an intermediate
+          redirect-only route left OAuth callbacks stranded on that route. */}
+      <SignIn signUpForceRedirectUrl="/dashboard/templates" />
     </div>
   );
 }

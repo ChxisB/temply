@@ -4,7 +4,12 @@ const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/templates(.*)']
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    // Without an explicit destination `auth.protect()` answers signed-out
+    // requests with a bare 404, which reads as a broken link rather than a
+    // prompt to sign in.
+    await auth.protect({
+      unauthenticatedUrl: new URL('/login', req.url).toString(),
+    });
   }
 });
 
