@@ -449,8 +449,11 @@ export function ImageStatusLabel(props: ImageStatusLabelProps) {
     >
       {status === 'idle' && !isDropZone && (
         <>
+          {/* An empty block is an invitation to act. Uploading is not wired up,
+              so this names the route that does work today: the Source URL
+              control in the toolbar above. */}
           <ImageOffIcon className="mly:size-4 mly:stroke-[2.5]" />
-          <span>No image selected</span>
+          <span>Add an image with Source URL in the toolbar</span>
         </>
       )}
 
