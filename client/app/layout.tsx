@@ -71,11 +71,11 @@ export default function RootLayout({
         },
       }}
     >
-      <html
-        lang="en"
-        suppressHydrationWarning
-        className={`${plexSans.variable} ${plexMono.variable}`}
-      >
+      {/* The font variables go on <body>, not <html>. Giving <html> a
+          className hands it to React, which then reconciles it on hydration and
+          strips the `dark` class the blocking script below just added — so a
+          full page load would drop the user's chosen theme. */}
+      <html lang="en" suppressHydrationWarning>
         <head>
           <GoogleAnalytics />
           <script
@@ -93,7 +93,7 @@ export default function RootLayout({
             }}
           />
         </head>
-        <body>
+        <body className={`${plexSans.variable} ${plexMono.variable}`}>
           <Providers>{children}</Providers>
         </body>
       </html>

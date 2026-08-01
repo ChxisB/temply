@@ -48,13 +48,27 @@ function applyTheme(next: Theme) {
   }
 }
 
+function preferredTheme(): Theme {
+  try {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') return stored;
+  } catch {
+    // Private browsing — fall through to the OS preference.
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // The blocking script in app/layout.tsx has already set the class before
-  // paint; read it back rather than guessing and causing a flash.
   const [theme, setThemeState] = useState<Theme>('light');
 
+  // Re-assert the class rather than reading it back. The blocking script in
+  // app/layout.tsx sets it before paint, but React owns <html> and clears its
+  // className during hydration, so by the time this runs the class is gone —
+  // and reading it would conclude "light" for someone who chose dark.
   useEffect(() => {
-    setThemeState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    const next = preferredTheme();
+    document.documentElement.classList.toggle('dark', next === 'dark');
+    setThemeState(next);
   }, []);
 
   // Follow the OS while the user has not expressed a preference of their own.

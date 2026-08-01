@@ -162,6 +162,12 @@
   }
 
   body {
+    /* next/font puts --font-plex-* on <body>, so the token has to be resolved
+       here too. Declared at :root it would evaluate against an <html> where
+       those variables do not exist, and inherit down as an empty value. */
+    --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
     background-color: var(--ds-surface);
     color: var(--ds-ink);
     font-family: var(--font-sans);
