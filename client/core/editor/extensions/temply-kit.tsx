@@ -11,6 +11,7 @@ import Document from '@tiptap/extension-document';
 import Focus from '@tiptap/extension-focus';
 import Dropcursor from '@tiptap/extension-dropcursor';
 
+import { BlockKeyboardShortcuts } from './block-keyboard';
 import { Color } from './color';
 import { HorizontalRule } from './horizontal-rule';
 import { Footer } from '../nodes/footer';
@@ -59,6 +60,7 @@ export const TemplyKit = Extension.create<TemplyKitOptions>({
 
   addExtensions() {
     const extensions: AnyExtension[] = [
+      BlockKeyboardShortcuts,
       Document.extend({
         content: '(block|columns)+',
       }),

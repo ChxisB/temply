@@ -135,11 +135,12 @@ export function ContentMenu(props: ContentMenuProps) {
                 className="mly:size-5! mly:cursor-grab mly:text-gray-500 mly:hover:text-black"
                 onClick={handleAddNewNode}
                 type="button"
+                aria-label="Add a block below"
               >
                 <Plus className="mly:size-3.5 mly:shrink-0" />
               </BaseButton>
             </TooltipTrigger>
-            <TooltipContent sideOffset={8}>Add new node</TooltipContent>
+            <TooltipContent sideOffset={8}>Add a block below — or press /</TooltipContent>
           </Tooltip>
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <div className="mly:relative mly:flex mly:flex-col">
@@ -155,11 +156,15 @@ export function ContentMenu(props: ContentMenuProps) {
                       editor.commands.setNodeSelection(currentNodePos);
                     }}
                     type="button"
+                    aria-label="Block actions"
+                    aria-keyshortcuts="Meta+Shift+L"
                   >
                     <GripVertical className="mly:size-3.5 mly:shrink-0" />
                   </BaseButton>
                 </TooltipTrigger>
-                <TooltipContent sideOffset={8}>Node actions</TooltipContent>
+                <TooltipContent sideOffset={8}>
+                  Block actions — or press ⌘⇧L
+                </TooltipContent>
               </Tooltip>
               <PopoverTrigger className="mly:absolute mly:left-0 mly:top-0 mly:z-0 mly:h-5 mly:w-5" />
             </div>
