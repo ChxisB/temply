@@ -29,7 +29,7 @@ const PopoverContent = React.forwardRef<
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'mly:z-9999 mly:w-72 mly:rounded-md mly:border mly:border-gray-200 mly:bg-white mly:p-4 mly:text-gray-950 mly:shadow-md mly:outline-hidden',
+          'mly:z-9999 mly:w-72 mly:rounded-md mly:border mly:border-gray-200 mly:bg-panel mly:p-4 mly:text-gray-950 mly:shadow-md mly:outline-hidden',
           'mly-editor',
           className
         )}

@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:contrast": "bun run scripts/check-contrast.ts",
-    "check:email-dark": "bun run scripts/check-email-dark.ts"
+    "check:email-dark": "bun run scripts/check-email-dark.ts",
+    "check:editor-contrast": "bun run scripts/check-editor-contrast.ts"
   },
   "dependencies": {
     "@antfu/utils": "^9.2.0",

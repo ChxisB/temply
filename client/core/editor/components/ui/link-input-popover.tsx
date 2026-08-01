@@ -115,7 +115,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
         >
           <div className="mly:isolate mly:flex mly:rounded-lg">
             {!isEditing && (
-              <div className="mly:flex mly:h-8 mly:items-center mly:rounded-lg mly:border mly:border-gray-300 mly:bg-white mly:px-0.5">
+              <div className="mly:flex mly:h-8 mly:items-center mly:rounded-lg mly:border mly:border-gray-300 mly:bg-panel mly:px-0.5">
                 <button
                   onClick={() => {
                     setIsEditing(true);

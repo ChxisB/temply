@@ -26,7 +26,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      'mly:focus:bg-white mly:data-[state=open]:bg-gray-100 mly:flex mly:cursor-default mly:select-none mly:items-center mly:rounded-sm mly:px-2 mly:py-1.5 mly:text-sm mly:outline-hidden',
+      'mly:focus:bg-panel mly:data-[state=open]:bg-gray-100 mly:flex mly:cursor-default mly:select-none mly:items-center mly:rounded-sm mly:px-2 mly:py-1.5 mly:text-sm mly:outline-hidden',
       inset && 'pl-8',
       className
     )}
@@ -46,7 +46,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      'mly:bg-white mly:text-midnight-gray mly:z-50 mly:min-w-32 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:p-1 mly:shadow-lg',
+      'mly:bg-panel mly:text-midnight-gray mly:z-50 mly:min-w-32 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:p-1 mly:shadow-lg',
       className
     )}
     {...props}
@@ -66,7 +66,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'mly:z-50 mly:min-w-32 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:p-1 mly:shadow-md mly:bg-white',
+        'mly:z-50 mly:min-w-32 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:p-1 mly:shadow-md mly:bg-panel',
         className
       )}
       {...props}

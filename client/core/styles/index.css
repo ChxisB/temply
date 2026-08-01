@@ -29,6 +29,12 @@
      user's template, not to our UI.
 --------------------------------------------------------------------------- */
 @theme inline {
+  /* The surface every floating panel sits on. Deliberately not a remap of
+     `white`: white is used as a foreground too — a label on a filled button —
+     and remapping it would turn that label dark in dark mode. Panels say
+     `mly:bg-panel`, labels keep saying `mly:text-white`. */
+  --color-panel: var(--ds-raised);
+
   --color-soft-gray: var(--ds-hover);
   --color-midnight-gray: var(--ds-ink);
 
@@ -36,24 +42,36 @@
   --color-gray-100: var(--ds-hover);
   --color-gray-200: var(--ds-line);
   --color-gray-300: var(--ds-line-strong);
-  --color-gray-400: var(--ds-faint);
+  /* `faint` is the borders-and-decoration tier and does not clear 3:1 on a
+     tinted surface. Editor icons are not decoration — you have to see them to
+     use the toolbar — so the 400s resolve to `muted`. */
+  --color-gray-400: var(--ds-muted);
   --color-gray-500: var(--ds-muted);
   --color-gray-600: var(--ds-muted);
   --color-gray-700: var(--ds-ink);
   --color-gray-900: var(--ds-ink);
 
-  --color-slate-400: var(--ds-faint);
+  --color-slate-400: var(--ds-muted);
   --color-slate-500: var(--ds-muted);
   --color-slate-600: var(--ds-muted);
   --color-slate-700: var(--ds-ink);
 
+  --color-rose-100: var(--ds-danger-wash);
   --color-rose-500: var(--ds-danger);
   --color-rose-600: var(--ds-danger-ink);
   --color-rose-800: var(--ds-danger-ink);
 
   --color-red-100: var(--ds-danger-wash);
   --color-red-200: var(--ds-danger-wash);
+  --color-red-500: var(--ds-danger);
   --color-red-600: var(--ds-danger-ink);
+
+  /* Radii, so a panel corner in the editor matches a card corner in the shell. */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 }
 
 /*
