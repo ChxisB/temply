@@ -16,7 +16,7 @@ export function ColumnsWidth(props: ColumnsWidthProps) {
         W
       </span>
       <select
-        className="mly:h-auto mly:max-w-28 mly:appearance-none mly:border-0 mly:border-none mly:p-1 mly:pl-[26px] mly:text-sm mly:tabular-nums mly:outline-hidden mly:focus-visible:outline-hidden"
+        className="mly:h-auto mly:max-w-28 mly:appearance-none mly:border-0 mly:border-none mly:p-1 mly:pl-[26px] mly:text-sm mly:tabular-nums "
         value={selectedValue}
         onChange={(e) => onValueChange(e.target.value)}
       >

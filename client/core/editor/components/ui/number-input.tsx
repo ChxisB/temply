@@ -36,7 +36,7 @@ export const NumberInput = forwardRef<HTMLLabelElement, NumberInputProps>(
           value={value + ''}
           onChange={(e) => onValueChange(Number(e.target.value))}
           className={cn(
-            'hide-number-controls mly:h-auto mly:max-w-12 mly:border-0 mly:border-none mly:p-1 mly:text-center mly:text-sm mly:tabular-nums mly:outline-hidden focus-visible:outline-none',
+            'hide-number-controls mly:h-auto mly:max-w-12 mly:border-0 mly:border-none mly:p-1 mly:text-center mly:text-sm mly:tabular-nums ',
             Icon ? 'mly:pl-[26px]' : ''
           )}
         />

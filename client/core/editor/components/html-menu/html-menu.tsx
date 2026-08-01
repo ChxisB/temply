@@ -65,7 +65,7 @@ export function HTMLBubbleMenu(props: EditorBubbleMenuProps) {
             <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'mly:flex mly:size-6 mly:shrink-0 mly:items-center mly:justify-center mly:rounded mly:focus-visible:relative mly:focus-visible:z-10 mly:focus-visible:outline-hidden mly:focus-visible:ring-2 mly:focus-visible:ring-gray-400 mly:focus-visible:ring-offset-2',
+                  'mly:flex mly:size-6 mly:shrink-0 mly:items-center mly:justify-center mly:rounded mly:focus-visible:relative mly:focus-visible:z-10 ',
                   activeTab === 'code' && 'mly:bg-panel'
                 )}
                 disabled={activeTab === 'code'}
@@ -84,7 +84,7 @@ export function HTMLBubbleMenu(props: EditorBubbleMenuProps) {
             <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'mly:flex mly:size-6 mly:shrink-0 mly:items-center mly:justify-center mly:rounded mly:focus-visible:relative mly:focus-visible:z-10 mly:focus-visible:outline-hidden mly:focus-visible:ring-2 mly:focus-visible:ring-gray-400 mly:focus-visible:ring-offset-2',
+                  'mly:flex mly:size-6 mly:shrink-0 mly:items-center mly:justify-center mly:rounded mly:focus-visible:relative mly:focus-visible:z-10 ',
                   activeTab === 'preview' && 'mly:bg-panel'
                 )}
                 disabled={activeTab === 'preview'}

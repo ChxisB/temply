@@ -173,6 +173,26 @@ for (const file of walk(COMPONENTS)) {
   }
 }
 
+/**
+ * globals.css defines one :focus-visible treatment for the whole app. Editor
+ * components used to switch it off and draw their own grey ring — and in nine
+ * files, switch it off and draw nothing, leaving those controls with no focus
+ * indicator at all. Suppressing it is now a build failure.
+ */
+const SUPPRESSORS = /(?:mly:)?(?:focus-visible:|focus:)?outline-(?:none|hidden)/;
+const suppressing: string[] = [];
+for (const file of walk(COMPONENTS)) {
+  if (SUPPRESSORS.test(readFileSync(file, 'utf8'))) {
+    suppressing.push(file.slice(file.indexOf('core/editor')));
+  }
+}
+if (suppressing.length > 0) {
+  failures += suppressing.length;
+  lines.push('\n  controls that switch off the app focus treatment');
+  for (const f of suppressing.slice(0, 6)) lines.push(`    FAIL ${f}`);
+  if (suppressing.length > 6) lines.push(`         …and ${suppressing.length - 6} more`);
+}
+
 if (unmapped.size > 0) {
   lines.push('\n  surfaces that do not resolve through the theme');
   for (const [name, files] of unmapped) {

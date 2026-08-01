@@ -16,7 +16,7 @@ export function ImageSize(props: ImageSizeProps) {
       </span>
       <input
         {...AUTOCOMPLETE_PASSWORD_MANAGERS_OFF}
-        className="hide-number-controls mly:h-auto mly:max-w-20 mly:appearance-none mly:border-0 mly:border-none mly:p-1 mly:px-[26px] mly:text-sm mly:uppercase mly:tabular-nums mly:outline-hidden mly:focus-visible:outline-hidden"
+        className="hide-number-controls mly:h-auto mly:max-w-20 mly:appearance-none mly:border-0 mly:border-none mly:p-1 mly:px-[26px] mly:text-sm mly:uppercase mly:tabular-nums "
         type="number"
         value={value}
         onChange={(e) => onValueChange(e.target.value)}

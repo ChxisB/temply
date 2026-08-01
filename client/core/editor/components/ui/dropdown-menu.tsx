@@ -26,7 +26,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      'mly:focus:bg-panel mly:data-[state=open]:bg-gray-100 mly:flex mly:cursor-default mly:select-none mly:items-center mly:rounded-sm mly:px-2 mly:py-1.5 mly:text-sm mly:outline-hidden',
+      'mly:focus:bg-panel mly:data-[state=open]:bg-gray-100 mly:flex mly:cursor-default mly:select-none mly:items-center mly:rounded-sm mly:px-2 mly:py-1.5 mly:text-sm ',
       inset && 'pl-8',
       className
     )}
@@ -90,7 +90,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      'mly:relative mly:flex mly:cursor-default mly:select-none mly:items-center mly:gap-2 mly:rounded-sm mly:px-2 mly:py-1 mly:text-sm mly:outline-hidden mly:transition-colors mly:data-disabled:pointer-events-none mly:data-disabled:opacity-50 mly:focus:bg-gray-100 mly:[&_svg]:pointer-events-none',
+      'mly:relative mly:flex mly:cursor-default mly:select-none mly:items-center mly:gap-2 mly:rounded-sm mly:px-2 mly:py-1 mly:text-sm mly:transition-colors mly:data-disabled:pointer-events-none mly:data-disabled:opacity-50 mly:focus:bg-gray-100 mly:[&_svg]:pointer-events-none',
       inset && 'pl-8',
       className
     )}

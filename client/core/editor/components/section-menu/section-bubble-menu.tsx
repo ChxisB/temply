@@ -231,7 +231,7 @@ export function SectionBubbleMenu(props: EditorBubbleMenuProps) {
             }}
             backgroundColor={state.currentBackgroundColor}
             tooltip="Background Color"
-            className="mly:rounded-full mly:border-[1.5px] mly:border-white mly:shadow"
+            className="mly:rounded-full mly:border-[1.5px] mly:border-panel mly:shadow"
           />
         </div>
 

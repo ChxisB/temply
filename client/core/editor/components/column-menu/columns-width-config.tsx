@@ -84,7 +84,7 @@ export function ColumnsWidthConfig(props: ColumnsWidthConfigProps) {
                     min={1}
                     max={90}
                     type="number"
-                    className="hide-number-controls mly:w-full mly:appearance-none mly:rounded-md mly:bg-soft-gray mly:px-1.5 mly:py-1 mly:pr-6 mly:text-sm mly:tabular-nums mly:outline-hidden mly:focus:bg-soft-gray mly:focus:outline-hidden mly:focus:ring-1 mly:focus:ring-midnight-gray/50"
+                    className="hide-number-controls mly:w-full mly:appearance-none mly:rounded-md mly:bg-soft-gray mly:px-1.5 mly:py-1 mly:pr-6 mly:text-sm mly:tabular-nums mly:focus:bg-soft-gray mly:focus:ring-1 mly:focus:ring-midnight-gray/50"
                     value={value}
                     onChange={(e) => {
                       const value = e.target.value;
