@@ -143,8 +143,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   };
 
   const handleSend = async () => {
+    // Sending goes through the user's own Resend account. Without a key that
+    // is not set up, the request fails server-side with a generic message; say
+    // so before the click instead, and name where to fix it.
+    if (!apiKeyConfig?.apiKey) {
+      toast.error('Connect your Resend account under "Sending" before you can send.');
+      return;
+    }
     if (!from || !to) {
-      toast.error('Please fill in the required fields.');
+      toast.error('Add a From and To address before sending.');
       return;
     }
     const content = JSON.stringify(editor?.getJSON());
@@ -153,9 +160,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         theme,
         previewText, subject, from, replyTo, to, content,
       });
-      toast.success('Email sent successfully.');
+      toast.success('Email sent.');
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send email.');
+      toast.error(error?.message || 'Could not send the email.');
     }
   };
 

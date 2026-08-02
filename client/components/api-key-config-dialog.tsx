@@ -66,9 +66,9 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       toast.promise(saveApiKey(), {
-        loading: 'Saving Config...',
-        success: 'Saved Config Successfully',
-        error: (err) => err?.message || 'Failed to save Config',
+        loading: 'Saving...',
+        success: 'Sending connected',
+        error: (err) => err?.message || 'Could not save',
       });
     },
     [saveApiKey]
@@ -88,25 +88,30 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
           disabled={isLoading}
         >
           <Settings2Icon className="size-4" />
-          <span className="hidden sm:inline">Config</span>
+          {/* Named for what it does — connect a sending account — not "Config".
+              The other API-key surface (/dashboard/api-keys) issues Temply's
+              own keys; this one holds your Resend key so Temply can send on
+              your behalf. Same words, opposite direction, so they get
+              different names. */}
+          <span className="hidden sm:inline">Sending</span>
         </button>
       </DialogTrigger>
       <DialogContent className="w-full min-w-0 max-w-sm overflow-hidden p-4">
         <DialogHeader>
-          <DialogTitle>Configuration</DialogTitle>
+          <DialogTitle>Sending</DialogTitle>
           <DialogDescription className="text-balance">
-            Configure your Provider API Key and Endpoint(if any). These settings
-            are saved in your browser.
+            Temply sends through your Resend account. Paste your Resend API key
+            so it can send on your behalf. It is stored in this browser.
           </DialogDescription>
         </DialogHeader>
 
         <form className="flex flex-col gap-2.5" onSubmit={handleSubmit}>
           <Label className="font-normal">
-            <span className="w-20 after:ml-0.5 after:text-red-400 after:content-['*']">
+            <span className="w-20 after:ml-0.5 after:text-danger-ink after:content-['*']">
               Provider
             </span>
             <select
-              className="mt-2 flex h-10 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm font-normal ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 flex h-10 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm font-normal placeholder:text-faint disabled:cursor-not-allowed disabled:opacity-50"
               name="provider"
               required
               value={provider}
@@ -116,13 +121,13 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
             </select>
           </Label>
           <Label className="font-normal">
-            <span className="w-20 after:ml-0.5 after:text-red-400 after:content-['*']">
-              API Key
+            <span className="w-20 after:ml-0.5 after:text-danger-ink after:content-['*']">
+              Resend key
             </span>
             <Input
               className="mt-2 h-10 font-normal"
               name="apiKey"
-              placeholder="API Key"
+              placeholder="re_..."
               required
               spellCheck={false}
               type="password"
@@ -132,7 +137,7 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
           </Label>
 
           <button
-            className="flex h-10 items-center justify-center rounded-md bg-black px-2 py-1 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 items-center justify-center rounded-md bg-accent px-2 py-1 text-sm text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
           >
             {isPending ? (
