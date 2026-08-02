@@ -12,6 +12,7 @@ import { Divider } from '../ui/divider';
 import { LinkInputPopover } from '../ui/link-input-popover';
 import { Select } from '../ui/select';
 import { TooltipProvider } from '../ui/tooltip';
+import { AltTextInput } from './alt-text-input';
 import { ImageSize } from './image-size';
 import { useImageState } from './use-image-state';
 import {
@@ -120,6 +121,15 @@ export function ImageBubbleMenu(props: EditorBubbleMenuProps) {
             icon={ImageDown}
             editor={editor}
             isVariable={state.isSrcVariable}
+            showImageStatus
+          />
+
+          <AltTextInput
+            value={state.imageAlt}
+            onChange={(alt) => {
+              const type = state.isLogoActive ? 'logo' : 'image';
+              editor?.chain().updateAttributes(type, { alt }).run();
+            }}
           />
 
           {state.isImageActive && (

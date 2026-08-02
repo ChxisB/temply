@@ -10,6 +10,10 @@ import { useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { useVariableOptions } from '@/editor/utils/node-options';
 import { DEFAULT_VARIABLE_TRIGGER_CHAR } from '@/editor/nodes/variable/variable';
+import {
+  imageUrlMessage,
+  useImageUrlStatus,
+} from '@/editor/utils/use-image-url-status';
 
 type LinkInputPopoverProps = {
   defaultValue?: string;
@@ -18,6 +22,9 @@ type LinkInputPopoverProps = {
 
   icon?: LucideIcon;
   tooltip?: string;
+  /** When set, the popover reports whether the pasted URL is a reachable
+   *  image. Used for the image source, not for arbitrary links. */
+  showImageStatus?: boolean;
 
   editor: Editor;
 };
@@ -29,14 +36,24 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
     tooltip,
     icon: Icon = Link,
     editor,
+    showImageStatus = false,
 
     isVariable,
   } = props;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(!isVariable);
+  // Track the live field value so validation reacts as they type, not only on
+  // submit. Seeded from the saved value.
+  const [draft, setDraft] = useState(defaultValue);
 
   const linkInputRef = useRef<HTMLInputElement>(null);
+
+  const imageStatus = useImageUrlStatus(
+    showImageStatus ? draft : '',
+    showImageStatus ? !!isVariable : false,
+  );
+  const statusMessage = showImageStatus ? imageUrlMessage(imageStatus) : null;
 
   const { placeholderUrl = DEFAULT_PLACEHOLDER_URL } = useMailyContext();
   const options = useVariableOptions(editor);
@@ -147,6 +164,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
                   editor={editor}
                   value={defaultValue}
                   onValueChange={(value) => {
+                    setDraft(value);
                     onValueChange?.(value);
                   }}
                   autoCompleteOptions={autoCompleteOptions}
@@ -168,6 +186,21 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
               </div>
             )}
           </div>
+
+          {statusMessage && isEditing ? (
+            // The popover itself is transparent — it was built to float a bare
+            // input — so this message carries its own surface, or it would read
+            // through onto whatever sits behind the popover.
+            <p
+              className={`mly:mt-1.5 mly:max-w-56 mly:rounded-lg mly:border mly:border-gray-200 mly:bg-panel mly:px-2 mly:py-1.5 mly:text-xs mly:shadow-sm ${
+                statusMessage.tone === 'warn'
+                  ? 'mly:text-rose-600'
+                  : 'mly:text-gray-500'
+              }`}
+            >
+              {statusMessage.text}
+            </p>
+          ) : null}
         </form>
       </PopoverContent>
     </Popover>
