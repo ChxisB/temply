@@ -24,21 +24,21 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Temply - Beautiful email templates, built fast',
+  title: 'Temply — write the email, we handle the HTML',
   description:
-    'Temply is a drag-and-drop email template builder that makes crafting stunning, responsive emails effortless.',
+    'A block editor for transactional email. Build it without code, send it from your own app.',
   twitter: {
     card: 'summary_large_image',
-    title: 'Temply - Beautiful email templates, built fast',
+    title: 'Temply — write the email, we handle the HTML',
     description:
-      'Temply is a drag-and-drop email template builder that makes crafting stunning, responsive emails effortless.',
+      'A block editor for transactional email. Build it without code, send it from your own app.',
     images: ['https://temply.app/og-image.png'],
   },
   openGraph: {
     siteName: 'Temply',
-    title: 'Temply - Beautiful email templates, built fast',
+    title: 'Temply — write the email, we handle the HTML',
     description:
-      'Temply is a drag-and-drop email template builder that makes crafting stunning, responsive emails effortless.',
+      'A block editor for transactional email. Build it without code, send it from your own app.',
     images: ['https://temply.app/og-image.png'],
   },
   icons: {
@@ -94,6 +94,11 @@ export default function RootLayout({
           />
         </head>
         <body className={`${plexSans.variable} ${plexMono.variable}`}>
+          {/* First focusable element on the page. Lets a keyboard user jump the
+              header and sidebar straight to the content. */}
+          <a href="#main-content" className="skip-link">
+            Skip to content
+          </a>
           <Providers>{children}</Providers>
         </body>
       </html>

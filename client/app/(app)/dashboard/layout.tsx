@@ -21,7 +21,7 @@ export default function DashboardLayout({
           <ThemeToggle />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-6">
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>
       </div>

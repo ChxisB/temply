@@ -184,6 +184,26 @@
   }
 }
 
+/* Skip link. Plain rules rather than utilities: Tailwind v4 ships no
+   `not-sr-only`, and a custom selector inside `@layer base` gets shuffled under
+   the utilities layer. Top-level keeps the reveal reliable. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0.75rem;
+  top: 0.75rem;
+  border-radius: 6px;
+  background-color: var(--ds-accent);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
