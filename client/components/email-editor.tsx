@@ -25,7 +25,7 @@ export function EmailEditor(props: EmailEditorProps) {
     <>
       {isLoading && (
         <div className="flex w-full items-center justify-center py-10">
-          <Loader2Icon className="h-8 w-8 animate-spin stroke-[2.5] text-gray-500" />
+          <Loader2Icon className="h-8 w-8 animate-spin stroke-[2.5] text-muted" />
         </div>
       )}
 

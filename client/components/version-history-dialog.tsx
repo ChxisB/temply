@@ -119,7 +119,7 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
               <button
                 onClick={() => restoreVersion(previewVersion.id)}
                 disabled={isRestoring}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
               >
                 {isRestoring ? (
                   <Loader2Icon className="h-4 w-4 animate-spin" />
@@ -165,7 +165,7 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
                   <button
                     onClick={() => restoreVersion(version.id)}
                     disabled={isRestoring}
-                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-emerald-50"
+                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-wash"
                   >
                     <RotateCcwIcon className="h-3 w-3" />
                     Restore

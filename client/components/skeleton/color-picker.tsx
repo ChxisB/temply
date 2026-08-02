@@ -56,7 +56,7 @@ export function ColorPicker(props: ColorPickerProps) {
             alpha={true}
             color={color}
             onChange={handleColorChange}
-            className="mt-4 w-full min-w-0 rounded-lg border border-line bg-raised px-2 py-1.5 text-sm uppercase focus-visible:border-gray-400 focus-visible:outline-none"
+            className="mt-4 w-full min-w-0 rounded-lg border border-line bg-raised px-2 py-1.5 text-sm uppercase"
             prefixed
           />
         </div>

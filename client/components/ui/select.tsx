@@ -29,7 +29,10 @@ export function Select(props: SelectProps) {
     iconClassName,
   } = props;
 
-  const selectId = `mly${useId()}`;
+  // The whole body used `mly-`-prefixed classes — the editor's Tailwind
+  // instance — inside an app-level component, where that prefix compiles to
+  // nothing. Every caller was getting an unstyled browser select.
+  const selectId = useId();
 
   return (
     <div className="relative">
@@ -38,16 +41,16 @@ export function Select(props: SelectProps) {
       </label>
 
       {Icon && (
-        <div className="mly-pointer-events-none mly-absolute mly-inset-y-0 mly-left-2 mly-z-20 mly-flex mly-items-center">
-          <Icon className={cn('mly-size-3', iconClassName)} />
+        <div className="pointer-events-none absolute inset-y-0 left-2 z-20 flex items-center text-faint">
+          <Icon className={cn('size-3.5', iconClassName)} />
         </div>
       )}
 
       <select
         id={selectId}
         className={cn(
-          'mly-flex mly-min-h-7 mly-max-w-max mly-appearance-none mly-items-center mly-rounded-md mly-px-1.5 mly-py-0.5 mly-pr-7 mly-text-sm mly-text-midnight-gray mly-ring-offset-white mly-transition-colors hover:mly-bg-soft-gray focus-visible:mly-relative focus-visible:mly-z-10 focus-visible:mly-outline-none focus-visible:mly-ring-2 focus-visible:mly-ring-gray-400 focus-visible:mly-ring-offset-2 active:mly-bg-soft-gray',
-          !!Icon && 'mly-pl-7',
+          'flex h-8 max-w-max appearance-none items-center rounded-sm border border-line bg-raised px-2.5 pr-7 text-sm text-ink transition-colors hover:bg-hover',
+          !!Icon && 'pl-7',
           className
         )}
         value={value}
@@ -60,7 +63,7 @@ export function Select(props: SelectProps) {
         ))}
       </select>
 
-      <span className="mly-pointer-events-none mly-absolute mly-inset-y-0 mly-right-0 mly-z-10 mly-flex mly-h-full mly-w-7 mly-items-center mly-justify-center mly-text-gray-600 peer-disabled:mly-opacity-50">
+      <span className="pointer-events-none absolute inset-y-0 right-0 z-10 flex h-full w-7 items-center justify-center text-faint peer-disabled:opacity-50">
         <ChevronDownIcon
           size={16}
           strokeWidth={2}
