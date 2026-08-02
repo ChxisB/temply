@@ -184,6 +184,53 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Overlay motion
+
+   One set of enter/exit animations for every floating surface — dialog,
+   popover, dropdown, tooltip — driven by the data-state and data-side Radix
+   already puts on the element. A quick fade with a small settle: enough to
+   read as intentional, short enough to stay out of the way of someone working.
+   prefers-reduced-motion below turns all of it off.
+--------------------------------------------------------------------------- */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(2px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes panel-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(2px) scale(0.98); }
+}
+
+/* Dialogs are centred with a translate, so a scale/translate keyframe would
+   fight the positioning transform. They fade only. */
+.overlay-fade[data-state='open'] {
+  animation: overlay-in 160ms ease-out;
+}
+.overlay-fade[data-state='closed'] {
+  animation: overlay-out 140ms ease-in;
+}
+
+/* Panels anchored to a trigger settle in from the side they open toward. */
+.overlay-panel[data-state='open'] {
+  animation: panel-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.overlay-panel[data-state='closed'] {
+  animation: panel-out 130ms ease-in;
+}
+.overlay-panel[data-side='top'] { transform-origin: bottom; }
+.overlay-panel[data-side='bottom'] { transform-origin: top; }
+.overlay-panel[data-side='left'] { transform-origin: right; }
+.overlay-panel[data-side='right'] { transform-origin: left; }
+
 /* Skip link. Plain rules rather than utilities: Tailwind v4 ships no
    `not-sr-only`, and a custom selector inside `@layer base` gets shuffled under
    the utilities layer. Top-level keeps the reveal reliable. */
