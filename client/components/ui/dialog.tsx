@@ -32,7 +32,9 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       className={cn(
-        'overlay-fade fixed top-[50%] left-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border border-line bg-raised p-5 shadow-xl',
+        // Positioning lives in the .dialog-pop rule so the pop keyframe can
+        // carry the centring translate; no Tailwind translate utilities here.
+        'dialog-pop fixed z-50 grid w-full max-w-md gap-4 rounded-lg border border-line bg-raised p-5 shadow-xl',
         className
       )}
       ref={ref}
