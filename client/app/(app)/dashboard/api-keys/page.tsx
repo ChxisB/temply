@@ -239,7 +239,7 @@ export default function ApiKeysPage() {
           </DialogHeader>
 
           <div className="space-y-1.5">
-            <label htmlFor="api-key-name" className="text-sm font-medium text-ink">
+            <label htmlFor="api-key-name" className="block text-sm font-medium text-ink">
               Key name
             </label>
             <input

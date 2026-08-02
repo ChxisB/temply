@@ -37,7 +37,7 @@ const primaryBtn =
 const inputClass =
   'w-full rounded-xl border border-line bg-raised/80 px-4 py-2.5 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none transition-colors';
 
-const labelClass = 'text-sm font-medium text-ink';
+const labelClass = 'mb-1.5 block text-sm font-medium text-ink';
 
 type UpdateTemplateData = {
   title: string;
@@ -313,7 +313,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         </div>
 
         <div className="mt-4">
-          <label className={`mb-1.5 block ${labelClass}`} htmlFor="previewText">
+          <label className={labelClass} htmlFor="previewText">
             Preview Text
           </label>
           <input
