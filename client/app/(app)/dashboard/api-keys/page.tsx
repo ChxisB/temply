@@ -1,11 +1,14 @@
 'use client';
 
-import { CheckIcon, CopyIcon, KeyIcon, Loader2Icon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { CheckIcon, CopyIcon, KeyIcon, Loader2Icon, LockIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { httpDelete, httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
+import { isLimitReached } from '@temply/shared/plans';
 import { Button } from '~/components/ui/button';
+import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import {
   Dialog,
   DialogContent,
@@ -53,6 +56,16 @@ export default function ApiKeysPage() {
     queryFn: () => httpGet<ApiKeyListResponse>('/api/v1/api-keys', {}),
   });
 
+  const { data: billing } = useQuery({
+    queryKey: ['billing'],
+    queryFn: () => httpGet<{ usage: { apiKeys: number }; limits: { maxApiKeys: number | null } }>('/api/v1/billing', {}),
+  });
+  const apiKeyLimit = billing?.limits?.maxApiKeys ?? null;
+  // Free's cap is 0 — the feature is locked, not used up. That reads
+  // differently from a Pro user who has spent all five, so keep them apart.
+  const featureLocked = apiKeyLimit === 0;
+  const atLimit = billing ? isLimitReached(billing.usage?.apiKeys ?? 0, apiKeyLimit) : false;
+
   const { mutateAsync: createKey, isPending: isCreating } = useMutation({
     mutationFn: (name: string) => httpPost<CreateKeyResponse>('/api/v1/api-keys', { name }),
     onSuccess: (result) => {
@@ -94,6 +107,7 @@ export default function ApiKeysPage() {
         actions={
           <Button
             variant="primary"
+            disabled={featureLocked || atLimit}
             onClick={() => {
               setNewlyCreatedKey(null);
               setShowCreate(true);
@@ -104,6 +118,13 @@ export default function ApiKeysPage() {
           </Button>
         }
       />
+
+      {atLimit && !featureLocked ? (
+        <PlanLimitBanner
+          title={`You've used all ${apiKeyLimit} API keys on your plan.`}
+          detail="Upgrade for more."
+        />
+      ) : null}
 
       {newlyCreatedKey ? (
         <Card className="border-accent bg-accent-wash">
@@ -131,6 +152,17 @@ export default function ApiKeysPage() {
         <ErrorState
           description="We could not load your keys. Any keys you already created are still active."
           onRetry={() => refetch()}
+        />
+      ) : featureLocked ? (
+        <EmptyState
+          icon={LockIcon}
+          title="API keys are a Pro feature"
+          description="Upgrade to create keys and read your templates from your own application."
+          action={
+            <Button variant="primary" asChild>
+              <Link href="/dashboard/billing">Upgrade to Pro</Link>
+            </Button>
+          }
         />
       ) : keys.length === 0 ? (
         <EmptyState
@@ -210,16 +242,20 @@ export default function ApiKeysPage() {
         </div>
       )}
 
-      <Card>
-        <h2 className="text-sm font-semibold text-ink">Using a key</h2>
-        <p className="mt-1 text-sm text-muted">
-          Send it as a bearer token when you call the public API.
-        </p>
-        <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
-          <code>{`curl -H "Authorization: Bearer tply_live_..." \\
+      {/* Hidden when the feature is locked — no point showing how to use a key
+          you cannot create. */}
+      {featureLocked ? null : (
+        <Card>
+          <h2 className="text-sm font-semibold text-ink">Using a key</h2>
+          <p className="mt-1 text-sm text-muted">
+            Send it as a bearer token when you call the public API.
+          </p>
+          <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
+            <code>{`curl -H "Authorization: Bearer tply_live_..." \\
   https://temply.app/api/public/v1/templates/tpl_abc123`}</code>
-        </pre>
-      </Card>
+          </pre>
+        </Card>
+      )}
 
       {/* Previously a bare fixed div: no role, no focus trap, no Escape, and Tab
           walked straight out into the page behind it. */}

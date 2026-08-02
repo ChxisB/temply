@@ -1,21 +1,8 @@
 import Stripe from 'stripe';
 import { eq, sql } from 'drizzle-orm';
 import { subscriptions, mails, apiKeysTable } from '@temply/shared/schema';
+import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
 
-export type Plan = 'free' | 'pro' | 'scale';
-
-interface PlanLimits {
-  maxTemplates: number;
-  maxApiKeys: number;
-  maxVersions: number;
-  maxApiCalls: number;
-}
-
-const planLimits: Record<Plan, PlanLimits> = {
-  free: { maxTemplates: 3, maxApiKeys: 0, maxVersions: 0, maxApiCalls: 0 },
-  pro: { maxTemplates: Infinity, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 10_000 },
-  scale: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: 100_000 },
-};
 
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;

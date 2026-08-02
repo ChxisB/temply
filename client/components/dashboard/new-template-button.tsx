@@ -12,7 +12,7 @@ type SaveTemplateResponse = {
   template: { id: string };
 };
 
-export function NewTemplateButton() {
+export function NewTemplateButton({ disabled = false }: { disabled?: boolean } = {}) {
   const router = useRouter();
 
   const { mutateAsync: createTemplate, isPending } = useMutation({
@@ -31,7 +31,7 @@ export function NewTemplateButton() {
   });
 
   return (
-    <Button variant="primary" onClick={() => createTemplate()} disabled={isPending}>
+    <Button variant="primary" onClick={() => createTemplate()} disabled={isPending || disabled}>
       {isPending ? <Loader2Icon className="animate-spin" /> : <PlusIcon />}
       New template
     </Button>

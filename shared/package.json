@@ -6,7 +6,8 @@
   "exports": {
     "./schema": "./schema.ts",
     "./theme": "./theme.ts",
-    "./contrast": "./contrast.ts"
+    "./contrast": "./contrast.ts",
+    "./plans": "./plans.ts"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",

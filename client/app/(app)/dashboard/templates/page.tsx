@@ -3,9 +3,11 @@ import { redirect } from 'next/navigation';
 import { FileTextIcon } from 'lucide-react';
 import Link from 'next/link';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
+import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import { TemplateActions } from '~/components/dashboard/template-actions';
 import { EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
+import { isLimitReached } from '@temply/shared/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,17 +19,31 @@ export default async function TemplatesPage() {
   // A failed request used to be coerced into an empty list, which drew the
   // "no templates yet" screen — indistinguishable from an account that really
   // is empty. Keep the two apart.
-  const res = await serverFetch('/api/v1/templates');
+  const [res, billingRes] = await Promise.all([
+    serverFetch('/api/v1/templates'),
+    serverFetch('/api/v1/billing').catch(() => null),
+  ]);
   const failed = !res.ok;
   const { templates = [] } = failed ? { templates: [] } : await res.json();
+
+  const billing = billingRes?.ok ? await billingRes.json() : null;
+  const templateLimit = billing?.limits?.maxTemplates ?? null;
+  const atLimit = billing ? isLimitReached(billing.usage?.templates ?? templates.length, templateLimit) : false;
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Templates"
         description="Every email you have built here."
-        actions={<NewTemplateButton />}
+        actions={<NewTemplateButton disabled={atLimit} />}
       />
+
+      {atLimit ? (
+        <PlanLimitBanner
+          title={`You've used all ${templateLimit} templates on the Free plan.`}
+          detail="Upgrade to Pro for unlimited templates."
+        />
+      ) : null}
 
       {failed ? (
         <ErrorState description="We could not reach the server, so your templates are not shown. This is not a sign that they are gone." />

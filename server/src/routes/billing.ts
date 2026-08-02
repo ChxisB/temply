@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { eq } from 'drizzle-orm';
 import { subscriptions } from '@temply/shared/schema';
 import { getPlan, getUsage, getStripe } from '../lib/billing';
+import { PLAN_LIMITS, serialiseLimits } from '@temply/shared/plans';
 import { json, unauthorized } from '../lib/errors';
 
 export const billingRoutes = new Elysia()
@@ -9,7 +10,10 @@ export const billingRoutes = new Elysia()
     if (!ctx.userId) return unauthorized();
     const plan = await getPlan(ctx.db, ctx.userId);
     const usage = await getUsage(ctx.db, ctx.userId);
-    return json({ ...plan, usage });
+    // Limits go out so the client can tell "full" from "room to spare" without
+    // reimplementing the plan rules. Infinity is sent as null (see plans.ts).
+    const limits = serialiseLimits(PLAN_LIMITS[plan.plan]);
+    return json({ ...plan, usage, limits });
   })
 
   .post('/api/v1/billing/checkout', async (ctx: any) => {
