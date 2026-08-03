@@ -28,6 +28,10 @@ export function initTables(sqlite: Database) {
     current_period_end TEXT,
     created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
   )`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS send_usage (
+    user_id TEXT NOT NULL, usage_date TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, usage_date)
+  )`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
 }

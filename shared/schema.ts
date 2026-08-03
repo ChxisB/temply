@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
 
 export const mails = sqliteTable('mails', {
   id: text('id').primaryKey(),
@@ -58,3 +58,20 @@ export type NewTemplateVersion = typeof templateVersions.$inferInsert;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+
+/** One row per user per UK calendar day. `count` is the number of recipients
+ *  sent that day — quota is charged per recipient, not per send. */
+export const sendUsage = sqliteTable(
+  'send_usage',
+  {
+    user_id: text('user_id').notNull(),
+    usage_date: text('usage_date').notNull(),
+    count: integer('count').notNull().default(0),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.user_id, t.usage_date] }),
+  }),
+);
+
+export type SendUsage = typeof sendUsage.$inferSelect;
+export type NewSendUsage = typeof sendUsage.$inferInsert;
