@@ -6,6 +6,7 @@ export type SendingStatus = {
   testSentAt: string | null;
   manual: { account: boolean; key: boolean };
   domainSkipped: boolean;
+  dismissed: boolean;
   domain: { name: string; status: string; verified: boolean } | null;
   domainError: string | null;
 };

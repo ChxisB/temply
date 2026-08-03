@@ -64,6 +64,7 @@ export const sendingRoutes = new Elysia()
       testSentAt: setup.testSentAt,
       manual: { account: setup.accountConfirmed, key: setup.keyConfirmed },
       domainSkipped: setup.domainSkipped,
+      dismissed: setup.wizardDismissed,
       domain,
       domainError,
     });
@@ -78,6 +79,8 @@ export const sendingRoutes = new Elysia()
       const setup = readSetup(cookie);
 
       if (body.reset) {
+        // Reset clears progress only. wizardDismissed is a display preference,
+        // toggled on its own so a reset never quietly brings the reminders back.
         setup.accountConfirmed = false;
         setup.keyConfirmed = false;
         setup.testSentAt = null;
@@ -86,6 +89,7 @@ export const sendingRoutes = new Elysia()
         if (typeof body.account === 'boolean') setup.accountConfirmed = body.account;
         if (typeof body.key === 'boolean') setup.keyConfirmed = body.key;
         if (typeof body.domainSkipped === 'boolean') setup.domainSkipped = body.domainSkipped;
+        if (typeof body.dismissed === 'boolean') setup.wizardDismissed = body.dismissed;
       }
 
       cookie.setup = setup;
@@ -100,6 +104,7 @@ export const sendingRoutes = new Elysia()
         account: t.Optional(t.Boolean()),
         key: t.Optional(t.Boolean()),
         domainSkipped: t.Optional(t.Boolean()),
+        dismissed: t.Optional(t.Boolean()),
         reset: t.Optional(t.Boolean()),
       }),
     }

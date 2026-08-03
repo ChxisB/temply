@@ -14,6 +14,10 @@ export type SendingSetup = {
   keyConfirmed: boolean;
   testSentAt: string | null;
   domainSkipped: boolean;
+  // "I've got it" — hide the reminders (Overview card, nav emphasis) without
+  // touching the actual progress. Kept apart from the checklist so a reset of
+  // progress does not silently un-hide, and hiding does not fake progress.
+  wizardDismissed: boolean;
 };
 
 export type ConfigCookie = {
@@ -27,6 +31,7 @@ export const DEFAULT_SETUP: SendingSetup = {
   keyConfirmed: false,
   testSentAt: null,
   domainSkipped: false,
+  wizardDismissed: false,
 };
 
 const COOKIE_NAME = '__temply_config__';

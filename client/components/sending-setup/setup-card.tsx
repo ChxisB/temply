@@ -15,8 +15,9 @@ export function SetupCard() {
   const s1 = stageOne(status);
 
   // Wait for a real answer before rendering, so the card cannot flash in for a
-  // user who has already finished setup.
-  if (!isSuccess || s1.ready) return null;
+  // user who has already finished setup. Once dismissed, it stays gone — that is
+  // the whole point of "I've got it".
+  if (!isSuccess || s1.ready || status?.dismissed) return null;
 
   const left = s1.total - s1.done;
 

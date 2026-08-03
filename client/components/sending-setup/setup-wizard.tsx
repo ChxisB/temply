@@ -3,6 +3,7 @@
 import { useUser } from '@clerk/nextjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  BellIcon,
   CheckCircle2Icon,
   ExternalLinkIcon,
   GlobeIcon,
@@ -391,7 +392,33 @@ export function SetupWizard() {
             </ul>
           </Card>
 
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {status?.dismissed ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setup.mutate({ dismissed: false });
+                  toast.success('Reminders back on');
+                }}
+                className="inline-flex items-center gap-1.5 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+              >
+                <BellIcon className="size-3.5" />
+                Show reminders
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setup.mutate({ dismissed: true });
+                  toast.success('Reminders hidden — reopen any time from Get sending');
+                }}
+                className="inline-flex items-center gap-1.5 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+              >
+                <CheckCircle2Icon className="size-3.5" />
+                I've got it — hide reminders
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
