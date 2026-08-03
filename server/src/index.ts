@@ -4,6 +4,7 @@ import { dbPlugin } from './plugins/db';
 import { templatesRoutes } from './routes/templates';
 import { apiKeysRoutes } from './routes/api-keys';
 import { billingRoutes } from './routes/billing';
+import { quotaRoutes } from './routes/quota';
 import { emailsRoutes } from './routes/emails';
 import { configRoutes } from './routes/config';
 import { sendingRoutes } from './routes/sending';
@@ -17,6 +18,7 @@ const app = new Elysia()
   .use(templatesRoutes)
   .use(apiKeysRoutes)
   .use(billingRoutes)
+  .use(quotaRoutes)
   .use(emailsRoutes)
   .use(configRoutes)
   .use(sendingRoutes)
