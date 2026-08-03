@@ -35,7 +35,7 @@ export function EmailEditor(props: EmailEditorProps) {
             hasMenuBar: false,
             wrapClassName: cn('editor-wrap', isLoading && 'hidden'),
             bodyClassName: '!mt-0 !border-0 !p-0',
-            contentClassName: `editor-content mx-auto max-w-[calc(600px+80px)]! px-10! pb-10!`,
+            contentClassName: `editor-content mx-auto max-w-[calc(600px+80px)]! px-10! pt-10! pb-10!`,
             toolbarClassName: 'flex-wrap !items-start',
             spellCheck: false,
             autofocus,
