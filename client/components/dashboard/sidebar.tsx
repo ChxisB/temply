@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { NavLinks } from './nav-items';
+import { QuotaWidget } from './quota-widget';
 import { UserMenu } from './user-menu';
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -21,7 +22,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <NavLinks onNavigate={onNavigate} />
       </div>
 
-      <div className="border-t border-line p-2">
+      <div className="space-y-2 border-t border-line p-2">
+        <QuotaWidget />
         <UserMenu align="start" />
       </div>
     </aside>

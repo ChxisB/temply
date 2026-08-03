@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { NavLinks } from './nav-items';
+import { QuotaWidget } from './quota-widget';
 import { UserMenu } from './user-menu';
 
 /**
@@ -53,7 +54,8 @@ export function MobileNav() {
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
 
-          <div className="border-t border-line p-2">
+          <div className="space-y-2 border-t border-line p-2">
+            <QuotaWidget />
             <UserMenu align="start" />
           </div>
         </DialogPrimitive.Content>
