@@ -1,36 +1,79 @@
 import { Elysia, t } from 'elysia';
 import { Resend } from 'resend';
 import { render } from '../render/render';
-import { DEFAULT_EDITOR_THEME_SCHEMA } from '../lib/email-theme-schema';
-import { json, unauthorized } from '../lib/errors';
+import { json, paymentRequired, unauthorized } from '../lib/errors';
+import { checkEmailQuota, recordEmailSend } from '../lib/quota';
+
+const FROM_ADDRESS = process.env.SENDING_FROM_ADDRESS || 'send@temply.app';
+const FROM_LABEL = process.env.SENDING_FROM_LABEL || 'Temply';
+
+function buildFrom(name?: string): string {
+  const trimmed = name?.trim();
+  const display = trimmed ? `${trimmed} via ${FROM_LABEL}` : FROM_LABEL;
+  return `${display} <${FROM_ADDRESS}>`;
+}
 
 export const emailsRoutes = new Elysia()
-  .post('/api/v1/emails/preview', async ({ body }: any) => {
-    const { content, theme, previewText } = body;
-    const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
-    // previewText was accepted but never forwarded, so the preheader never
-    // appeared in a preview even though it does in the sent mail.
-    const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
-    return json({ html });
-  }, { body: t.Object({ previewText: t.Optional(t.String()), content: t.Any(), theme: t.Optional(t.Any()) }) })
+  .post(
+    '/api/v1/emails/preview',
+    async ({ body }: any) => {
+      const { content, theme, previewText } = body;
+      const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
+      const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
+      return json({ html });
+    },
+    { body: t.Object({ previewText: t.Optional(t.String()), content: t.Any(), theme: t.Optional(t.Any()) }) },
+  )
 
-  .post('/api/v1/emails/send', async ({ body, request }: any) => {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const configCookie = cookieHeader.split(';').find((c: string) => c.trim().startsWith('__temply_config__='))?.split('=')[1];
-    if (!configCookie) return unauthorized('Missing configuration');
-    const config = JSON.parse(decodeURIComponent(configCookie));
-    if (!config.apiKey) return unauthorized('Missing API key');
+  .post(
+    '/api/v1/emails/send',
+    async (ctx: any) => {
+      const { body, userId, db } = ctx;
+      if (!userId) return unauthorized();
 
-    const { previewText, subject, from, replyTo, to, content, theme } = body;
-    const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
-    // Send has to apply the same theme the author previewed, or what lands in
-    // the inbox is not what they approved.
-    const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
+      const recipients = body.to
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      if (recipients.length === 0) {
+        return json({ status: 400, message: 'Add at least one recipient', errors: ['No recipients'] }, 400);
+      }
 
-    const resend = new Resend(config.apiKey);
-    const recipients = to.split(',').map((s: string) => s.trim());
-    const { error } = await resend.emails.send({ to: recipients, from, replyTo: replyTo || undefined, subject, html });
+      // Charge per recipient, and refuse the whole send rather than sending part.
+      const quota = await checkEmailQuota(db, userId, recipients.length);
+      if (!quota.allowed) return paymentRequired(quota.message!);
 
-    if (error) return json({ status: 500, message: error.message, errors: [error.message] }, 500);
-    return json({ status: 'ok' });
-  }, { body: t.Object({ previewText: t.Optional(t.String()), subject: t.String({ minLength: 1 }), from: t.String({ minLength: 1 }), replyTo: t.Optional(t.String()), to: t.String({ minLength: 1 }), content: t.String({ minLength: 1 }), theme: t.Optional(t.Any()) }) });
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        return json({ status: 500, message: 'Sending is not configured', errors: ['RESEND_API_KEY missing'] }, 500);
+      }
+
+      const { previewText, subject, fromName, replyTo, content, theme } = body;
+      const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
+      const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
+
+      const resend = new Resend(apiKey);
+      const { error } = await resend.emails.send({
+        from: buildFrom(fromName),
+        to: recipients,
+        replyTo: replyTo || undefined,
+        subject,
+        html,
+      });
+      if (error) return json({ status: 500, message: error.message, errors: [error.message] }, 500);
+
+      await recordEmailSend(db, userId, recipients.length);
+      return json({ status: 'ok' });
+    },
+    {
+      body: t.Object({
+        previewText: t.Optional(t.String()),
+        subject: t.String({ minLength: 1 }),
+        fromName: t.Optional(t.String()),
+        replyTo: t.Optional(t.String()),
+        to: t.String({ minLength: 1 }),
+        content: t.String({ minLength: 1 }),
+        theme: t.Optional(t.Any()),
+      }),
+    },
+  );
