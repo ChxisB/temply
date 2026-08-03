@@ -8,7 +8,7 @@ const FROM_ADDRESS = process.env.SENDING_FROM_ADDRESS || 'send@temply.app';
 const FROM_LABEL = process.env.SENDING_FROM_LABEL || 'Temply';
 
 function buildFrom(name?: string): string {
-  const trimmed = name?.trim();
+  const trimmed = name?.replace(/[<>"\r\n]/g, '').trim();
   const display = trimmed ? `${trimmed} via ${FROM_LABEL}` : FROM_LABEL;
   return `${display} <${FROM_ADDRESS}>`;
 }

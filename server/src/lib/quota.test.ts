@@ -14,7 +14,7 @@ describe('ukDateString', () => {
 });
 
 describe('hoursUntilReset', () => {
-  it('is ~24h just after London midnight and ~0h just before it', () => {
+  it('is ~24h just after London midnight and ~1h just before it', () => {
     // 2026-01-01 00:00 UTC == London midnight in winter (GMT).
     expect(hoursUntilReset(new Date('2026-01-01T00:00:00Z'))).toBeCloseTo(24, 0);
     expect(hoursUntilReset(new Date('2026-01-01T23:00:00Z'))).toBeCloseTo(1, 0);

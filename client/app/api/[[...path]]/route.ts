@@ -39,11 +39,8 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
     },
   });
 
-  // The API stores the sending config (Resend key + setup progress) with a
-  // Set-Cookie on its response. This proxy previously copied only Content-Type,
-  // so that cookie was dropped on the floor — keys and setup never persisted.
-  // getSetCookie keeps multiple cookies intact rather than folding them into one
-  // comma-joined string.
+  // Forward any Set-Cookie the API returns so cookie-setting routes work through
+  // the proxy; getSetCookie keeps multiple cookies intact.
   const setCookies =
     typeof res.headers.getSetCookie === 'function'
       ? res.headers.getSetCookie()

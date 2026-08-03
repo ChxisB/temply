@@ -28,7 +28,14 @@ export function QuotaWidget() {
         <span className="text-xs font-medium text-ink capitalize">{data.plan} plan</span>
         <span className="text-2xs text-muted tabular-nums">{used}/{limit}</span>
       </div>
-      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-hover">
+      <div
+        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-hover"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label={`${used} of ${limit} daily emails used`}
+      >
         <div
           className={over ? 'h-full rounded-full bg-danger' : 'h-full rounded-full bg-accent'}
           style={{ width: `${pct}%` }}

@@ -53,6 +53,21 @@ describe('POST /api/v1/emails/send', () => {
     expect(await getEmailUsage(db, USER)).toBe(1);
   });
 
+  it('sanitizes a hostile display name before it reaches the From header', async () => {
+    const res = await post(
+      app,
+      '/api/v1/emails/send',
+      body({ fromName: 'Acme <evil@x.com>\r\nBcc: victim@x.com' }),
+      USER,
+    );
+    expect(res.status).toBe(200);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].from).toBe('Acme evil@x.comBcc: victim@x.com via Temply <send@temply.app>');
+    expect(sent[0].from).not.toContain('\r');
+    expect(sent[0].from).not.toContain('\n');
+    expect(sent[0].from.split(' via Temply <')[0]).not.toContain('<');
+  });
+
   it('charges one quota per recipient', async () => {
     await post(app, '/api/v1/emails/send', body({ to: 'a@x.com, b@x.com, c@x.com' }), USER);
     expect(await getEmailUsage(db, USER)).toBe(3);
