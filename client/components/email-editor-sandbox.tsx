@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Editor, FocusPosition } from '@tiptap/core';
 import {
   CheckIcon,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
 import type { Mail } from '~/db/schema';
@@ -21,14 +22,19 @@ import { CopyEmailHtml } from './copy-email-html';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { PreviewEmailDialog } from './preview-email-dialog';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
-import {
-  ApiKeyConfigDialog,
-  apiKeyQueryOptions,
-} from './api-key-config-dialog';
 import { VersionHistoryDialog } from './version-history-dialog';
 import { TemplateThemePanel } from './template-theme-panel';
 import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
@@ -64,16 +70,17 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const { template, showSaveButton = true, autofocus } = props;
 
   const router = useRouter();
-  const { data: apiKeyConfig } = useQuery(apiKeyQueryOptions());
+  const queryClient = useQueryClient();
 
   const [subject, setSubject] = useState(template?.title || '');
   const [previewText, setPreviewText] = useState(template?.preview_text || '');
-  const [from, setFrom] = useState('');
+  const [fromName, setFromName] = useState('');
   const [to, setTo] = useState('');
 
   const [showReplyTo, setShowReplyTo] = useState(false);
   const [replyTo, setReplyTo] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [theme, setTheme] = useState<RendererThemeOptions>(() => {
     if (template?.theme) {
       try {
@@ -147,25 +154,29 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   };
 
   const handleSend = async () => {
-    // Sending goes through the user's own Resend account. Without a key that
-    // is not set up, the request fails server-side with a generic message; say
-    // so before the click instead, and name where to fix it.
-    if (!apiKeyConfig?.apiKey) {
-      toast.error('Connect your Resend account under "Sending" before you can send.');
-      return;
-    }
-    if (!from || !to) {
-      toast.error('Add a From and To address before sending.');
+    if (!to) {
+      toast.error('Add a To address before sending.');
       return;
     }
     const content = JSON.stringify(editor?.getJSON());
     try {
       await httpPost('/api/v1/emails/send', {
         theme,
-        previewText, subject, from, replyTo, to, content,
+        previewText,
+        subject,
+        fromName,
+        replyTo,
+        to,
+        content,
       });
       toast.success('Email sent.');
+      queryClient.invalidateQueries({ queryKey: ['quota'] });
     } catch (error: any) {
+      // 402 is the daily-limit signal — offer the upgrade path instead of a toast.
+      if (error?.status === 402) {
+        setQuotaBlocked(true);
+        return;
+      }
       toast.error(error?.message || 'Could not send the email.');
     }
   };
@@ -204,11 +215,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             editor={editor}
             previewText={previewText}
             subject={subject}
-            from={from}
             theme={theme}
           />
           <VersionHistoryDialog templateId={template?.id} />
-          <ApiKeyConfigDialog />
         </div>
 
         <div className="flex items-center gap-2">
@@ -287,14 +296,13 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className={labelClass} htmlFor="from">From</Label>
+            <Label className={labelClass} htmlFor="fromName">From name</Label>
             <input
               className={inputClass}
-              id="from"
-              onChange={(e) => setFrom(e.target.value)}
-              placeholder="from@example.com"
-              type="email"
-              value={from}
+              id="fromName"
+              onChange={(e) => setFromName(e.target.value)}
+              placeholder="Your name or brand"
+              value={fromName}
             />
           </div>
 
@@ -362,6 +370,23 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           setEditor={setEditor}
         />
       </section>
+
+      <Dialog open={quotaBlocked} onOpenChange={setQuotaBlocked}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Daily send limit reached</DialogTitle>
+            <DialogDescription>
+              You&apos;ve used today&apos;s email allowance. It resets at midnight UK time. Upgrade for a higher daily limit.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setQuotaBlocked(false)}>Not now</Button>
+            <Button variant="primary" asChild>
+              <Link href="/dashboard/billing">See plans</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
