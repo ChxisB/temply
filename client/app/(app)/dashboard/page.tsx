@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FileTextIcon } from 'lucide-react';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
-import { SetupCard } from '~/components/sending-setup/setup-card';
 import { EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
 
@@ -36,8 +35,6 @@ export default async function DashboardPage() {
         description="Where your templates and usage stand today."
         actions={<NewTemplateButton />}
       />
-
-      <SetupCard />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile label="Templates" value={templatesFailed ? '—' : templates.length} />
