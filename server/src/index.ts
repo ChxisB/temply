@@ -6,6 +6,7 @@ import { apiKeysRoutes } from './routes/api-keys';
 import { billingRoutes } from './routes/billing';
 import { emailsRoutes } from './routes/emails';
 import { configRoutes } from './routes/config';
+import { sendingRoutes } from './routes/sending';
 import { publicRoutes } from './routes/public';
 import { webhookRoutes } from './routes/webhooks/stripe';
 import { authRoutes } from './routes/auth/logout';
@@ -18,6 +19,7 @@ const app = new Elysia()
   .use(billingRoutes)
   .use(emailsRoutes)
   .use(configRoutes)
+  .use(sendingRoutes)
   .use(publicRoutes)
   .use(webhookRoutes)
   .use(authRoutes)

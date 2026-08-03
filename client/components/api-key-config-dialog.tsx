@@ -1,4 +1,4 @@
-import { Cog, Loader2Icon, PlugZapIcon, Settings2Icon } from 'lucide-react';
+import { ExternalLinkIcon, Loader2Icon, PlugZapIcon, Settings2Icon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Dialog,
@@ -148,6 +148,18 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
             Save Changes
           </button>
         </form>
+
+        {/* Opens the guided checklist in a new tab so this dialog — and whatever
+            the user was doing behind it — stays put to paste into. */}
+        <a
+          href="/dashboard/get-sending"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-1 inline-flex items-center gap-1.5 text-sm text-accent-ink underline-offset-4 hover:underline"
+        >
+          <ExternalLinkIcon className="size-3.5" />
+          New to this? Set up sending step by step
+        </a>
       </DialogContent>
     </Dialog>
   );
