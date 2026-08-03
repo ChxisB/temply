@@ -1,5 +1,13 @@
 import { ExternalLinkIcon, Loader2Icon, PlugZapIcon, Settings2Icon } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import type { FormEvent } from 'react';
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -11,16 +19,6 @@ import {
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { httpGet, httpPost } from '~/lib/http';
-import {
-  queryOptions,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
-import { useCallback } from 'react';
-import type { FormEvent } from 'react';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
 
 type ApiKeyConfig = {
   apiKey: string;
@@ -36,26 +34,17 @@ export function apiKeyQueryOptions() {
   });
 }
 
-type ApiKeyConfigDialogProps = {
-  apiKey?: string;
-  provider?: string;
-};
-
-export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
-  const { apiKey: defaultApiKey, provider: defaultProvider } = props;
-
+export function ApiKeyConfigDialog() {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(defaultApiKey || '');
-  const [provider, setProvider] = useState(defaultProvider || 'resend');
+  const [apiKey, setApiKey] = useState('');
 
   const { isLoading } = useQuery(apiKeyQueryOptions());
   const { mutateAsync: saveApiKey, isPending } = useMutation({
+    // Resend is the only provider, so it is fixed here rather than chosen —
+    // picking from a list of one is a decision the user should not have to make.
     mutationFn: async () => {
-      return httpPost('/api/v1/config', {
-        apiKey,
-        provider,
-      });
+      return httpPost('/api/v1/config', { apiKey, provider: 'resend' });
     },
     onSettled: () => {
       queryClient.invalidateQueries(apiKeyQueryOptions());
@@ -73,11 +62,6 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
     },
     [saveApiKey]
   );
-
-  useEffect(() => {
-    setApiKey(defaultApiKey || '');
-    setProvider(defaultProvider || 'resend');
-  }, [defaultApiKey, defaultProvider]);
 
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
@@ -107,21 +91,7 @@ export function ApiKeyConfigDialog(props: ApiKeyConfigDialogProps) {
 
         <form className="flex flex-col gap-2.5" onSubmit={handleSubmit}>
           <Label className="font-normal">
-            <span className="w-20 after:ml-0.5 after:text-danger-ink after:content-['*']">
-              Provider
-            </span>
-            <select
-              className="mt-2 flex h-10 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm font-normal placeholder:text-faint disabled:cursor-not-allowed disabled:opacity-50"
-              name="provider"
-              required
-              value={provider}
-              onChange={(event) => setProvider(event.target.value)}
-            >
-              <option value="resend">Resend</option>
-            </select>
-          </Label>
-          <Label className="font-normal">
-            <span className="w-20 after:ml-0.5 after:text-danger-ink after:content-['*']">
+            <span className="after:ml-0.5 after:text-danger-ink after:content-['*']">
               Resend key
             </span>
             <Input
