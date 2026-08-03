@@ -5,7 +5,10 @@ import type { Editor, FocusPosition } from '@tiptap/core';
 import {
   CheckIcon,
   CopyIcon,
+  InfoIcon,
+  LayoutTemplateIcon,
   Loader2Icon,
+  MailIcon,
   SaveIcon,
   SendIcon,
 } from 'lucide-react';
@@ -20,6 +23,7 @@ import { EmailEditor } from './email-editor';
 import { PreviewEmailDialog } from './preview-email-dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
 import {
   ApiKeyConfigDialog,
@@ -218,11 +222,11 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         </div>
       </div>
 
-      {/* Short code */}
+      {/* Template ID */}
       {template?.short_code && (
         <div className="flex items-center gap-3 rounded-xl border border-line bg-raised p-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-faint">Short Code</span>
+            <span className="text-xs font-medium text-faint">Template ID</span>
             <code className="rounded-md bg-hover px-2 py-1 text-sm font-mono text-ink">
               {template.short_code}
             </code>
@@ -237,22 +241,39 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
               <><CopyIcon className="h-3.5 w-3.5" /> Copy</>
             )}
           </button>
-          <a
-            href={`/api/public/v1/templates/${template.short_code}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-auto text-xs text-faint underline-offset-2 hover:text-muted hover:underline"
-          >
-            API URL
-          </a>
+
+          <Popover>
+            <PopoverTrigger
+              className="ml-auto flex size-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-hover hover:text-ink"
+              aria-label="What is the template ID for?"
+            >
+              <InfoIcon className="size-4" />
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72">
+              <p className="text-sm font-medium text-ink">Using this template ID</p>
+              <p className="mt-1 text-sm text-muted">
+                Fetch this template from your own code with an API key, so your app
+                pulls the latest version instead of hardcoding the email.
+              </p>
+              <pre className="mt-2.5 overflow-x-auto rounded-sm border border-line bg-surface p-2 font-mono text-2xs text-ink">
+{`curl -H "Authorization: Bearer tply_..." \\
+  ${typeof window !== 'undefined' ? window.location.origin : ''}/api/public/v1/templates/${template.short_code}`}
+              </pre>
+              <p className="mt-2 text-2xs text-faint">
+                API access is a Pro feature — create a key under API keys first.
+              </p>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
 
-      {/* Email fields card */}
-      <div className="rounded-xl border border-line bg-raised p-5 sm:p-6">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-faint">
-          Email Details
-        </h2>
+      {/* Email fields card — same section/header shape as the Brand panel */}
+      <section className="overflow-hidden rounded-lg border border-line bg-raised">
+        <header className="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
+          <MailIcon className="size-4 text-faint" />
+          <h2 className="text-sm font-medium text-ink">Email details</h2>
+        </header>
+        <div className="p-3.5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label className={labelClass} htmlFor="subject">Subject</Label>
@@ -324,18 +345,23 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             value={previewText}
           />
         </div>
-      </div>
+        </div>
+      </section>
 
       <TemplateThemePanel theme={theme} onChange={setTheme} />
 
-      {/* Editor */}
-      <div className="overflow-hidden rounded-xl border border-line bg-raised shadow-sm">
+      {/* Editor — same section/header shape as Email details and Brand */}
+      <section className="overflow-hidden rounded-lg border border-line bg-raised">
+        <header className="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
+          <LayoutTemplateIcon className="size-4 text-faint" />
+          <h2 className="text-sm font-medium text-ink">Content</h2>
+        </header>
         <EmailEditor
           autofocus={autofocus}
           defaultContent={editorContent}
           setEditor={setEditor}
         />
-      </div>
+      </section>
     </div>
   );
 }
