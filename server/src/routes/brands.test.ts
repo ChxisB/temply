@@ -47,6 +47,23 @@ describe('POST /api/v1/brands/:id/default', () => {
   });
 });
 
+describe('PUT /api/v1/brands/:id', () => {
+  it('updates the caller’s own brand', async () => {
+    const { brand } = await (await make(OWNER)).json();
+    const res = await put(app, `/api/v1/brands/${brand.id}`, { name: 'Renamed' }, OWNER);
+    expect(res.status).toBe(200);
+    const rows = await db.select().from(brands).where(eq(brands.id, brand.id));
+    expect(rows[0].name).toBe('Renamed');
+  });
+  it('404s and does not modify another user’s brand', async () => {
+    const { brand } = await (await make(OWNER)).json();
+    const res = await put(app, `/api/v1/brands/${brand.id}`, { name: 'Hacked' }, OTHER);
+    expect(res.status).toBe(404);
+    const rows = await db.select().from(brands).where(eq(brands.id, brand.id));
+    expect(rows[0].name).not.toBe('Hacked');
+  });
+});
+
 describe('DELETE /api/v1/brands/:id', () => {
   it('will not delete another user’s brand', async () => {
     const { brand } = await (await make(OWNER)).json();

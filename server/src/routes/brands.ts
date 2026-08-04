@@ -25,10 +25,13 @@ export const brandsRoutes = new Elysia()
 
   .put('/api/v1/brands/:id', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();
+    const [owned] = await ctx.db.select({ id: brands.id }).from(brands)
+      .where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId))).limit(1);
+    if (!owned) return notFound('Brand not found');
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (typeof ctx.body.name === 'string') patch.name = ctx.body.name;
     if (typeof ctx.body.theme === 'string') patch.theme = ctx.body.theme;
-    const res = await ctx.db.update(brands).set(patch).where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId)));
+    await ctx.db.update(brands).set(patch).where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId)));
     return json({ status: 'ok' });
   }, { body: t.Object({ name: t.Optional(t.String({ minLength: 1 })), theme: t.Optional(t.String({ minLength: 1 })) }) })
 
