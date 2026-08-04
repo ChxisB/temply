@@ -213,7 +213,7 @@ export default function BrandsPage() {
                       Edit
                     </Button>
                     {!isDefault ? (
-                      <Button variant="secondary" size="sm" onClick={() => setDefaultBrand(brand.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>
                         Set as default
                       </Button>
                     ) : null}
