@@ -3,6 +3,7 @@ import { authPlugin } from './plugins/auth';
 import { dbPlugin } from './plugins/db';
 import { templatesRoutes } from './routes/templates';
 import { apiKeysRoutes } from './routes/api-keys';
+import { brandsRoutes } from './routes/brands';
 import { billingRoutes } from './routes/billing';
 import { quotaRoutes } from './routes/quota';
 import { imagekitRoutes } from './routes/imagekit';
@@ -16,6 +17,7 @@ const app = new Elysia()
   .use(dbPlugin)
   .use(templatesRoutes)
   .use(apiKeysRoutes)
+  .use(brandsRoutes)
   .use(billingRoutes)
   .use(quotaRoutes)
   .use(imagekitRoutes)

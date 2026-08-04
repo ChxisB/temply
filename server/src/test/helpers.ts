@@ -45,6 +45,16 @@ export function post(app: any, path: string, body: unknown, userId?: string | nu
   );
 }
 
+export function put(app: any, path: string, body: unknown, userId?: string | null, headers: Record<string, string> = {}) {
+  return app.handle(
+    new Request(`http://localhost${path}`, {
+      method: 'PUT',
+      headers: withUser({ 'Content-Type': 'application/json', ...headers }, userId),
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
 export function del(app: any, path: string, userId?: string | null) {
   return app.handle(
     new Request(`http://localhost${path}`, { method: 'DELETE', headers: withUser({}, userId) }),
