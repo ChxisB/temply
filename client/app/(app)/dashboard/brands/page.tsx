@@ -158,41 +158,6 @@ export default function BrandsPage() {
         />
       ) : null}
 
-      {/* Built-in looks — always available in the editor, not deletable. */}
-      <section className="space-y-2.5">
-        <h2 className="text-sm font-semibold text-ink">Presets</h2>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {BRAND_PRESETS.map((p) => {
-            const isDefault = p.id === defaultBrandId;
-            return (
-              <Card
-                key={p.id}
-                onClick={() => openPreview(p.name, p.theme)}
-                className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 space-y-2">
-                    <p className="truncate text-sm font-medium text-ink">{p.name}</p>
-                    <Swatches theme={p.theme} />
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <Badge tone="neutral">Preset</Badge>
-                    {isDefault ? <Badge tone="accent">Default</Badge> : null}
-                  </div>
-                </div>
-                {!isDefault ? (
-                  <div className="mt-auto flex items-center justify-end pt-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(p.id)}>
-                      Set as default
-                    </Button>
-                  </div>
-                ) : null}
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
       {/* The user's own saved brands. */}
       <section className="space-y-2.5">
         <h2 className="text-sm font-semibold text-ink">Your brands</h2>
@@ -268,6 +233,41 @@ export default function BrandsPage() {
             })}
           </div>
         )}
+      </section>
+
+      {/* Built-in looks — always available in the editor, not deletable. */}
+      <section className="space-y-2.5">
+        <h2 className="text-sm font-semibold text-ink">Presets</h2>
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {BRAND_PRESETS.map((p) => {
+            const isDefault = p.id === defaultBrandId;
+            return (
+              <Card
+                key={p.id}
+                onClick={() => openPreview(p.name, p.theme)}
+                className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 space-y-2">
+                    <p className="truncate text-sm font-medium text-ink">{p.name}</p>
+                    <Swatches theme={p.theme} />
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <Badge tone="neutral">Preset</Badge>
+                    {isDefault ? <Badge tone="accent">Default</Badge> : null}
+                  </div>
+                </div>
+                {!isDefault ? (
+                  <div className="mt-auto flex items-center justify-end pt-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(p.id)}>
+                      Set as default
+                    </Button>
+                  </div>
+                ) : null}
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
       <Dialog
