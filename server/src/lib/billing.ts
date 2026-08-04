@@ -65,10 +65,4 @@ export async function shouldSnapshot(db: any, userId: string): Promise<boolean> 
   return plan !== 'free';
 }
 
-export async function checkApiCallLimit(db: any, userId: string): Promise<{ allowed: boolean; message?: string }> {
-  const { plan } = await getPlan(db, userId);
-  if (plan === 'free') return { allowed: false, message: 'API access requires a paid plan. Upgrade at /dashboard/billing.' };
-  return { allowed: true };
-}
-
 export { planLimits };

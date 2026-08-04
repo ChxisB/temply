@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { apiKeysTable, mails } from '@temply/shared/schema';
 import { createTestDb, givePlan, type TestDb } from '../test/helpers';
 import {
-  checkApiCallLimit,
   checkApiKeyLimit,
   checkTemplateLimit,
   getPlan,
@@ -134,18 +133,5 @@ describe('shouldSnapshot', () => {
   it('is on for paid users', async () => {
     await givePlan(db, 'user_1', 'pro');
     expect(await shouldSnapshot(db, 'user_1')).toBe(true);
-  });
-});
-
-describe('checkApiCallLimit', () => {
-  it('blocks free users from the public API', async () => {
-    const result = await checkApiCallLimit(db, 'user_1');
-    expect(result.allowed).toBe(false);
-    expect(result.message).toContain('paid plan');
-  });
-
-  it('allows paid users', async () => {
-    await givePlan(db, 'user_1', 'pro');
-    expect(await checkApiCallLimit(db, 'user_1')).toEqual({ allowed: true });
   });
 });

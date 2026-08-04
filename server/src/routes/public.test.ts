@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { apiKeysTable, mails } from '@temply/shared/schema';
 import { generateApiKey, generateShortCode } from '../lib/codes';
 import { createTestApp, createTestDb, givePlan, type TestDb } from '../test/helpers';
+import { recordApiCall } from '../lib/api-quota';
 import { publicRoutes } from './public';
 
 let db: TestDb;
@@ -73,13 +74,24 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
     expect(res.status).toBe(401);
   });
 
-  it('402s when the key belongs to a free user', async () => {
+  it('allows a free user and increments usage', async () => {
     const { fullKey } = await seedKey(OWNER);
     const shortCode = await seedTemplate(OWNER);
 
     const res = await fetchTemplate(shortCode, fullKey);
-    expect(res.status).toBe(402);
-    expect((await res.json()).message).toContain('paid plan');
+    expect(res.status).toBe(200);
+
+    const { getApiUsage } = await import('../lib/api-quota');
+    expect(await getApiUsage(db, OWNER)).toBe(1);
+  });
+
+  it('returns 429 when the monthly limit is reached and does not serve', async () => {
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER);
+    for (let i = 0; i < 10_000; i++) await recordApiCall(db, OWNER); // free limit
+
+    const res = await fetchTemplate(shortCode, fullKey);
+    expect(res.status).toBe(429);
   });
 
   it('404s for an unknown short code', async () => {
