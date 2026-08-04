@@ -15,9 +15,9 @@ export const publicRoutes = new Elysia()
     if (!key) return unauthorized('Invalid or revoked API key');
     const quota = await checkApiQuota(ctx.db, key.user_id);
     if (!quota.allowed) return json({ status: 429, message: quota.message!, errors: [quota.message!] }, 429);
-    await ctx.db.update(apiKeysTable).set({ last_used_at: new Date().toISOString() }).where(eq(apiKeysTable.id, key.id));
     const [template] = await ctx.db.select().from(mails).where(eq(mails.short_code, ctx.params.shortCode)).limit(1);
     if (!template) return notFound('Template not found');
+    await ctx.db.update(apiKeysTable).set({ last_used_at: new Date().toISOString() }).where(eq(apiKeysTable.id, key.id));
     await recordApiCall(ctx.db, key.user_id);
     return json({ id: template.id, shortCode: template.short_code, title: template.title, previewText: template.preview_text, updatedAt: template.updated_at });
   });

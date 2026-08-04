@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { apiKeysTable, mails } from '@temply/shared/schema';
+import { apiKeysTable, apiUsage, mails } from '@temply/shared/schema';
 import { generateApiKey, generateShortCode } from '../lib/codes';
 import { createTestApp, createTestDb, givePlan, type TestDb } from '../test/helpers';
-import { recordApiCall } from '../lib/api-quota';
 import { publicRoutes } from './public';
 
 let db: TestDb;
@@ -88,7 +87,8 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
   it('returns 429 when the monthly limit is reached and does not serve', async () => {
     const { fullKey } = await seedKey(OWNER);
     const shortCode = await seedTemplate(OWNER);
-    for (let i = 0; i < 10_000; i++) await recordApiCall(db, OWNER); // free limit
+    const { ukMonthString } = await import('../lib/api-quota');
+    await db.insert(apiUsage).values({ user_id: OWNER, period: ukMonthString(), count: 10_000 });
 
     const res = await fetchTemplate(shortCode, fullKey);
     expect(res.status).toBe(429);

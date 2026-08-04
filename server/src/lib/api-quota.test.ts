@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+import { apiUsage } from '@temply/shared/schema';
 import { createTestDb, givePlan, type TestDb } from '../test/helpers';
 import { checkApiQuota, getApiUsage, nextResetDate, recordApiCall, ukMonthString } from './api-quota';
 
@@ -33,21 +34,12 @@ describe('api usage', () => {
 });
 
 describe('checkApiQuota', () => {
-  it('blocks a free user at the limit (uses PLAN_LIMITS)', async () => {
-    // Free maxApiCalls is set to 10_000 in Task 2; this test is written to
-    // that number and will pass once Task 2 lands. To keep Task 1 green on
-    // its own, seed usage relative to the limit read at runtime.
+  it('blocks a free user once usage reaches the limit', async () => {
     const now = new Date('2026-03-03T10:00:00Z');
-    const first = await checkApiQuota(db, USER, now);
-    // Free's maxApiCalls is 0 today (Task 2 raises it to 10_000), so "at the
-    // limit" is already true with zero usage — seed relative to whatever the
-    // runtime limit is instead of assuming it's non-zero.
-    if (first.limit > 0) {
-      expect(first.allowed).toBe(true);
-      for (let i = 0; i < first.limit; i++) await recordApiCall(db, USER, now);
-    } else {
-      expect(first.allowed).toBe(false);
-    }
+    const before = await checkApiQuota(db, USER, now);
+    expect(before.allowed).toBe(true);
+    // Seed usage to exactly the plan limit rather than looping recordApiCall.
+    await db.insert(apiUsage).values({ user_id: USER, period: ukMonthString(now), count: before.limit });
     const blocked = await checkApiQuota(db, USER, now);
     expect(blocked.allowed).toBe(false);
     expect(blocked.remaining).toBe(0);
