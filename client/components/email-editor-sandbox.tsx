@@ -12,11 +12,12 @@ import {
   SaveIcon,
   SendIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
+import { createImageKitUploader } from '~/lib/imagekit-upload';
 import type { Mail } from '~/db/schema';
 import { CopyEmailHtml } from './copy-email-html';
 import { DeleteEmailDialog } from './delete-email-dialog';
@@ -133,6 +134,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         toast.error(error.message || 'Failed to delete template.');
       },
     });
+
+  const imageUploader = useMemo(() => createImageKitUploader(), []);
 
   const [editorContent, setEditorContent] = useState(() => {
     if (template?.content) {
@@ -367,6 +370,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         <EmailEditor
           autofocus={autofocus}
           defaultContent={editorContent}
+          onImageUpload={imageUploader}
           setEditor={setEditor}
         />
       </section>
