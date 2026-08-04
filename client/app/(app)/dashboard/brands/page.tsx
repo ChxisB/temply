@@ -52,6 +52,14 @@ export default function BrandsPage() {
   const [name, setName] = useState('');
   const [theme, setTheme] = useState<RendererThemeOptions>(() => structuredClone(BRAND_PRESETS[0].theme));
   const [preview, setPreview] = useState<{ name: string; theme: RendererThemeOptions } | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Keep the preview data mounted while the dialog plays its close animation —
+  // clearing it on close blanks the content a frame before the dialog leaves.
+  const openPreview = (name: string, theme: RendererThemeOptions) => {
+    setPreview({ name, theme });
+    setPreviewOpen(true);
+  };
 
   const { data, isLoading, isError, refetch } = useQuery(brandsQueryOptions());
 
@@ -159,7 +167,7 @@ export default function BrandsPage() {
             return (
               <Card
                 key={p.id}
-                onClick={() => setPreview({ name: p.name, theme: p.theme })}
+                onClick={() => openPreview(p.name, p.theme)}
                 className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -213,7 +221,7 @@ export default function BrandsPage() {
               return (
                 <Card
                   key={brand.id}
-                  onClick={() => setPreview({ name: brand.name, theme: brandTheme })}
+                  onClick={() => openPreview(brand.name, brandTheme)}
                   className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -324,7 +332,7 @@ export default function BrandsPage() {
       </Dialog>
 
       {/* Read-only look preview — the same email mock the editor shows. */}
-      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{preview?.name}</DialogTitle>
