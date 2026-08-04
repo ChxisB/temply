@@ -11,6 +11,7 @@ import { Select } from '~/components/ui/select';
 import { BrandKnobsControl } from '~/components/brand/brand-knobs';
 import { RawThemeFields } from '~/components/brand/raw-theme-fields';
 import { ThemeWarnings } from '~/components/theme-warnings';
+import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { brandsQueryOptions } from '~/lib/brands';
 import { cn } from '~/lib/classname';
 
@@ -43,13 +44,21 @@ export function TemplateThemePanel({
   onChange: (next: Theme) => void;
   className?: string;
 }) {
-  const { data: brands = [] } = useQuery(brandsQueryOptions());
+  const { data } = useQuery(brandsQueryOptions());
+  const brands = data?.brands ?? [];
   const [selectedBrandId, setSelectedBrandId] = useState('custom');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleBrandChange = (id: string) => {
     setSelectedBrandId(id);
     if (id === 'custom') return;
+    // Presets ship with the app; saved brands come from the API. Presets first —
+    // their ids ('classic', …) never collide with a saved brand's UUID.
+    const preset = BRAND_PRESETS.find((p) => p.id === id);
+    if (preset) {
+      onChange(structuredClone(preset.theme));
+      return;
+    }
     const brand = brands.find((b) => b.id === id);
     if (!brand) return;
     onChange(structuredClone(safeParse(brand.theme, theme)));
@@ -87,6 +96,7 @@ export function TemplateThemePanel({
             className="w-full"
             options={[
               { value: 'custom', label: 'Custom' },
+              ...BRAND_PRESETS.map((p) => ({ value: p.id, label: p.name })),
               ...brands.map((brand) => ({ value: brand.id, label: brand.name })),
             ]}
           />

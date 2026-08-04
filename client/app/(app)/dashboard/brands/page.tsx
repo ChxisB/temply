@@ -17,9 +17,22 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
+import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import { BrandEditor } from '~/components/brand/brand-editor';
 import { BrandPreview } from '~/components/brand/brand-preview';
 import { brandsQueryOptions, type Brand } from '~/lib/brands';
+
+/** The three colours that read a brand at a glance: page, button, link. */
+function Swatches({ theme }: { theme: RendererThemeOptions }) {
+  const colors = [theme.body?.backgroundColor, theme.button?.backgroundColor, theme.link?.color];
+  return (
+    <div className="flex items-center gap-1.5">
+      {colors.map((c, i) => (
+        <span key={i} className="size-5 rounded-sm border border-line" style={{ background: c }} />
+      ))}
+    </div>
+  );
+}
 
 /** A brand's theme comes back from the API as a raw string; a corrupted or
  *  hand-edited row should degrade to a default look instead of throwing
@@ -110,7 +123,9 @@ export default function BrandsPage() {
     setShowEditor(false);
   };
 
-  const brands = data ?? [];
+  const brands = data?.brands ?? [];
+  const limit = data?.limit ?? null;
+  const atLimit = limit !== null && brands.length >= limit;
   const isSaving = isCreating || isUpdating;
 
   return (
@@ -119,82 +134,100 @@ export default function BrandsPage() {
         title="Brands"
         description="Reusable looks you apply to templates."
         actions={
-          <Button variant="primary" onClick={openCreate}>
+          <Button variant="primary" disabled={atLimit} onClick={openCreate}>
             <PlusIcon />
             New brand
           </Button>
         }
       />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2Icon className="size-5 animate-spin text-faint" />
-        </div>
-      ) : isError ? (
-        <ErrorState
-          description="We could not load your brands."
-          onRetry={() => refetch()}
+      {atLimit ? (
+        <PlanLimitBanner
+          title={`You've used all ${limit} custom brand${limit === 1 ? '' : 's'} on your plan.`}
+          detail="Upgrade to save more."
         />
-      ) : brands.length === 0 ? (
-        <EmptyState
-          icon={PaletteIcon}
-          title="No brands yet"
-          description="Create a brand to reuse a look across templates."
-          action={<Button onClick={openCreate}>New brand</Button>}
-        />
-      ) : (
+      ) : null}
+
+      {/* Built-in looks — always available in the editor, not deletable. */}
+      <section className="space-y-2.5">
+        <h2 className="text-sm font-semibold text-ink">Presets</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {brands.map((brand) => {
-            const brandTheme = safeTheme(brand.theme);
-            return (
-              <Card key={brand.id} className="space-y-3">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="size-5 rounded-sm border border-line"
-                    style={{ background: brandTheme.body?.backgroundColor }}
-                  />
-                  <span
-                    className="size-5 rounded-sm border border-line"
-                    style={{ background: brandTheme.button?.backgroundColor }}
-                  />
-                  <span
-                    className="size-5 rounded-sm border border-line"
-                    style={{ background: brandTheme.link?.color }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium text-ink">{brand.name}</p>
-                  {brand.is_default === 1 ? <Badge tone="accent">Default</Badge> : null}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <Button size="sm" onClick={() => openEdit(brand)}>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger-quiet"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm('Delete this brand? Templates using it keep their own copy of the look.')) {
-                        deleteBrand(brand.id);
-                      }
-                    }}
-                  >
-                    <Trash2Icon />
-                    Delete
-                  </Button>
-                  {brand.is_default !== 1 ? (
-                    <Button size="sm" onClick={() => setDefaultBrand(brand.id)}>
-                      Set default
-                    </Button>
-                  ) : null}
-                </div>
-              </Card>
-            );
-          })}
+          {BRAND_PRESETS.map((p) => (
+            <Card key={p.id} className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <Swatches theme={p.theme} />
+                <Badge tone="neutral">Preset</Badge>
+              </div>
+              <p className="truncate text-sm font-medium text-ink">{p.name}</p>
+            </Card>
+          ))}
         </div>
-      )}
+      </section>
+
+      {/* The user's own saved brands. */}
+      <section className="space-y-2.5">
+        <h2 className="text-sm font-semibold text-ink">Your brands</h2>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2Icon className="size-5 animate-spin text-faint" />
+          </div>
+        ) : isError ? (
+          <ErrorState description="We could not load your brands." onRetry={() => refetch()} />
+        ) : brands.length === 0 ? (
+          <EmptyState
+            icon={PaletteIcon}
+            title="No custom brands yet"
+            description="Save a look — from a preset or your own colours — to reuse it across templates."
+            action={
+              <Button onClick={openCreate} disabled={atLimit}>
+                New brand
+              </Button>
+            }
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {brands.map((brand) => {
+              const brandTheme = safeTheme(brand.theme);
+              const isDefault = brand.is_default === 1;
+              return (
+                <Card key={brand.id} className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Swatches theme={brandTheme} />
+                    {isDefault ? <Badge tone="accent">Default</Badge> : null}
+                  </div>
+
+                  <p className="truncate text-sm font-medium text-ink">{brand.name}</p>
+
+                  <div className="flex flex-wrap items-center gap-1">
+                    <Button size="sm" onClick={() => openEdit(brand)}>
+                      Edit
+                    </Button>
+                    {!isDefault ? (
+                      <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>
+                        Set default
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="danger-quiet"
+                      size="sm"
+                      disabled={isDefault}
+                      title={isDefault ? 'Set another brand as default before deleting this one.' : undefined}
+                      onClick={() => {
+                        if (confirm('Delete this brand? Templates using it keep their own copy of the look.')) {
+                          deleteBrand(brand.id);
+                        }
+                      }}
+                    >
+                      <Trash2Icon />
+                      Delete
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <Dialog
         open={showEditor}
