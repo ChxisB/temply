@@ -73,6 +73,8 @@ export function Editor(props: EditorProps) {
     blocks = DEFAULT_SLASH_COMMANDS,
     editable = true,
     placeholderUrl = DEFAULT_PLACEHOLDER_URL,
+    onImageUpload,
+    allowedMimeTypes,
     scrollThreshold = 40,
     scrollMargin = 40,
   } = props;
@@ -123,6 +125,8 @@ export function Editor(props: EditorProps) {
     extensions: defaultExtensions({
       extensions,
       blocks,
+      onImageUpload,
+      allowedMimeTypes,
     }),
     content: formattedContent,
     autofocus,
