@@ -19,19 +19,26 @@ describe('POST /api/v1/brands', () => {
     expect((await make(OWNER)).status).toBe(200);
     expect((await make(OWNER, 'Second')).status).toBe(402);
   });
-  it('marks the very first brand as default', async () => {
+  it('does not auto-default a newly created brand', async () => {
     const { brand } = await (await make(OWNER)).json();
-    expect(brand.is_default).toBe(1);
+    expect(brand.is_default).toBe(0);
   });
 });
 
 describe('GET /api/v1/brands', () => {
-  it('lists only the caller’s brands', async () => {
+  it('lists only the caller’s brands and reports the plan cap', async () => {
     await givePlan(db, OWNER, 'pro'); await givePlan(db, OTHER, 'pro');
     await make(OWNER, 'Mine'); await make(OTHER, 'Theirs');
-    const { brands: list } = await (await get(app, '/api/v1/brands', OWNER)).json();
-    expect(list).toHaveLength(1);
-    expect(list[0].name).toBe('Mine');
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.brands).toHaveLength(1);
+    expect(body.brands[0].name).toBe('Mine');
+    expect(body.limit).toBe(5); // pro
+  });
+
+  it('reports null (unlimited) for enterprise', async () => {
+    await givePlan(db, OWNER, 'enterprise');
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.limit).toBeNull();
   });
 });
 
@@ -72,15 +79,27 @@ describe('DELETE /api/v1/brands/:id', () => {
     expect(rows).toHaveLength(1);
   });
 
-  it('promotes the newest remaining brand to default when the default is deleted', async () => {
+  it('deletes a non-default brand', async () => {
+    const { brand } = await (await make(OWNER)).json();
+    const res = await del(app, `/api/v1/brands/${brand.id}`, OWNER);
+    expect(res.status).toBe(200);
+    const rows = await db.select().from(brands).where(eq(brands.id, brand.id));
+    expect(rows).toHaveLength(0);
+  });
+
+  it('refuses to delete the default brand until another is made default', async () => {
     await givePlan(db, OWNER, 'pro');
-    const a = (await (await make(OWNER, 'A')).json()).brand; // first → default
+    const a = (await (await make(OWNER, 'A')).json()).brand;
     const b = (await (await make(OWNER, 'B')).json()).brand;
-    expect(a.is_default).toBe(1);
-    await del(app, `/api/v1/brands/${a.id}`, OWNER);
-    const rows = await db.select().from(brands).where(eq(brands.user_id, OWNER));
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe(b.id);
-    expect(rows[0].is_default).toBe(1);
+    await post(app, `/api/v1/brands/${a.id}/default`, {}, OWNER);
+    // a is default → blocked
+    const blocked = await del(app, `/api/v1/brands/${a.id}`, OWNER);
+    expect(blocked.status).toBe(400);
+    expect((await db.select().from(brands).where(eq(brands.id, a.id)))).toHaveLength(1);
+    // move default to b, then a deletes
+    await post(app, `/api/v1/brands/${b.id}/default`, {}, OWNER);
+    const ok = await del(app, `/api/v1/brands/${a.id}`, OWNER);
+    expect(ok.status).toBe(200);
+    expect((await db.select().from(brands).where(eq(brands.id, a.id)))).toHaveLength(0);
   });
 });
