@@ -20,7 +20,10 @@ export function extensions(props: ExtensionsProps) {
 
   const defaultExtensions = [
     TemplyKit,
-    ImageUploadExtension.configure({ onImageUpload, allowedMimeTypes }),
+    ImageUploadExtension.configure({
+      onImageUpload,
+      ...(allowedMimeTypes ? { allowedMimeTypes } : {}),
+    }),
     SlashCommandExtension.configure({
       suggestion: getSlashCommandSuggestions(blocks),
     }),
