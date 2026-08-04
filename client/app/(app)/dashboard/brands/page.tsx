@@ -126,6 +126,7 @@ export default function BrandsPage() {
 
   const brands = data?.brands ?? [];
   const limit = data?.limit ?? null;
+  const defaultBrandId = data?.defaultBrandId ?? null;
   const atLimit = limit !== null && brands.length >= limit;
   const isSaving = isCreating || isUpdating;
 
@@ -153,19 +154,29 @@ export default function BrandsPage() {
       <section className="space-y-2.5">
         <h2 className="text-sm font-semibold text-ink">Presets</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {BRAND_PRESETS.map((p) => (
-            <Card
-              key={p.id}
-              onClick={() => setPreview({ name: p.name, theme: p.theme })}
-              className="cursor-pointer space-y-3 transition-colors hover:border-line-strong"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <Swatches theme={p.theme} />
-                <Badge tone="neutral">Preset</Badge>
-              </div>
-              <p className="truncate text-sm font-medium text-ink">{p.name}</p>
-            </Card>
-          ))}
+          {BRAND_PRESETS.map((p) => {
+            const isDefault = p.id === defaultBrandId;
+            return (
+              <Card
+                key={p.id}
+                onClick={() => setPreview({ name: p.name, theme: p.theme })}
+                className="cursor-pointer space-y-3 transition-colors hover:border-line-strong"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Swatches theme={p.theme} />
+                  {isDefault ? <Badge tone="accent">Default</Badge> : <Badge tone="neutral">Preset</Badge>}
+                </div>
+                <p className="truncate text-sm font-medium text-ink">{p.name}</p>
+                {!isDefault ? (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(p.id)}>
+                      Set as default
+                    </Button>
+                  </div>
+                ) : null}
+              </Card>
+            );
+          })}
         </div>
       </section>
 
@@ -193,7 +204,7 @@ export default function BrandsPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {brands.map((brand) => {
               const brandTheme = safeTheme(brand.theme);
-              const isDefault = brand.is_default === 1;
+              const isDefault = brand.id === defaultBrandId;
               return (
                 <Card
                   key={brand.id}
@@ -220,10 +231,11 @@ export default function BrandsPage() {
                     <Button
                       variant="danger-quiet"
                       size="sm"
-                      disabled={isDefault}
-                      title={isDefault ? 'Set another brand as default before deleting this one.' : undefined}
                       onClick={() => {
-                        if (confirm('Delete this brand? Templates using it keep their own copy of the look.')) {
+                        const msg = isDefault
+                          ? 'Delete this brand? It’s your default — the default will move to another brand or a preset.'
+                          : 'Delete this brand? Templates using it keep their own copy of the look.';
+                        if (confirm(msg)) {
                           deleteBrand(brand.id);
                         }
                       }}

@@ -86,3 +86,13 @@ export const brands = sqliteTable('brands', {
 
 export type Brand = typeof brands.$inferSelect;
 export type NewBrand = typeof brands.$inferInsert;
+
+/** One row per user. `default_brand_id` points at the user's default look — a
+ *  preset id (e.g. 'classic') or a custom brand id. Presets are not rows, so
+ *  the default cannot live on the brands table. */
+export const userPrefs = sqliteTable('user_prefs', {
+  user_id: text('user_id').primaryKey(),
+  default_brand_id: text('default_brand_id'),
+});
+
+export type UserPrefs = typeof userPrefs.$inferSelect;

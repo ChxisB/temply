@@ -37,6 +37,14 @@ export function initTables(sqlite: Database) {
     theme TEXT NOT NULL, is_default INTEGER NOT NULL DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
   )`);
+  // The default look is a preset id or a custom brand id, so it can't live on
+  // the brands table (presets are not rows).
+  sqlite.run(`CREATE TABLE IF NOT EXISTS user_prefs (
+    user_id TEXT PRIMARY KEY, default_brand_id TEXT
+  )`);
+  // Carry over any pre-existing default from the old is_default column.
+  sqlite.run(`INSERT OR IGNORE INTO user_prefs (user_id, default_brand_id)
+    SELECT user_id, id FROM brands WHERE is_default = 1`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
 

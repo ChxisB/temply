@@ -40,17 +40,40 @@ describe('GET /api/v1/brands', () => {
     const body = await (await get(app, '/api/v1/brands', OWNER)).json();
     expect(body.limit).toBeNull();
   });
+
+  it('has no default until one is chosen', async () => {
+    await make(OWNER);
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.defaultBrandId).toBeNull();
+  });
 });
+
+const defaultOf = async (userId: string) =>
+  (await (await get(app, '/api/v1/brands', userId)).json()).defaultBrandId;
 
 describe('POST /api/v1/brands/:id/default', () => {
   it('moves default to the chosen brand', async () => {
     await givePlan(db, OWNER, 'pro');
-    const a = (await (await make(OWNER, 'A')).json()).brand;
+    await make(OWNER, 'A');
     const b = (await (await make(OWNER, 'B')).json()).brand;
     await post(app, `/api/v1/brands/${b.id}/default`, {}, OWNER);
-    const rows = await db.select().from(brands).where(eq(brands.user_id, OWNER));
-    expect(rows.find((r: any) => r.id === b.id)!.is_default).toBe(1);
-    expect(rows.find((r: any) => r.id === a.id)!.is_default).toBe(0);
+    expect(await defaultOf(OWNER)).toBe(b.id);
+  });
+
+  it('accepts a preset id as the default', async () => {
+    await post(app, '/api/v1/brands/classic/default', {}, OWNER);
+    expect(await defaultOf(OWNER)).toBe('classic');
+  });
+
+  it('404s for an unknown id that is neither a preset nor an owned brand', async () => {
+    const res = await post(app, '/api/v1/brands/nope/default', {}, OWNER);
+    expect(res.status).toBe(404);
+  });
+
+  it('will not default another user’s brand', async () => {
+    const { brand } = await (await make(OTHER)).json();
+    const res = await post(app, `/api/v1/brands/${brand.id}/default`, {}, OWNER);
+    expect(res.status).toBe(404);
   });
 });
 
@@ -87,19 +110,34 @@ describe('DELETE /api/v1/brands/:id', () => {
     expect(rows).toHaveLength(0);
   });
 
-  it('refuses to delete the default brand until another is made default', async () => {
+  it('deletes the default brand and hands the default to the next custom brand', async () => {
     await givePlan(db, OWNER, 'pro');
     const a = (await (await make(OWNER, 'A')).json()).brand;
     const b = (await (await make(OWNER, 'B')).json()).brand;
     await post(app, `/api/v1/brands/${a.id}/default`, {}, OWNER);
-    // a is default → blocked
-    const blocked = await del(app, `/api/v1/brands/${a.id}`, OWNER);
-    expect(blocked.status).toBe(400);
-    expect((await db.select().from(brands).where(eq(brands.id, a.id)))).toHaveLength(1);
-    // move default to b, then a deletes
-    await post(app, `/api/v1/brands/${b.id}/default`, {}, OWNER);
-    const ok = await del(app, `/api/v1/brands/${a.id}`, OWNER);
-    expect(ok.status).toBe(200);
+    const res = await del(app, `/api/v1/brands/${a.id}`, OWNER);
+    expect(res.status).toBe(200);
     expect((await db.select().from(brands).where(eq(brands.id, a.id)))).toHaveLength(0);
+    // b is the only custom brand left, so it inherits the default.
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.defaultBrandId).toBe(b.id);
+  });
+
+  it('falls back to a preset when the last custom brand (the default) is deleted', async () => {
+    const a = (await (await make(OWNER, 'Only')).json()).brand;
+    await post(app, `/api/v1/brands/${a.id}/default`, {}, OWNER);
+    await del(app, `/api/v1/brands/${a.id}`, OWNER);
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.defaultBrandId).toBe('classic'); // first preset
+  });
+
+  it('leaves the default untouched when a non-default brand is deleted', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const a = (await (await make(OWNER, 'A')).json()).brand;
+    const b = (await (await make(OWNER, 'B')).json()).brand;
+    await post(app, `/api/v1/brands/${a.id}/default`, {}, OWNER);
+    await del(app, `/api/v1/brands/${b.id}`, OWNER);
+    const body = await (await get(app, '/api/v1/brands', OWNER)).json();
+    expect(body.defaultBrandId).toBe(a.id);
   });
 });
