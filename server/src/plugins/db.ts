@@ -32,6 +32,10 @@ export function initTables(sqlite: Database) {
     user_id TEXT NOT NULL, usage_date TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, usage_date)
   )`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS api_usage (
+    user_id TEXT NOT NULL, period TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, period)
+  )`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
 }

@@ -75,3 +75,17 @@ export const sendUsage = sqliteTable(
 
 export type SendUsage = typeof sendUsage.$inferSelect;
 export type NewSendUsage = typeof sendUsage.$inferInsert;
+
+/** One row per user per UK calendar month. Counts successful public API
+ *  template fetches. */
+export const apiUsage = sqliteTable(
+  'api_usage',
+  {
+    user_id: text('user_id').notNull(),
+    period: text('period').notNull(), // "YYYY-MM" in Europe/London
+    count: integer('count').notNull().default(0),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.user_id, t.period] }) }),
+);
+
+export type ApiUsage = typeof apiUsage.$inferSelect;
