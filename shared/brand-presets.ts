@@ -26,4 +26,3 @@ export const BRAND_PRESETS: { id: string; name: string; theme: RendererThemeOpti
   { id: 'slate', name: 'Slate', theme: preset({ page: '#F1F5F5', card: '#FFFFFF', text: '#1F2937', button: '#0F766E', link: '#0F766E', radius: '8px', cardPad: '28px', topPad: '32px' }) },
 ];
 
-export const DEFAULT_PRESET_ID = 'classic';

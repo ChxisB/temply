@@ -71,4 +71,16 @@ describe('DELETE /api/v1/brands/:id', () => {
     const rows = await db.select().from(brands).where(eq(brands.id, brand.id));
     expect(rows).toHaveLength(1);
   });
+
+  it('promotes the newest remaining brand to default when the default is deleted', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const a = (await (await make(OWNER, 'A')).json()).brand; // first → default
+    const b = (await (await make(OWNER, 'B')).json()).brand;
+    expect(a.is_default).toBe(1);
+    await del(app, `/api/v1/brands/${a.id}`, OWNER);
+    const rows = await db.select().from(brands).where(eq(brands.user_id, OWNER));
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(b.id);
+    expect(rows[0].is_default).toBe(1);
+  });
 });

@@ -37,7 +37,14 @@ export const brandsRoutes = new Elysia()
 
   .delete('/api/v1/brands/:id', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();
+    const [target] = await ctx.db.select().from(brands)
+      .where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId))).limit(1);
     await ctx.db.delete(brands).where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId)));
+    if (target?.is_default) {
+      const [next] = await ctx.db.select({ id: brands.id }).from(brands)
+        .where(eq(brands.user_id, ctx.userId)).orderBy(desc(brands.created_at)).limit(1);
+      if (next) await ctx.db.update(brands).set({ is_default: 1 }).where(eq(brands.id, next.id));
+    }
     return json({ status: 'ok' });
   })
 

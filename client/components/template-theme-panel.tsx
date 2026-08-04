@@ -55,6 +55,11 @@ export function TemplateThemePanel({
     onChange(structuredClone(safeParse(brand.theme, theme)));
   };
 
+  const handleEdit = (next: Theme) => {
+    setSelectedBrandId('custom');
+    onChange(next);
+  };
+
   return (
     <section className={cn('rounded-lg border border-line bg-raised', className)}>
       <header className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2">
@@ -65,7 +70,7 @@ export function TemplateThemePanel({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onChange(structuredClone(DEFAULT_RENDERER_THEME))}
+          onClick={() => handleEdit(structuredClone(DEFAULT_RENDERER_THEME))}
         >
           <RotateCcwIcon />
           Reset
@@ -89,7 +94,7 @@ export function TemplateThemePanel({
 
         <BrandKnobsControl
           value={knobsFromTheme(theme)}
-          onChange={(knobs) => onChange(applyKnobs(theme, knobs))}
+          onChange={(knobs) => handleEdit(applyKnobs(theme, knobs))}
         />
 
         <div>
@@ -102,7 +107,7 @@ export function TemplateThemePanel({
           </button>
           {showAdvanced && (
             <div className="mt-3">
-              <RawThemeFields theme={theme} onChange={onChange} />
+              <RawThemeFields theme={theme} onChange={handleEdit} />
             </div>
           )}
         </div>
