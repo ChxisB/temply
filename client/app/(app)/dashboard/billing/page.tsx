@@ -36,10 +36,10 @@ const plans = [
     price: '$0',
     period: '/month',
     features: [
-      { text: '3 templates', included: true },
-      { text: 'API keys', included: false },
+      { text: '2 templates', included: true },
+      { text: '1 API key', included: true },
+      { text: '10,000 API calls/month', included: true },
       { text: 'Version history', included: false },
-      { text: 'API access', included: false },
     ],
   },
   {
@@ -48,22 +48,22 @@ const plans = [
     price: '$12',
     period: '/month',
     features: [
-      { text: 'Unlimited templates', included: true },
+      { text: '10 templates', included: true },
       { text: '5 API keys', included: true },
+      { text: '50,000 API calls/month', included: true },
       { text: '10 versions per template', included: true },
-      { text: '10k API calls/month', included: true },
     ],
   },
   {
     id: 'enterprise' as const,
     name: 'Enterprise',
-    price: '$29',
-    period: '/month',
+    price: "Let's talk",
+    period: '',
     features: [
       { text: 'Unlimited templates', included: true },
       { text: 'Unlimited API keys', included: true },
+      { text: 'Custom API volume', included: true },
       { text: '25 versions per template', included: true },
-      { text: '100k API calls/month', included: true },
     ],
   },
 ];
@@ -86,7 +86,7 @@ function BillingContent() {
   });
 
   const { mutateAsync: createCheckout, isPending: isCheckoutLoading } = useMutation({
-    mutationFn: (plan: 'pro' | 'enterprise') =>
+    mutationFn: (plan: 'pro') =>
       httpPost<CheckoutResponse>('/api/v1/billing/checkout', { plan }),
     onSuccess: (data) => {
       window.location.href = data.url;
@@ -206,11 +206,15 @@ function BillingContent() {
                       {isPortalLoading ? <Loader2Icon className="animate-spin" /> : null}
                       {isDowngrade ? 'Downgrade' : 'Switch plan'}
                     </Button>
+                  ) : p.id === 'enterprise' ? (
+                    <Button variant="primary" className="w-full" asChild>
+                      <a href="mailto:sales@temply.app?subject=Temply%20Enterprise">Contact sales</a>
+                    </Button>
                   ) : (
                     <Button
                       variant="primary"
                       className="w-full"
-                      onClick={() => createCheckout(p.id as 'pro' | 'enterprise')}
+                      onClick={() => createCheckout(p.id as 'pro')}
                       disabled={isCheckoutLoading}
                     >
                       {isCheckoutLoading ? <Loader2Icon className="animate-spin" /> : null}
