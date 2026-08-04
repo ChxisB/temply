@@ -18,7 +18,6 @@ mock.module('resend', () => ({
 
 const { emailsRoutes } = await import('./emails');
 const { createTestApp, createTestDb, givePlan, post } = await import('../test/helpers');
-const { getEmailUsage } = await import('../lib/quota');
 
 let db: TestDb;
 let app: any;
@@ -43,14 +42,13 @@ describe('POST /api/v1/emails/send', () => {
     expect(res.status).toBe(401);
   });
 
-  it('sends from the Temply address with the display name and records usage', async () => {
+  it('sends from the Temply address with the display name', async () => {
     const res = await post(app, '/api/v1/emails/send', body({ fromName: 'Acme', replyTo: 'me@acme.com' }), USER);
     expect(res.status).toBe(200);
     expect(sent).toHaveLength(1);
     expect(sent[0].from).toBe('Acme via Temply <send@temply.app>');
     expect(sent[0].replyTo).toBe('me@acme.com');
     expect(sent[0].to).toEqual(['a@example.com']);
-    expect(await getEmailUsage(db, USER)).toBe(1);
   });
 
   it('sanitizes a hostile display name before it reaches the From header', async () => {
@@ -68,18 +66,14 @@ describe('POST /api/v1/emails/send', () => {
     expect(sent[0].from.split(' via Temply <')[0]).not.toContain('<');
   });
 
-  it('charges one quota per recipient', async () => {
-    await post(app, '/api/v1/emails/send', body({ to: 'a@x.com, b@x.com, c@x.com' }), USER);
-    expect(await getEmailUsage(db, USER)).toBe(3);
-  });
-
-  it('blocks the whole send when it would exceed the free limit and does not call Resend', async () => {
-    // Free limit is 30. Pre-load 29, then try to send to 2.
-    const { recordEmailSend } = await import('../lib/quota');
-    await recordEmailSend(db, USER, 29);
-    const res = await post(app, '/api/v1/emails/send', body({ to: 'a@x.com, b@x.com' }), USER);
-    expect(res.status).toBe(402);
-    expect(sent).toHaveLength(0);
-    expect(await getEmailUsage(db, USER)).toBe(29);
+  it('rate-limits after 20 sends in the hour', async () => {
+    // Use a dedicated user so this test's exact 20/21 counts aren't skewed by
+    // the sends the other tests above already made for USER in this file's
+    // shared, module-level rate limiter.
+    const rateLimitUser = 'user_ratelimit';
+    for (let i = 0; i < 20; i++) {
+      expect((await post(app, '/api/v1/emails/send', body(), rateLimitUser)).status).toBe(200);
+    }
+    expect((await post(app, '/api/v1/emails/send', body(), rateLimitUser)).status).toBe(429);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import type { Editor, FocusPosition } from '@tiptap/core';
 import {
   CheckIcon,
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
 import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
@@ -23,15 +22,6 @@ import { CopyEmailHtml } from './copy-email-html';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { PreviewEmailDialog } from './preview-email-dialog';
-import { Button } from './ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -71,7 +61,6 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const { template, showSaveButton = true, autofocus } = props;
 
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [subject, setSubject] = useState(template?.title || '');
   const [previewText, setPreviewText] = useState(template?.preview_text || '');
@@ -81,7 +70,6 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [showReplyTo, setShowReplyTo] = useState(false);
   const [replyTo, setReplyTo] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [theme, setTheme] = useState<RendererThemeOptions>(() => {
     if (template?.theme) {
       try {
@@ -173,13 +161,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         content,
       });
       toast.success('Email sent.');
-      queryClient.invalidateQueries({ queryKey: ['quota'] });
     } catch (error: any) {
-      // 402 is the daily-limit signal — offer the upgrade path instead of a toast.
-      if (error?.status === 402) {
-        setQuotaBlocked(true);
-        return;
-      }
       toast.error(error?.message || 'Could not send the email.');
     }
   };
@@ -375,23 +357,6 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           setEditor={setEditor}
         />
       </section>
-
-      <Dialog open={quotaBlocked} onOpenChange={setQuotaBlocked}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Daily send limit reached</DialogTitle>
-            <DialogDescription>
-              You&apos;ve used today&apos;s email allowance. It resets at midnight UK time. Upgrade for a higher daily limit.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setQuotaBlocked(false)}>Not now</Button>
-            <Button variant="primary" asChild>
-              <Link href="/dashboard/billing">See plans</Link>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
