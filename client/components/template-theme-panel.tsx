@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
-import { PaletteIcon, RotateCcwIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Select } from '~/components/ui/select';
@@ -111,9 +111,10 @@ export function TemplateThemePanel({
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="text-xs font-medium text-faint transition-colors hover:text-muted"
+            className="flex items-center gap-1 text-xs font-medium text-faint transition-colors hover:text-muted [&_svg]:size-3.5"
           >
-            {showAdvanced ? '— Hide advanced' : '+ Advanced'}
+            {showAdvanced ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            {showAdvanced ? 'Hide advanced' : 'Advanced'}
           </button>
           {showAdvanced && (
             <div className="mt-3">

@@ -51,6 +51,7 @@ export default function BrandsPage() {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [name, setName] = useState('');
   const [theme, setTheme] = useState<RendererThemeOptions>(() => structuredClone(BRAND_PRESETS[0].theme));
+  const [preview, setPreview] = useState<{ name: string; theme: RendererThemeOptions } | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery(brandsQueryOptions());
 
@@ -153,7 +154,11 @@ export default function BrandsPage() {
         <h2 className="text-sm font-semibold text-ink">Presets</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {BRAND_PRESETS.map((p) => (
-            <Card key={p.id} className="space-y-3">
+            <Card
+              key={p.id}
+              onClick={() => setPreview({ name: p.name, theme: p.theme })}
+              className="cursor-pointer space-y-3 transition-colors hover:border-line-strong"
+            >
               <div className="flex items-center justify-between gap-2">
                 <Swatches theme={p.theme} />
                 <Badge tone="neutral">Preset</Badge>
@@ -190,7 +195,11 @@ export default function BrandsPage() {
               const brandTheme = safeTheme(brand.theme);
               const isDefault = brand.is_default === 1;
               return (
-                <Card key={brand.id} className="space-y-3">
+                <Card
+                  key={brand.id}
+                  onClick={() => setPreview({ name: brand.name, theme: brandTheme })}
+                  className="cursor-pointer space-y-3 transition-colors hover:border-line-strong"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <Swatches theme={brandTheme} />
                     {isDefault ? <Badge tone="accent">Default</Badge> : null}
@@ -198,13 +207,14 @@ export default function BrandsPage() {
 
                   <p className="truncate text-sm font-medium text-ink">{brand.name}</p>
 
-                  <div className="flex flex-wrap items-center gap-1">
+                  {/* The card opens a preview; its action buttons must not. */}
+                  <div className="flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button size="sm" onClick={() => openEdit(brand)}>
                       Edit
                     </Button>
                     {!isDefault ? (
-                      <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>
-                        Set default
+                      <Button variant="secondary" size="sm" onClick={() => setDefaultBrand(brand.id)}>
+                        Set as default
                       </Button>
                     ) : null}
                     <Button
@@ -287,6 +297,17 @@ export default function BrandsPage() {
               Save
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Read-only look preview — the same email mock the editor shows. */}
+      <Dialog open={!!preview} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className="max-h-[85vh] max-w-md overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{preview?.name}</DialogTitle>
+            <DialogDescription>How an email looks with this brand.</DialogDescription>
+          </DialogHeader>
+          {preview ? <BrandPreview theme={preview.theme} /> : null}
         </DialogContent>
       </Dialog>
     </div>

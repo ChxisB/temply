@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
@@ -25,7 +26,8 @@ export function BrandEditor({ theme, onChange }: { theme: RendererThemeOptions; 
       </div>
       <BrandKnobsControl value={knobs} onChange={(k) => onChange(applyKnobs(theme, k))} />
       <div>
-        <button type="button" onClick={() => setAdvanced((v) => !v)} className="text-xs text-muted underline-offset-4 hover:text-ink hover:underline">
+        <button type="button" onClick={() => setAdvanced((v) => !v)} className="flex items-center gap-1 text-xs text-muted hover:text-ink [&_svg]:size-3.5">
+          {advanced ? <ChevronUpIcon /> : <ChevronDownIcon />}
           {advanced ? 'Hide advanced' : 'Advanced'}
         </button>
         {advanced ? <div className="mt-3"><RawThemeFields theme={theme} onChange={onChange} /></div> : null}
