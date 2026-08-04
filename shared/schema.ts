@@ -72,3 +72,17 @@ export const apiUsage = sqliteTable(
 );
 
 export type ApiUsage = typeof apiUsage.$inferSelect;
+
+export const brands = sqliteTable('brands', {
+  id: text('id').primaryKey(),
+  user_id: text('user_id').notNull(),
+  name: text('name').notNull(),
+  /** Serialised RendererThemeOptions. */
+  theme: text('theme').notNull(),
+  is_default: integer('is_default').notNull().default(0),
+  created_at: text('created_at'),
+  updated_at: text('updated_at'),
+});
+
+export type Brand = typeof brands.$inferSelect;
+export type NewBrand = typeof brands.$inferInsert;

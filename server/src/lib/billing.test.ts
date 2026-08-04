@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { apiKeysTable, mails } from '@temply/shared/schema';
+import { apiKeysTable, brands, mails } from '@temply/shared/schema';
 import { createTestDb, givePlan, type TestDb } from '../test/helpers';
 import {
   checkApiKeyLimit,
+  checkBrandLimit,
   checkTemplateLimit,
   getPlan,
   getUsage,
@@ -122,6 +123,24 @@ describe('checkApiKeyLimit', () => {
     await givePlan(db, 'user_1', 'enterprise');
     await addApiKeys('user_1', planLimits.pro.maxApiKeys + 20);
     expect(await checkApiKeyLimit(db, 'user_1')).toEqual({ allowed: true });
+  });
+});
+
+describe('checkBrandLimit', () => {
+  it('blocks a free user at 1 brand', async () => {
+    const db = createTestDb();
+    expect((await checkBrandLimit(db, 'u')).allowed).toBe(true);
+    await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', name: 'B1', theme: '{}' });
+    const res = await checkBrandLimit(db, 'u');
+    expect(res.allowed).toBe(false);
+    expect(res.message).toContain('Upgrade');
+  });
+
+  it('lets a pro user reach 5', async () => {
+    const db = createTestDb();
+    await givePlan(db, 'u', 'pro');
+    for (let i = 0; i < 5; i++) await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', name: `B${i}`, theme: '{}' });
+    expect((await checkBrandLimit(db, 'u')).allowed).toBe(false);
   });
 });
 

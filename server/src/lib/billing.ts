@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { eq, sql } from 'drizzle-orm';
-import { subscriptions, mails, apiKeysTable } from '@temply/shared/schema';
+import { subscriptions, mails, apiKeysTable, brands } from '@temply/shared/schema';
 import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
 
 
@@ -56,6 +56,17 @@ export async function checkApiKeyLimit(db: any, userId: string): Promise<{ allow
   const usage = await getUsage(db, userId);
   if (usage.apiKeys >= limits.maxApiKeys) {
     return { allowed: false, message: `You can only create ${limits.maxApiKeys} API keys on your current plan. Upgrade for more.` };
+  }
+  return { allowed: true };
+}
+
+export async function checkBrandLimit(db: any, userId: string): Promise<{ allowed: boolean; message?: string }> {
+  const { plan } = await getPlan(db, userId);
+  const limit = planLimits[plan].maxBrands;
+  if (!Number.isFinite(limit)) return { allowed: true };
+  const [row] = await db.select({ count: sql<number>`count(*)` }).from(brands).where(eq(brands.user_id, userId));
+  if ((row?.count ?? 0) >= limit) {
+    return { allowed: false, message: `You can save ${limit} brand${limit === 1 ? '' : 's'} on your current plan. Upgrade for more.` };
   }
   return { allowed: true };
 }
