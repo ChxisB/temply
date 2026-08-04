@@ -18,6 +18,7 @@ import {
 } from '~/components/ui/dialog';
 import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { BrandEditor } from '~/components/brand/brand-editor';
+import { BrandPreview } from '~/components/brand/brand-preview';
 import { brandsQueryOptions, type Brand } from '~/lib/brands';
 
 /** A brand's theme comes back from the API as a raw string; a corrupted or
@@ -205,7 +206,7 @@ export default function BrandsPage() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingBrand ? 'Edit brand' : 'Create brand'}</DialogTitle>
             <DialogDescription>
@@ -213,22 +214,29 @@ export default function BrandsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label htmlFor="brand-name" className="block text-sm font-medium text-ink">
-                Brand name
-              </label>
-              <input
-                id="brand-name"
-                className="h-8 w-full rounded-sm border border-line bg-raised px-2.5 text-sm text-ink placeholder:text-faint"
-                placeholder="Acme"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
+          <div className="grid gap-5 sm:grid-cols-[300px_minmax(0,1fr)]">
+            {/* Live-ish preview on the left; controls on the right. */}
+            <div className="sm:sticky sm:top-0 sm:self-start">
+              <BrandPreview theme={theme} />
             </div>
 
-            <BrandEditor theme={theme} onChange={setTheme} />
+            <div className="min-w-0 space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="brand-name" className="block text-sm font-medium text-ink">
+                  Brand name
+                </label>
+                <input
+                  id="brand-name"
+                  className="h-8 w-full rounded-sm border border-line bg-raised px-2.5 text-sm text-ink placeholder:text-faint"
+                  placeholder="Acme"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <BrandEditor theme={theme} onChange={setTheme} />
+            </div>
           </div>
 
           <DialogFooter>

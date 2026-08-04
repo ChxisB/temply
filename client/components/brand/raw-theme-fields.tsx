@@ -22,19 +22,19 @@ function ColorField({
   const id = `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="space-y-1">
       <label htmlFor={id} className={SWATCH_LABEL}>
         {label}
       </label>
       <div className="flex items-center gap-1.5">
-        <span className="font-mono text-2xs text-faint uppercase">{current}</span>
         <input
           id={id}
           type="color"
           value={current}
           onChange={(event) => onChange(event.target.value.toUpperCase())}
-          className="size-6 cursor-pointer rounded-xs border border-line bg-raised p-0.5"
+          className="size-6 shrink-0 cursor-pointer rounded-xs border border-line bg-raised p-0.5"
         />
+        <span className="font-mono text-2xs text-faint uppercase">{current}</span>
       </div>
     </div>
   );
@@ -55,7 +55,7 @@ function NumberField({
   const id = `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="space-y-1">
       <label htmlFor={id} className={SWATCH_LABEL}>
         {label}
       </label>
@@ -67,7 +67,7 @@ function NumberField({
           max={120}
           value={Number.isNaN(current) ? 0 : current}
           onChange={(event) => onChange(`${event.target.value || 0}px`)}
-          className="h-7 w-14 rounded-xs border border-line bg-raised px-1.5 text-right text-sm tabular-nums text-ink"
+          className="h-7 w-16 rounded-xs border border-line bg-raised px-1.5 text-right text-sm tabular-nums text-ink"
         />
         <span className="text-2xs text-faint">px</span>
       </div>

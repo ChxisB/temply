@@ -23,7 +23,7 @@ export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onCh
         <div className="flex gap-1">
           {CORNERS.map((c) => (
             <button key={c.v} type="button" onClick={() => onChange({ ...value, corner: c.v })}
-              className={`h-8 flex-1 rounded-sm border text-xs ${value.corner === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
+              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${value.corner === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
           ))}
         </div>
       </div>
@@ -32,7 +32,7 @@ export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onCh
         <div className="flex gap-1">
           {DENSITIES.map((c) => (
             <button key={c.v} type="button" onClick={() => onChange({ ...value, density: c.v })}
-              className={`h-8 flex-1 rounded-sm border text-xs ${value.density === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
+              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${value.density === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
           ))}
         </div>
       </div>
