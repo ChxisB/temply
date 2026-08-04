@@ -1,11 +1,17 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
+import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
 import { PaletteIcon, RotateCcwIcon } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '~/components/ui/button';
+import { Select } from '~/components/ui/select';
+import { BrandKnobsControl } from '~/components/brand/brand-knobs';
 import { RawThemeFields } from '~/components/brand/raw-theme-fields';
 import { ThemeWarnings } from '~/components/theme-warnings';
+import { brandsQueryOptions } from '~/lib/brands';
 import { cn } from '~/lib/classname';
 
 /**
@@ -19,6 +25,15 @@ import { cn } from '~/lib/classname';
 
 type Theme = RendererThemeOptions;
 
+/** Parses a stored brand theme, falling back to the current theme if it's malformed. */
+function safeParse(raw: string, fallback: Theme): Theme {
+  try {
+    return JSON.parse(raw) as Theme;
+  } catch {
+    return fallback;
+  }
+}
+
 export function TemplateThemePanel({
   theme,
   onChange,
@@ -28,6 +43,18 @@ export function TemplateThemePanel({
   onChange: (next: Theme) => void;
   className?: string;
 }) {
+  const { data: brands = [] } = useQuery(brandsQueryOptions());
+  const [selectedBrandId, setSelectedBrandId] = useState('custom');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const handleBrandChange = (id: string) => {
+    setSelectedBrandId(id);
+    if (id === 'custom') return;
+    const brand = brands.find((b) => b.id === id);
+    if (!brand) return;
+    onChange(structuredClone(safeParse(brand.theme, theme)));
+  };
+
   return (
     <section className={cn('rounded-lg border border-line bg-raised', className)}>
       <header className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2">
@@ -45,8 +72,40 @@ export function TemplateThemePanel({
         </Button>
       </header>
 
-      <div className="p-3.5">
-        <RawThemeFields theme={theme} onChange={onChange} />
+      <div className="space-y-4 p-3.5">
+        <div className="space-y-1.5">
+          <span className="block text-xs font-medium text-ink">Brand</span>
+          <Select
+            label="Brand"
+            value={selectedBrandId}
+            onValueChange={handleBrandChange}
+            className="w-full"
+            options={[
+              { value: 'custom', label: 'Custom' },
+              ...brands.map((brand) => ({ value: brand.id, label: brand.name })),
+            ]}
+          />
+        </div>
+
+        <BrandKnobsControl
+          value={knobsFromTheme(theme)}
+          onChange={(knobs) => onChange(applyKnobs(theme, knobs))}
+        />
+
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="text-xs font-medium text-faint transition-colors hover:text-muted"
+          >
+            {showAdvanced ? '— Hide advanced' : '+ Advanced'}
+          </button>
+          {showAdvanced && (
+            <div className="mt-3">
+              <RawThemeFields theme={theme} onChange={onChange} />
+            </div>
+          )}
+        </div>
       </div>
 
       <ThemeWarnings theme={theme} />
