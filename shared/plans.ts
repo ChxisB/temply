@@ -12,15 +12,14 @@ export interface PlanLimits {
   maxApiKeys: number;
   maxVersions: number;
   maxApiCalls: number;
-  maxEmailsPerDay: number;
 }
 
 /** `Infinity` means unlimited. It does not survive JSON, so anything sending
  *  limits over the wire must map it — see `serialiseLimits`. */
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free: { maxTemplates: 2, maxApiKeys: 1, maxVersions: 0, maxApiCalls: 10_000, maxEmailsPerDay: 30 },
-  pro: { maxTemplates: 10, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 50_000, maxEmailsPerDay: 500 },
-  enterprise: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: Infinity, maxEmailsPerDay: 2000 },
+  free: { maxTemplates: 2, maxApiKeys: 1, maxVersions: 0, maxApiCalls: 10_000 },
+  pro: { maxTemplates: 10, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 50_000 },
+  enterprise: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: Infinity },
 };
 
 /** JSON turns Infinity into null, so send null over the wire and read it back
