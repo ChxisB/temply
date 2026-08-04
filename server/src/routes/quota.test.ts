@@ -28,7 +28,7 @@ describe('GET /api/v1/quota', () => {
   });
 
   it('reflects the paid limit', async () => {
-    await givePlan(db, USER, 'scale');
+    await givePlan(db, USER, 'enterprise');
     const bodyJson = await (await get(app, '/api/v1/quota', USER)).json();
     expect(bodyJson.email.limit).toBe(2000);
   });

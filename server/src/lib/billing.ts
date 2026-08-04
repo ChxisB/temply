@@ -55,7 +55,7 @@ export async function checkApiKeyLimit(db: any, userId: string): Promise<{ allow
   }
   const usage = await getUsage(db, userId);
   if (usage.apiKeys >= limits.maxApiKeys) {
-    return { allowed: false, message: `You can only create ${limits.maxApiKeys} API keys on your current plan. Upgrade to Scale for unlimited keys.` };
+    return { allowed: false, message: `You can only create ${limits.maxApiKeys} API keys on your current plan. Upgrade for more.` };
   }
   return { allowed: true };
 }

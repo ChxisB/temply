@@ -38,6 +38,9 @@ export function initTables(sqlite: Database) {
   )`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
+
+  // One-time migration: the top plan was renamed from `scale` to `enterprise`.
+  sqlite.run(`UPDATE subscriptions SET plan = 'enterprise' WHERE plan = 'scale'`);
 }
 
 /** SQLite has no `ADD COLUMN IF NOT EXISTS`, and existing installs already have

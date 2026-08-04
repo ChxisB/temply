@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { httpGet } from '~/lib/http';
 
 type Quota = {
-  plan: 'free' | 'pro' | 'scale';
+  plan: 'free' | 'pro' | 'enterprise';
   email: { used: number; limit: number; remaining: number };
   resetInHours: number;
 };

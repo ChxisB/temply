@@ -5,7 +5,7 @@
  * to know a limit without hardcoding it. Both sides import from here now.
  */
 
-export type Plan = 'free' | 'pro' | 'scale';
+export type Plan = 'free' | 'pro' | 'enterprise';
 
 export interface PlanLimits {
   maxTemplates: number;
@@ -18,9 +18,9 @@ export interface PlanLimits {
 /** `Infinity` means unlimited. It does not survive JSON, so anything sending
  *  limits over the wire must map it — see `serialiseLimits`. */
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free: { maxTemplates: 3, maxApiKeys: 0, maxVersions: 0, maxApiCalls: 0, maxEmailsPerDay: 30 },
-  pro: { maxTemplates: Infinity, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 10_000, maxEmailsPerDay: 500 },
-  scale: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: 100_000, maxEmailsPerDay: 2000 },
+  free: { maxTemplates: 2, maxApiKeys: 1, maxVersions: 0, maxApiCalls: 10_000, maxEmailsPerDay: 30 },
+  pro: { maxTemplates: 10, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 50_000, maxEmailsPerDay: 500 },
+  enterprise: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: Infinity, maxEmailsPerDay: 2000 },
 };
 
 /** JSON turns Infinity into null, so send null over the wire and read it back

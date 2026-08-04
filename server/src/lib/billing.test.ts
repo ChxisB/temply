@@ -52,12 +52,12 @@ describe('getPlan', () => {
   });
 
   it('downgrades to free when a paid subscription is no longer active', async () => {
-    await givePlan(db, 'user_1', 'scale', 'past_due');
+    await givePlan(db, 'user_1', 'enterprise', 'past_due');
     expect(await getPlan(db, 'user_1')).toEqual({ plan: 'free', status: 'active' });
   });
 
   it('does not leak another user’s plan', async () => {
-    await givePlan(db, 'user_1', 'scale');
+    await givePlan(db, 'user_1', 'enterprise');
     expect(await getPlan(db, 'user_2')).toEqual({ plan: 'free', status: 'active' });
   });
 });
@@ -91,16 +91,18 @@ describe('checkTemplateLimit', () => {
 
   it('lets a paid user go past the free cap', async () => {
     await givePlan(db, 'user_1', 'pro');
-    await addTemplates('user_1', planLimits.free.maxTemplates + 10);
+    await addTemplates('user_1', planLimits.free.maxTemplates + 1);
     expect(await checkTemplateLimit(db, 'user_1')).toEqual({ allowed: true });
   });
 });
 
 describe('checkApiKeyLimit', () => {
-  it('blocks free users outright', async () => {
+  it('allows a free user one key, then blocks the next', async () => {
+    expect(await checkApiKeyLimit(db, 'user_1')).toEqual({ allowed: true });
+    await addApiKeys('user_1', planLimits.free.maxApiKeys);
     const result = await checkApiKeyLimit(db, 'user_1');
     expect(result.allowed).toBe(false);
-    expect(result.message).toContain('Free plan');
+    expect(result.message).toContain('API keys');
   });
 
   it('allows a pro user below their cap', async () => {
@@ -114,11 +116,11 @@ describe('checkApiKeyLimit', () => {
     await addApiKeys('user_1', planLimits.pro.maxApiKeys);
     const result = await checkApiKeyLimit(db, 'user_1');
     expect(result.allowed).toBe(false);
-    expect(result.message).toContain('Scale');
+    expect(result.message).toContain('API keys');
   });
 
-  it('never caps a scale user', async () => {
-    await givePlan(db, 'user_1', 'scale');
+  it('never caps an enterprise user', async () => {
+    await givePlan(db, 'user_1', 'enterprise');
     await addApiKeys('user_1', planLimits.pro.maxApiKeys + 20);
     expect(await checkApiKeyLimit(db, 'user_1')).toEqual({ allowed: true });
   });

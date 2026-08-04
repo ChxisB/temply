@@ -28,8 +28,7 @@ export const webhookRoutes = new Elysia()
         const [sub] = await ctx.db.select().from(subscriptions).where(eq(subscriptions.stripe_customer_id, customerId)).limit(1);
         if (sub) {
           const status = stripeSub.status === 'active' ? 'active' : stripeSub.status === 'past_due' ? 'past_due' : stripeSub.status === 'canceled' ? 'canceled' : 'inactive';
-          const productId = stripeSub.items.data[0]?.price.product as string;
-          const plan = productId === process.env.STRIPE_PRODUCT_SCALE ? 'scale' : 'pro';
+          const plan = 'pro';
           const periodEnd = (stripeSub as any).current_period_end;
           await ctx.db.update(subscriptions).set({ plan: status === 'active' ? plan : 'free', status, current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, customerId));
         }

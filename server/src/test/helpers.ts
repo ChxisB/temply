@@ -56,7 +56,7 @@ function withUser(headers: Record<string, string>, userId?: string | null): Reco
 }
 
 /** Gives `userId` a paid subscription so plan-gated branches can be reached. */
-export async function givePlan(db: TestDb, userId: string, plan: 'free' | 'pro' | 'scale', status = 'active') {
+export async function givePlan(db: TestDb, userId: string, plan: 'free' | 'pro' | 'enterprise', status = 'active') {
   await db.insert(schema.subscriptions).values({
     id: crypto.randomUUID(),
     user_id: userId,

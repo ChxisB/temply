@@ -34,10 +34,10 @@ describe('authentication', () => {
 });
 
 describe('POST /api/v1/api-keys', () => {
-  it('returns 402 for a free user', async () => {
-    const { status, body } = await createKey(OWNER);
+  it('lets a free user create one key, then blocks the second', async () => {
+    expect((await createKey(OWNER)).status).toBe(200);
+    const { status } = await createKey(OWNER, 'Second');
     expect(status).toBe(402);
-    expect(body.message).toContain('Free plan');
   });
 
   it('returns the full key exactly once and stores only its hash', async () => {
@@ -64,7 +64,7 @@ describe('POST /api/v1/api-keys', () => {
 
     const { status, body } = await createKey(OWNER, 'Sixth');
     expect(status).toBe(402);
-    expect(body.message).toContain('Scale');
+    expect(body.message).toContain('API keys');
   });
 });
 

@@ -33,7 +33,7 @@ export const billingRoutes = new Elysia()
     }
     const session = await stripe.checkout.sessions.create({ customer: stripeCustomerId, mode: 'subscription', line_items: [{ price: priceId, quantity: 1 }], success_url: `${appUrl}/dashboard/billing?success=true`, cancel_url: `${appUrl}/dashboard/billing?canceled=true`, metadata: { userId: ctx.userId, plan } });
     return json({ url: session.url });
-  }, { body: t.Object({ plan: t.Union([t.Literal('pro'), t.Literal('scale')]) }) })
+  }, { body: t.Object({ plan: t.Literal('pro') }) })
 
   .post('/api/v1/billing/portal', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();

@@ -55,8 +55,8 @@ const plans = [
     ],
   },
   {
-    id: 'scale' as const,
-    name: 'Scale',
+    id: 'enterprise' as const,
+    name: 'Enterprise',
     price: '$29',
     period: '/month',
     features: [
@@ -86,7 +86,7 @@ function BillingContent() {
   });
 
   const { mutateAsync: createCheckout, isPending: isCheckoutLoading } = useMutation({
-    mutationFn: (plan: 'pro' | 'scale') =>
+    mutationFn: (plan: 'pro' | 'enterprise') =>
       httpPost<CheckoutResponse>('/api/v1/billing/checkout', { plan }),
     onSuccess: (data) => {
       window.location.href = data.url;
@@ -210,7 +210,7 @@ function BillingContent() {
                     <Button
                       variant="primary"
                       className="w-full"
-                      onClick={() => createCheckout(p.id as 'pro' | 'scale')}
+                      onClick={() => createCheckout(p.id as 'pro' | 'enterprise')}
                       disabled={isCheckoutLoading}
                     >
                       {isCheckoutLoading ? <Loader2Icon className="animate-spin" /> : null}

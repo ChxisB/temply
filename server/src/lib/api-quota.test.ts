@@ -54,15 +54,11 @@ describe('checkApiQuota', () => {
   });
 
   it('always allows an unlimited plan', async () => {
-    // 'enterprise' does not exist as a Plan yet (added in Task 2, with
-    // maxApiCalls: Infinity). Until then, use 'scale' — its maxApiCalls
-    // (100_000) is finite, so we only assert `allowed` stays true after a
-    // single call rather than asserting `limit === Infinity`. Task 2 should
-    // switch this back to 'enterprise' and restore the Infinity assertion.
-    await givePlan(db, USER, 'scale');
+    await givePlan(db, USER, 'enterprise');
     const now = new Date('2026-03-03T10:00:00Z');
     await recordApiCall(db, USER, now);
     const res = await checkApiQuota(db, USER, now);
     expect(res.allowed).toBe(true);
+    expect(res.limit).toBe(Infinity);
   });
 });
