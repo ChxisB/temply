@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { httpDelete, httpPost, httpPut } from '~/lib/http';
 import { toast } from 'sonner';
-import type { RendererThemeOptions } from '@temply/shared/theme';
+import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { Button } from '~/components/ui/button';
 import {
@@ -19,6 +19,17 @@ import {
 import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { BrandEditor } from '~/components/brand/brand-editor';
 import { brandsQueryOptions, type Brand } from '~/lib/brands';
+
+/** A brand's theme comes back from the API as a raw string; a corrupted or
+ *  hand-edited row should degrade to a default look instead of throwing
+ *  during render. */
+function safeTheme(raw: string): RendererThemeOptions {
+  try {
+    return JSON.parse(raw) as RendererThemeOptions;
+  } catch {
+    return structuredClone(DEFAULT_RENDERER_THEME);
+  }
+}
 
 export default function BrandsPage() {
   const queryClient = useQueryClient();
@@ -84,7 +95,7 @@ export default function BrandsPage() {
   const openEdit = (brand: Brand) => {
     setEditingBrand(brand);
     setName(brand.name);
-    setTheme(JSON.parse(brand.theme));
+    setTheme(safeTheme(brand.theme));
     setShowEditor(true);
   };
 
@@ -133,7 +144,7 @@ export default function BrandsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {brands.map((brand) => {
-            const brandTheme: RendererThemeOptions = JSON.parse(brand.theme);
+            const brandTheme = safeTheme(brand.theme);
             return (
               <Card key={brand.id} className="space-y-3">
                 <div className="flex items-center gap-1.5">
