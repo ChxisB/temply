@@ -5,6 +5,7 @@ import {
   FileTextIcon,
   KeyIcon,
   LayoutDashboardIcon,
+  PaletteIcon,
   SettingsIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -23,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboardIcon, exact: true },
   { href: '/dashboard/templates', label: 'Templates', icon: FileTextIcon },
   { href: '/dashboard/api-keys', label: 'API keys', icon: KeyIcon },
+  { href: '/dashboard/brands', label: 'Brands', icon: PaletteIcon },
   { href: '/dashboard/billing', label: 'Billing', icon: CreditCardIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ];
