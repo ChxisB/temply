@@ -5,6 +5,7 @@ import { templatesRoutes } from './routes/templates';
 import { apiKeysRoutes } from './routes/api-keys';
 import { billingRoutes } from './routes/billing';
 import { quotaRoutes } from './routes/quota';
+import { imagekitRoutes } from './routes/imagekit';
 import { emailsRoutes } from './routes/emails';
 import { publicRoutes } from './routes/public';
 import { webhookRoutes } from './routes/webhooks/stripe';
@@ -17,6 +18,7 @@ const app = new Elysia()
   .use(apiKeysRoutes)
   .use(billingRoutes)
   .use(quotaRoutes)
+  .use(imagekitRoutes)
   .use(emailsRoutes)
   .use(publicRoutes)
   .use(webhookRoutes)
