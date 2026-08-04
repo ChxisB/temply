@@ -7,7 +7,9 @@
     "./schema": "./schema.ts",
     "./theme": "./theme.ts",
     "./contrast": "./contrast.ts",
-    "./plans": "./plans.ts"
+    "./plans": "./plans.ts",
+    "./brand-presets": "./brand-presets.ts",
+    "./brand-knobs": "./brand-knobs.ts"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",
