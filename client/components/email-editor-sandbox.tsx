@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
-import { createImageKitUploader } from '~/lib/imagekit-upload';
+import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
 import type { Mail } from '~/db/schema';
 import { CopyEmailHtml } from './copy-email-html';
 import { DeleteEmailDialog } from './delete-email-dialog';
@@ -368,6 +368,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           <h2 className="text-sm font-medium text-ink">Content</h2>
         </header>
         <EmailEditor
+          allowedMimeTypes={UPLOAD_MIME_TYPES}
           autofocus={autofocus}
           defaultContent={editorContent}
           onImageUpload={imageUploader}

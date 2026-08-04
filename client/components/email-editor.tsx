@@ -15,10 +15,11 @@ type EmailEditorProps = {
   setEditor: (editor: TiptapEditor) => void;
   autofocus?: FocusPosition;
   onImageUpload?: (file: Blob) => Promise<string>;
+  allowedMimeTypes?: string[];
 };
 
 export function EmailEditor(props: EmailEditorProps) {
-  const { defaultContent, setEditor, autofocus, onImageUpload } = props;
+  const { defaultContent, setEditor, autofocus, onImageUpload, allowedMimeTypes } = props;
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,6 +34,7 @@ export function EmailEditor(props: EmailEditorProps) {
       <Suspense>
         <Editor
           onImageUpload={onImageUpload}
+          allowedMimeTypes={allowedMimeTypes}
           config={{
             hasMenuBar: false,
             wrapClassName: cn('editor-wrap', isLoading && 'hidden'),

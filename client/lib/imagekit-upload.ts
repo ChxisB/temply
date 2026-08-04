@@ -6,6 +6,10 @@ const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 // width; q-80 halves the bytes at good quality.
 const TRANSFORM = 'tr=w-1200,q-80';
 
+// SVG is excluded on purpose: Gmail/Outlook strip inline SVG, so it never
+// renders in a real email.
+export const UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
 type ImageKitAuth = {
   token: string;
   expire: number;
@@ -42,6 +46,8 @@ export function createImageKitUploader(): (file: Blob) => Promise<string> {
     form.append('signature', auth.signature);
     form.append('expire', String(auth.expire));
     form.append('token', auth.token);
+    // The ImageKit signature authenticates the request, not these fields — folder
+    // and fileName are organizational only, not an access boundary.
     form.append('folder', `/temply/${auth.userId}`);
     form.append('useUniqueFileName', 'true');
 
