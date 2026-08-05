@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk, useUser } from '@clerk/nextjs';
-import { LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
+import { LogOutIcon, SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -25,7 +25,7 @@ type UserMenuProps = {
 
 export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: UserMenuProps) {
   const { user, isSignedIn, isLoaded } = useUser();
-  const { signOut, openUserProfile } = useClerk();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   if (!isLoaded) return null;
@@ -77,10 +77,6 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
             <SettingsIcon className="h-4 w-4" />
             Settings
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => openUserProfile()}>
-          <UserIcon className="h-4 w-4" />
-          Manage Account
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut({ redirectUrl: '/' })}>

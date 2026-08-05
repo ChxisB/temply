@@ -34,8 +34,8 @@ export function MobileNav() {
       </DialogPrimitive.Trigger>
 
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 md:hidden" />
-        <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden">
+        <DialogPrimitive.Overlay className="overlay-fade fixed inset-0 z-50 bg-black/40 md:hidden" />
+        <DialogPrimitive.Content className="drawer-left fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden">
           <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
 
           <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2 pl-4">
