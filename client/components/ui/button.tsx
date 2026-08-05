@@ -3,10 +3,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '~/lib/classname';
 
-// Focus is not declared here. globals.css defines one :focus-visible treatment
-// for the whole app, so every control gets it whether or not someone remembered.
+// Buttons opt out of the global outline for the same soft ring text fields
+// use — ring composes with each variant's shadow, a hard outline does not.
 const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-[background-color,box-shadow,border-color] disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-[background-color,box-shadow,border-color,color,transform] duration-150 ease-out active:scale-[0.98] focus-visible:ring-[3px] focus-visible:ring-accent/25 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-45 motion-reduce:transition-none motion-reduce:active:scale-100 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
