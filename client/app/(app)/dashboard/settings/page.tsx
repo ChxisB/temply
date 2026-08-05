@@ -14,6 +14,10 @@ export default function SettingsPage() {
     <div className="space-y-5">
       <PageHeader title="Settings" description="Your account and how you sign in." />
 
+      {/* Clerk's own navbar stays visible: hiding it forced the mobile menu
+          row (a separate element) to act as the only navigation at every
+          width. With it restored, desktop gets the two-pane layout and narrow
+          widths use Clerk's native mobile behaviour. */}
       <UserProfile
         appearance={{
           ...clerkAppearance,
@@ -22,8 +26,6 @@ export default function SettingsPage() {
             rootBox: 'w-full',
             cardBox: 'w-full shadow-none border border-line rounded-lg',
             card: 'w-full shadow-none',
-            navbar: 'hidden',
-            pageScrollBox: 'p-0',
           },
         }}
       />

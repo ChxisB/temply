@@ -473,3 +473,15 @@ html {
     animation: none;
   }
 }
+
+/* Clerk's embedded profile card (the Settings page): the root box sizes
+   itself to Clerk's fixed 55rem card and its internals carry widths of their
+   own, which overflows the dashboard column on tablets and phones. Cap the
+   root AND the internals at the container. Scoped to the embedded profile so
+   sign-in and modals keep Clerk's own sizing. */
+.cl-userProfile-root,
+.cl-userProfile-root :is(.cl-cardBox, .cl-pageScrollBox, .cl-profilePage,
+  .cl-profileSection, .cl-navbarMobileMenuRow) {
+  max-width: 100%;
+  min-width: 0;
+}
