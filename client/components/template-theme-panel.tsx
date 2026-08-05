@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
-import { ChevronDownIcon, ChevronUpIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
+import { ChevronDownIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { BrandSelect } from '~/components/brand/brand-select';
@@ -144,16 +144,31 @@ export function TemplateThemePanel({
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
             className="flex items-center gap-1 text-xs font-medium text-faint transition-colors hover:text-muted [&_svg]:size-3.5"
           >
-            {showAdvanced ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            <ChevronDownIcon
+              className={cn(
+                'transition-transform duration-200 ease-out motion-reduce:transition-none',
+                showAdvanced && 'rotate-180'
+              )}
+            />
             {showAdvanced ? 'Hide advanced' : 'Advanced'}
           </button>
-          {showAdvanced && (
-            <div className="mt-3">
-              <RawThemeFields theme={theme} onChange={handleEdit} />
+          {/* The 0fr→1fr grid row is the one way to animate to a height the
+              content decides; `overflow-hidden` clips the panel while it grows. */}
+          <div
+            className={cn(
+              'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
+              showAdvanced ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="mt-3">
+                <RawThemeFields theme={theme} onChange={handleEdit} />
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
