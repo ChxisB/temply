@@ -1,9 +1,10 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { ArrowRightIcon, MailIcon } from 'lucide-react';
+import { ArrowRightIcon } from 'lucide-react';
 import Link from 'next/link';
 import { BlockPalette } from '~/components/marketing/block-palette';
+import { ContactForm } from '~/components/marketing/contact-form';
 import { HeroBackground } from '~/components/marketing/hero-background';
 import { HeroShowreel } from '~/components/marketing/hero-showreel';
 import { ScrollToTop } from '~/components/marketing/scroll-to-top';
@@ -17,10 +18,6 @@ import {
 import { Button } from '~/components/ui/button';
 import { useParallax } from '~/hooks/use-parallax';
 import { useReveal } from '~/hooks/use-reveal';
-
-// Replace with the real inbox before launch. Nothing else on the page depends
-// on it, so it is a one-line change.
-const CONTACT_EMAIL = 'hello@temply.app';
 
 /** Position in the hero's entrance sequence. The stagger is declared beside the
  *  element it belongs to rather than in a stack of numbered CSS classes. */
@@ -259,12 +256,8 @@ export default function Home() {
           <p className="mx-auto mt-4 max-w-md text-lg text-pretty text-muted">
             Questions, enterprise plans, or feedback — we&apos;d love to hear from you.
           </p>
-          <div className="mt-8 flex justify-center">
-            <Button asChild variant="primary" size="lg">
-              <a href={`mailto:${CONTACT_EMAIL}`}>
-                Get in touch<MailIcon />
-              </a>
-            </Button>
+          <div className="mt-10">
+            <ContactForm />
           </div>
         </div>
       </section>
