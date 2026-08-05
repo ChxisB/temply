@@ -10,7 +10,6 @@ import { Button } from '~/components/ui/button';
 import { Select } from '~/components/ui/select';
 import { BrandKnobsControl } from '~/components/brand/brand-knobs';
 import { RawThemeFields } from '~/components/brand/raw-theme-fields';
-import { ThemeWarnings } from '~/components/theme-warnings';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { brandsQueryOptions } from '~/lib/brands';
 import { cn } from '~/lib/classname';
@@ -126,7 +125,6 @@ export function TemplateThemePanel({
         </div>
       </div>
 
-      <ThemeWarnings theme={theme} />
     </section>
   );
 }

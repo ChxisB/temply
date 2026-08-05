@@ -34,7 +34,7 @@ import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/share
 const inputClass =
   'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
 
-const labelClass = 'mb-1.5 block text-sm font-medium text-ink';
+const labelClass = 'block text-sm font-medium text-ink';
 
 type UpdateTemplateData = {
   title: string;
@@ -63,7 +63,6 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [fromName, setFromName] = useState('');
   const [to, setTo] = useState('');
 
-  const [showReplyTo, setShowReplyTo] = useState(false);
   const [replyTo, setReplyTo] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [theme, setTheme] = useState<RendererThemeOptions>(() => {
@@ -164,6 +163,36 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
   const saveBtnPending = isUpdateTemplatePending || isCreateTemplatePending;
   const [shortCodeCopied, setShortCodeCopied] = useState(false);
+
+  // The editor canvas is styled by --mly-* variables (declared at :root in
+  // core/styles). Re-declaring them on this wrapper from the live theme makes
+  // a brand or colour change visible in the content immediately, instead of
+  // only at preview/render time.
+  const canvasVars = useMemo(() => {
+    const d = DEFAULT_RENDERER_THEME;
+    const v: Record<string, string> = {};
+    const set = (name: string, val?: string) => {
+      if (val) v[name] = val;
+    };
+    set('--mly-body-background-color', theme.body?.backgroundColor ?? d.body?.backgroundColor);
+    set('--mly-body-padding-top', theme.body?.paddingTop ?? d.body?.paddingTop);
+    set('--mly-body-padding-right', theme.body?.paddingRight ?? d.body?.paddingRight);
+    set('--mly-body-padding-bottom', theme.body?.paddingBottom ?? d.body?.paddingBottom);
+    set('--mly-body-padding-left', theme.body?.paddingLeft ?? d.body?.paddingLeft);
+    set('--mly-container-background-color', theme.container?.backgroundColor ?? d.container?.backgroundColor);
+    set('--mly-container-padding-top', theme.container?.paddingTop ?? d.container?.paddingTop);
+    set('--mly-container-padding-right', theme.container?.paddingRight ?? d.container?.paddingRight);
+    set('--mly-container-padding-bottom', theme.container?.paddingBottom ?? d.container?.paddingBottom);
+    set('--mly-container-padding-left', theme.container?.paddingLeft ?? d.container?.paddingLeft);
+    set('--mly-container-border-radius', theme.container?.borderRadius ?? d.container?.borderRadius);
+    set('--mly-container-border-width', theme.container?.borderWidth ?? d.container?.borderWidth);
+    set('--mly-container-border-color', theme.container?.borderColor ?? d.container?.borderColor);
+    set('--mly-container-max-width', theme.container?.maxWidth ?? d.container?.maxWidth);
+    set('--mly-button-background-color', theme.button?.backgroundColor ?? d.button?.backgroundColor);
+    set('--mly-button-text-color', theme.button?.color ?? d.button?.color);
+    set('--mly-link-color', theme.link?.color ?? d.link?.color);
+    return v as React.CSSProperties;
+  }, [theme]);
 
   const copyShortCode = async () => {
     if (!template?.short_code) return;
@@ -301,29 +330,21 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <Label className={labelClass} htmlFor="replyTo">Reply To</Label>
-              <button
-                className="text-xs font-medium text-faint transition-colors hover:text-muted"
-                onClick={() => setShowReplyTo(!showReplyTo)}
-              >
-                {showReplyTo ? '— Remove' : '+ Add'}
-              </button>
-            </div>
-            {showReplyTo && (
-              <input
-                className={inputClass}
-                id="replyTo"
-                onChange={(e) => setReplyTo(e.target.value)}
-                placeholder="replyto@example.com"
-                type="email"
-                value={replyTo}
-              />
-            )}
+            <Label className={labelClass} htmlFor="replyTo">
+              Reply To <span className="font-normal text-faint">(optional)</span>
+            </Label>
+            <input
+              className={inputClass}
+              id="replyTo"
+              onChange={(e) => setReplyTo(e.target.value)}
+              placeholder="replyto@example.com"
+              type="email"
+              value={replyTo}
+            />
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col gap-1.5">
           <label className={labelClass} htmlFor="previewText">
             Preview Text
           </label>
@@ -346,13 +367,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           <LayoutTemplateIcon className="size-4 text-faint" />
           <h2 className="text-sm font-medium text-ink">Content</h2>
         </header>
-        <EmailEditor
-          allowedMimeTypes={UPLOAD_MIME_TYPES}
-          autofocus={autofocus}
-          defaultContent={editorContent}
-          onImageUpload={imageUploader}
-          setEditor={setEditor}
-        />
+        <div style={canvasVars}>
+          <EmailEditor
+            allowedMimeTypes={UPLOAD_MIME_TYPES}
+            autofocus={autofocus}
+            defaultContent={editorContent}
+            onImageUpload={imageUploader}
+            setEditor={setEditor}
+          />
+        </div>
       </section>
     </div>
   );

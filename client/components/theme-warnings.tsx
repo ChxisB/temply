@@ -4,6 +4,7 @@ import { AlertTriangleIcon } from 'lucide-react';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { checkPair, type ContrastIssue } from '@temply/shared/contrast';
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 
 /**
  * The colours the renderer applies to text. They are not editable in the Brand
@@ -32,39 +33,65 @@ export function themeIssues(theme: RendererThemeOptions): ContrastIssue[] {
   ];
 }
 
-/**
- * Shown beside the controls that caused it, not as a dialog. Choosing an
- * awkward colour is not an error — the email still sends — so this states what
- * would be hard to read and leaves the decision alone.
- */
-export function ThemeWarnings({ theme }: { theme: RendererThemeOptions }) {
-  const issues = themeIssues(theme);
-  if (issues.length === 0) return null;
+/** Which colour field each finding belongs beside. */
+export type ThemeIssueField = 'card-background' | 'link' | 'button-text';
 
-  // One line per subject: saying the same thing twice for both renderings is
-  // noise, and the harsher of the two is the one worth acting on.
+export function issuesForField(
+  theme: RendererThemeOptions,
+  field: ThemeIssueField,
+): ContrastIssue[] {
+  const issues = themeIssues(theme);
+  const subjects: Record<ThemeIssueField, string[]> = {
+    'card-background': ['Headings', 'Body copy', 'Footer text'],
+    link: ['Links'],
+    'button-text': ['The button label'],
+  };
+  const wanted = subjects[field];
+
+  // One entry per subject — the harsher of the light/forced-dark pair is the
+  // one worth acting on.
   const worst = new Map<string, ContrastIssue>();
   for (const issue of issues) {
+    if (!wanted.includes(issue.subject)) continue;
     const seen = worst.get(issue.subject);
     if (!seen || issue.ratio < seen.ratio) worst.set(issue.subject, issue);
   }
+  return [...worst.values()];
+}
+
+/**
+ * A small warning beside the specific colour that causes a readability
+ * problem. The detail lives in a popover, so nobody is confronted with
+ * contrast ratios uninvited.
+ */
+export function ThemeIssueHint({ issues }: { issues: ContrastIssue[] }) {
+  if (issues.length === 0) return null;
 
   return (
-    <div className="border-t border-line px-3.5 py-2.5">
-      <p className="flex items-center gap-1.5 text-xs font-medium text-ink">
-        <AlertTriangleIcon className="size-3.5 text-danger-ink" />
-        Hard to read at these colours
-      </p>
-      <ul className="mt-1.5 space-y-1">
-        {[...worst.values()].map((issue) => (
-          <li key={issue.subject} className="text-xs text-muted">
-            <span className="text-ink">{issue.subject}</span> sit{issue.subject.endsWith('s') ? '' : 's'} at{' '}
-            <span className="font-mono tabular-nums">{issue.ratio}:1</span> against the background
-            {issue.where === 'forced dark' ? ' once a client forces dark mode' : ''}. Aim for{' '}
-            <span className="font-mono tabular-nums">{issue.required}:1</span>.
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="This colour may be hard to read — details"
+          className="inline-flex size-4 items-center justify-center rounded-full text-danger-ink transition-colors hover:bg-danger-wash"
+        >
+          <AlertTriangleIcon className="size-3" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72">
+        <p className="text-sm font-medium text-ink">Hard to read with this colour</p>
+        <ul className="mt-1.5 space-y-1">
+          {issues.map((issue) => (
+            <li key={`${issue.subject}-${issue.where}`} className="text-xs text-muted">
+              <span className="text-ink">{issue.subject}</span> sit
+              {issue.subject.endsWith('s') ? '' : 's'} at{' '}
+              <span className="font-mono tabular-nums">{issue.ratio}:1</span> against the background
+              {issue.where === 'forced dark' ? ' once a client forces dark mode' : ''}. Aim for{' '}
+              <span className="font-mono tabular-nums">{issue.required}:1</span>.
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
+import { issuesForField, ThemeIssueHint } from '~/components/theme-warnings';
 
 type Theme = RendererThemeOptions;
 
@@ -12,20 +14,27 @@ function ColorField({
   value,
   fallback,
   onChange,
+  hint,
 }: {
   label: string;
   value?: string;
   fallback: string;
   onChange: (next: string) => void;
+  /** A warning icon rendered beside the label when this colour causes a
+   *  readability problem. */
+  hint?: ReactNode;
 }) {
   const current = value ?? fallback;
   const id = `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className={SWATCH_LABEL}>
-        {label}
-      </label>
+      <span className="flex items-center gap-1">
+        <label htmlFor={id} className={SWATCH_LABEL}>
+          {label}
+        </label>
+        {hint}
+      </span>
       <div className="flex items-center gap-1.5">
         <input
           id={id}
@@ -115,6 +124,7 @@ export function RawThemeFields({
           onChange={(backgroundColor) =>
             patch({ container: { ...theme.container, backgroundColor } })
           }
+          hint={<ThemeIssueHint issues={issuesForField(theme, 'card-background')} />}
         />
         <NumberField
           label="Padding"
@@ -157,12 +167,14 @@ export function RawThemeFields({
           value={theme.button?.color}
           fallback={d.button?.color ?? '#FFFFFF'}
           onChange={(color) => patch({ button: { ...theme.button, color } })}
+          hint={<ThemeIssueHint issues={issuesForField(theme, 'button-text')} />}
         />
         <ColorField
           label="Link"
           value={theme.link?.color}
           fallback={d.link?.color ?? '#346FE4'}
           onChange={(color) => patch({ link: { ...theme.link, color } })}
+          hint={<ThemeIssueHint issues={issuesForField(theme, 'link')} />}
         />
       </div>
     </div>
