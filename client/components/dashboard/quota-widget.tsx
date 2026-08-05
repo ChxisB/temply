@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { httpGet } from '~/lib/http';
 
 type Quota = {
@@ -52,6 +53,14 @@ export function QuotaWidget() {
         <span>API calls this month</span>
         <span>resets {formatReset(data.resetsOn)}</span>
       </div>
+      {data.plan === 'free' ? (
+        <Link
+          href="/dashboard/billing"
+          className="mt-2 flex h-7 w-full items-center justify-center rounded-md bg-accent text-xs font-medium text-white transition-colors hover:bg-accent-hover"
+        >
+          Upgrade
+        </Link>
+      ) : null}
     </div>
   );
 }
