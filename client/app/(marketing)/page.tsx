@@ -80,7 +80,10 @@ export default function Home() {
   return (
     // No background class here on purpose: the body already paints bg-surface,
     // and an opaque wrapper would hide the fixed dot field below it.
-    <div>
+    // overflow-x-clip: the showcase washes intentionally bleed past their
+    // panels; clip keeps that bleed from becoming a horizontal scrollbar on
+    // phones (clip, unlike hidden, creates no scroll container).
+    <div className="overflow-x-clip">
       {/* One dot field for the whole page, fixed so the content scrolls over
           it like a workbench — this is what keeps the mid-page from going
           flat. Sections with their own opaque band (Blocks) carry their own
