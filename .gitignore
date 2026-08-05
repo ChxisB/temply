@@ -50,3 +50,6 @@ yarn-error.log*
 server/*.db
 server/*.db-shm
 server/*.db-wal
+
+# SDD/brainstorming paperwork stays out of the repo (user rule: no docs commits)
+docs/superpowers/
