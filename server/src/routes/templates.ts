@@ -59,6 +59,9 @@ export const templatesRoutes = new Elysia()
 
   .post('/api/v1/templates/:id/duplicate', async (ctx: any) => {
     if (!ctx.userId) return unauthorized();
+    // Duplicating adds a template, so it must respect the plan cap like create.
+    const limit = await checkTemplateLimit(ctx.db, ctx.userId);
+    if (!limit.allowed) return paymentRequired(limit.message!);
     const [template] = await ctx.db.select().from(mails).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId))).limit(1);
     if (!template) return notFound('Template not found');
     const newId = crypto.randomUUID();

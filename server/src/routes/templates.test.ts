@@ -152,6 +152,14 @@ describe('POST /api/v1/templates/:id/duplicate', () => {
     const res = await post(app, `/api/v1/templates/${template.id}/duplicate`, {}, OTHER);
     expect(res.status).toBe(404);
   });
+
+  it('returns 402 when a free user is already at the template cap', async () => {
+    const first = await createTemplate(OWNER, 'Template 0');
+    for (let i = 1; i < 3; i++) await createTemplate(OWNER, `Template ${i}`);
+
+    const res = await post(app, `/api/v1/templates/${first.id}/duplicate`, {}, OWNER);
+    expect(res.status).toBe(402);
+  });
 });
 
 describe('version history', () => {

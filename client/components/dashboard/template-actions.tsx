@@ -9,9 +9,11 @@ import { httpDelete, httpPost } from '~/lib/http';
 
 type TemplateActionsProps = {
   templateId: string;
+  /** Duplicating adds a template; hide the action once the plan cap is hit. */
+  canDuplicate?: boolean;
 };
 
-export function TemplateActions({ templateId }: TemplateActionsProps) {
+export function TemplateActions({ templateId, canDuplicate = true }: TemplateActionsProps) {
   const router = useRouter();
 
   const { mutateAsync: duplicateTemplate, isPending: isDuplicating } = useMutation({
@@ -42,15 +44,17 @@ export function TemplateActions({ templateId }: TemplateActionsProps) {
 
   return (
     <div className="flex shrink-0 items-center gap-0.5">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => duplicateTemplate()}
-        disabled={isDuplicating}
-        aria-label="Duplicate template"
-      >
-        <CopyIcon />
-      </Button>
+      {canDuplicate ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => duplicateTemplate()}
+          disabled={isDuplicating}
+          aria-label="Duplicate template"
+        >
+          <CopyIcon />
+        </Button>
+      ) : null}
       <Button
         variant="danger-quiet"
         size="icon-sm"

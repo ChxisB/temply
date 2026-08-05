@@ -70,17 +70,17 @@ export default async function TemplatesPage() {
                 </p>
               </Link>
 
-              <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
-                {template.updated_at
-                  ? new Date(template.updated_at).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : '—'}
-              </span>
+              {template.updated_at ? (
+                <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
+                  {new Date(template.updated_at).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </span>
+              ) : null}
 
-              <TemplateActions templateId={template.id} />
+              <TemplateActions templateId={template.id} canDuplicate={!atLimit} />
             </li>
           ))}
         </ul>
