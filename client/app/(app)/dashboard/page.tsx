@@ -84,14 +84,14 @@ export default async function DashboardPage() {
                       {template.preview_text || 'No preview text'}
                     </span>
                   </span>
-                  <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
-                    {template.updated_at
-                      ? new Date(template.updated_at).toLocaleDateString(undefined, {
-                          day: 'numeric',
-                          month: 'short',
-                        })
-                      : '—'}
-                  </span>
+                  {template.updated_at ? (
+                    <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
+                      {new Date(template.updated_at).toLocaleDateString(undefined, {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
             ))}
