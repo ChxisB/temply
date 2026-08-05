@@ -96,3 +96,15 @@ export const userPrefs = sqliteTable('user_prefs', {
 });
 
 export type UserPrefs = typeof userPrefs.$inferSelect;
+
+/** Landing-page contact submissions. Stored before any delivery attempt, so a
+ *  mail outage never loses a message. */
+export const contactMessages = sqliteTable('contact_messages', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  message: text('message').notNull(),
+  created_at: text('created_at'),
+});
+
+export type ContactMessage = typeof contactMessages.$inferSelect;

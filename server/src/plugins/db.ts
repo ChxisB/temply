@@ -45,6 +45,10 @@ export function initTables(sqlite: Database) {
   // Carry over any pre-existing default from the old is_default column.
   sqlite.run(`INSERT OR IGNORE INTO user_prefs (user_id, default_brand_id)
     SELECT user_id, id FROM brands WHERE is_default = 1`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS contact_messages (
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL,
+    message TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now'))
+  )`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
 

@@ -9,6 +9,7 @@ import { quotaRoutes } from './routes/quota';
 import { imagekitRoutes } from './routes/imagekit';
 import { emailsRoutes } from './routes/emails';
 import { publicRoutes } from './routes/public';
+import { contactRoutes } from './routes/contact';
 import { webhookRoutes } from './routes/webhooks/stripe';
 import { authRoutes } from './routes/auth/logout';
 
@@ -23,6 +24,7 @@ const app = new Elysia()
   .use(imagekitRoutes)
   .use(emailsRoutes)
   .use(publicRoutes)
+  .use(contactRoutes)
   .use(webhookRoutes)
   .use(authRoutes)
   .onError(({ error, code }) => {
