@@ -239,12 +239,14 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             subject={subject}
             theme={theme}
           />
-          <VersionHistoryDialog templateId={template?.id} />
+          {/* History and Delete act on a saved template; on the anonymous
+              playground they would only ever render disabled. */}
+          {template?.id && <VersionHistoryDialog templateId={template.id} />}
         </div>
 
         <div className="flex items-center gap-2">
           <CopyEmailHtml editor={editor} />
-          <DeleteEmailDialog templateId={template?.id} />
+          {template?.id && <DeleteEmailDialog templateId={template.id} />}
 
           {/* Internal-debug delivery — only for a saved template. The
               anonymous playground must not advertise a send capability the
