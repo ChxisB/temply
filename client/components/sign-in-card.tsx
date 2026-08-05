@@ -8,6 +8,7 @@ export function SignInCard() {
 
   return (
     <SignIn
+      forceRedirectUrl="/dashboard"
       signUpForceRedirectUrl="/dashboard/templates"
       appearance={{
         ...clerkAppearance,
