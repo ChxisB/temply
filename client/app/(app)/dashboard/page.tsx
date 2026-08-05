@@ -48,7 +48,7 @@ export default async function DashboardPage() {
 
       <section className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-ink">Recent templates</h2>
+          <h2 className="font-display text-sm font-semibold text-ink">Recent templates</h2>
           {!templatesFailed && templates.length > 0 ? (
             <Link
               href="/dashboard/templates"

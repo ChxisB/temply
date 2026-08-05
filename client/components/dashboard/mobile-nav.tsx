@@ -35,16 +35,19 @@ export function MobileNav() {
 
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 md:hidden" />
-        <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-raised shadow-xl md:hidden">
+        <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden">
           <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
 
-          <div className="flex h-12 items-center justify-between border-b border-line pr-2 pl-4">
-            <Link href="/dashboard" className="text-base font-semibold tracking-tight text-ink">
-              Temply
-            </Link>
+          <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2 pl-4">
+            <div className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-md bg-accent text-xs font-bold text-white">T</span>
+              <Link href="/dashboard" className="font-display text-base font-semibold tracking-tight text-rail-ink">
+                Temply
+              </Link>
+            </div>
             <DialogPrimitive.Close
               aria-label="Close navigation"
-              className="flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink"
+              className="flex size-8 items-center justify-center rounded-sm text-rail-muted transition-colors hover:bg-rail-hover hover:text-rail-ink"
             >
               <XIcon className="size-4" />
             </DialogPrimitive.Close>
@@ -54,7 +57,7 @@ export function MobileNav() {
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
 
-          <div className="space-y-2 border-t border-line p-2">
+          <div className="space-y-2 border-t border-rail-line p-2">
             <QuotaWidget />
             <UserMenu align="start" />
           </div>

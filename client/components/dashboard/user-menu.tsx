@@ -25,9 +25,14 @@ import {
 type UserMenuProps = {
   align?: 'start' | 'end' | 'center';
   showLabel?: boolean;
+  /** Which background the trigger sits on. The dashboard rail is graphite in
+   *  both themes, so it needs the rail palette; the marketing header sits on
+   *  the page surface and must follow the theme instead — rail colours there
+   *  meant a dark hover blotch in light mode. */
+  surface?: 'rail' | 'page';
 };
 
-export function UserMenu({ align = 'end', showLabel = true }: UserMenuProps) {
+export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: UserMenuProps) {
   const { user, isSignedIn, isLoaded } = useUser();
   const { signOut, openUserProfile } = useClerk();
   const router = useRouter();
@@ -42,7 +47,11 @@ export function UserMenu({ align = 'end', showLabel = true }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-2 rounded-sm p-1.5 text-sm text-ink transition-colors hover:bg-hover"
+          className={`flex w-full items-center gap-2 rounded-md p-1.5 text-sm transition-colors ${
+            surface === 'rail'
+              ? 'text-rail-ink hover:bg-rail-hover'
+              : 'text-ink hover:bg-hover'
+          }`}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">
             {initials}
@@ -52,7 +61,9 @@ export function UserMenu({ align = 'end', showLabel = true }: UserMenuProps) {
               <span className="w-full truncate text-sm leading-tight font-medium">
                 {user?.fullName ?? 'User'}
               </span>
-              <span className="w-full truncate text-xs text-muted">
+              <span
+                className={`w-full truncate text-xs ${surface === 'rail' ? 'text-rail-muted' : 'text-muted'}`}
+              >
                 {user?.emailAddresses?.[0]?.emailAddress ?? ''}
               </span>
             </span>

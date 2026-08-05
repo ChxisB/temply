@@ -6,14 +6,14 @@ import { cn } from '~/lib/classname';
 // Focus is not declared here. globals.css defines one :focus-visible treatment
 // for the whole app, so every control gets it whether or not someone remembered.
 const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-sm font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap transition-[background-color,box-shadow,border-color] disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-accent text-white hover:bg-accent-hover',
-        secondary: 'border border-line bg-raised text-ink hover:bg-hover',
+        primary: 'bg-accent text-white shadow-sm hover:bg-accent-hover',
+        secondary: 'border border-line bg-raised text-ink shadow-xs hover:bg-hover hover:border-line-strong',
         ghost: 'text-muted hover:bg-hover hover:text-ink',
-        danger: 'bg-danger text-white hover:opacity-90',
+        danger: 'bg-danger text-white shadow-sm hover:opacity-90',
         'danger-quiet': 'text-danger-ink hover:bg-danger-wash',
         link: 'text-accent-ink underline-offset-4 hover:underline',
       },

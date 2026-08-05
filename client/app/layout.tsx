@@ -1,25 +1,29 @@
 import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google';
 import { GoogleAnalytics } from '~/components/google-analytics';
 import { Providers } from './providers';
 import '../core/styles/index.css';
 import './globals.css';
 
-// Self-hosted and subset at build time, so no render-blocking request to a
-// third-party origin. Mono is not decorative: this product shows short codes,
-// curl commands, API URLs and hex values, and those want a real monospace.
-const plexSans = IBM_Plex_Sans({
+const geistSans = Geist({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-plex-sans',
+  weight: ['400', '500', '600'],
+  variable: '--font-geist',
   display: 'swap',
 });
 
-const plexMono = IBM_Plex_Mono({
+const geistMono = Geist_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
-  variable: '--font-plex-mono',
+  variable: '--font-geist-mono',
+  display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-space-grotesk',
   display: 'swap',
 });
 
@@ -93,7 +97,7 @@ export default function RootLayout({
             }}
           />
         </head>
-        <body className={`${plexSans.variable} ${plexMono.variable}`}>
+        <body className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}>
           {/* First focusable element on the page. Lets a keyboard user jump the
               header and sidebar straight to the content. */}
           <a href="#main-content" className="skip-link">

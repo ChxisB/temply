@@ -11,20 +11,20 @@ export type Theme = 'light' | 'dark';
  */
 const PALETTE: Record<Theme, Record<string, string>> = {
   light: {
-    surface: '#f6f7f9',
+    surface: '#f7f7f4',
     raised: '#ffffff',
-    ink: '#12141a',
-    muted: '#5b6170',
-    accent: '#346fe4',
+    ink: '#191a1e',
+    muted: '#595c66',
+    accent: '#4f46e5',
     danger: '#c0304a',
   },
   dark: {
-    surface: '#16181d',
-    raised: '#1d2026',
-    ink: '#f2f3f5',
-    muted: '#a2a9b8',
-    accent: '#5b8cf0',
-    danger: '#ff7a8a',
+    surface: '#161719',
+    raised: '#1d1e21',
+    ink: '#f3f3f2',
+    muted: '#a3a4ad',
+    accent: '#4f46e5',
+    danger: '#c0304a',
   },
 };
 
@@ -119,7 +119,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           colorInputText: p.ink,
           colorDanger: p.danger,
           borderRadius: '6px',
-          fontFamily: 'var(--font-plex-sans)',
+          fontFamily: 'var(--font-geist)',
         },
         elements: {
           card: 'shadow-none border border-line',
