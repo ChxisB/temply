@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { BrandMark } from '~/components/brand-mark';
 import { ThemeToggle } from '~/components/theme-toggle';
 import { UserMenu } from '~/components/dashboard/user-menu';
 import { Button } from '~/components/ui/button';
@@ -71,7 +72,7 @@ export function Header() {
       <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-5">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-accent text-xs font-bold text-white">T</span>
+            <BrandMark className="size-6 text-accent" />
             <span className="font-display text-base font-semibold tracking-tight text-ink">Temply</span>
           </Link>
 

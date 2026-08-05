@@ -3,6 +3,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { MenuIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
+import { BrandMark } from '~/components/brand-mark';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { NavLinks } from './nav-items';
@@ -40,7 +41,7 @@ export function MobileNav() {
 
           <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2 pl-4">
             <div className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-md bg-accent text-xs font-bold text-white">T</span>
+              <BrandMark className="size-6 text-rail-active-ink" />
               <Link href="/dashboard" className="font-display text-base font-semibold tracking-tight text-rail-ink">
                 Temply
               </Link>
