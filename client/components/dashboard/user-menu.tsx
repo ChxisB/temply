@@ -1,21 +1,12 @@
 'use client';
 
 import { useClerk, useUser } from '@clerk/nextjs';
-import {
-  CreditCardIcon,
-  KeyIcon,
-  LayoutDashboardIcon,
-  LogOutIcon,
-  SettingsIcon,
-  FileTextIcon,
-  UserIcon,
-} from 'lucide-react';
+import { LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -80,33 +71,7 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard" className="flex cursor-pointer items-center gap-2">
-              <LayoutDashboardIcon className="h-4 w-4" />
-              Dashboard
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/templates" className="flex cursor-pointer items-center gap-2">
-              <FileTextIcon className="h-4 w-4" />
-              Templates
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/api-keys" className="flex cursor-pointer items-center gap-2">
-              <KeyIcon className="h-4 w-4" />
-              API Keys
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/billing" className="flex cursor-pointer items-center gap-2">
-              <CreditCardIcon className="h-4 w-4" />
-              Billing
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        {/* Navigation lives in the sidebar; this menu is about the account. */}
         <DropdownMenuItem asChild>
           <Link href="/dashboard/settings" className="flex cursor-pointer items-center gap-2">
             <SettingsIcon className="h-4 w-4" />

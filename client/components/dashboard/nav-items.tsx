@@ -6,7 +6,6 @@ import {
   KeyIcon,
   LayoutDashboardIcon,
   PaletteIcon,
-  SettingsIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,7 +25,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard/api-keys', label: 'API keys', icon: KeyIcon },
   { href: '/dashboard/brands', label: 'Brands', icon: PaletteIcon },
   { href: '/dashboard/billing', label: 'Billing', icon: CreditCardIcon },
-  { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 /** Shared by the fixed sidebar and the narrow-viewport drawer, so the two can
