@@ -54,14 +54,18 @@ function NumberField({
   value,
   fallback,
   onChange,
+  id: idOverride,
 }: {
   label: string;
   value?: string;
   fallback: string;
   onChange: (next: string) => void;
+  /** Needed when two groups share a label (both cards and buttons have a
+   *  "Corner") — the derived id would otherwise collide. */
+  id?: string;
 }) {
   const current = parseInt(value ?? fallback, 10);
-  const id = `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const id = idOverride ?? `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
     <div className="space-y-1">
@@ -168,6 +172,15 @@ export function RawThemeFields({
           fallback={d.button?.color ?? '#FFFFFF'}
           onChange={(color) => patch({ button: { ...theme.button, color } })}
           hint={<ThemeIssueHint issues={issuesForField(theme, 'button-text')} />}
+        />
+        <NumberField
+          id="theme-button-corner"
+          label="Corner"
+          value={theme.button?.borderRadius}
+          fallback={d.button?.borderRadius ?? '6px'}
+          onChange={(borderRadius) =>
+            patch({ button: { ...theme.button, borderRadius } })
+          }
         />
         <ColorField
           label="Link"
