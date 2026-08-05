@@ -131,13 +131,15 @@ export function StatTile({
   label,
   value,
   hint,
+  className,
 }: {
   label: string;
   value: React.ReactNode;
   hint?: string;
+  className?: string;
 }) {
   return (
-    <Card className="p-3.5">
+    <Card className={cn('p-3.5', className)}>
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 font-display text-2xl font-semibold tabular-nums text-ink">{value}</p>
       {hint ? <p className="mt-0.5 text-xs text-faint">{hint}</p> : null}

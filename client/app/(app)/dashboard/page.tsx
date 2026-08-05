@@ -33,17 +33,32 @@ export default async function DashboardPage() {
       <PageHeader
         title={`Welcome back${user?.firstName ? `, ${user.firstName}` : ''}`}
         description="Where your templates and usage stand today."
-        actions={<NewTemplateButton />}
       />
 
+      {/* The tiles are the navigation: each one opens the page it summarises. */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatTile label="Templates" value={templatesFailed ? '—' : templates.length} />
-        <StatTile label="API keys" value={billing?.usage?.apiKeys ?? '—'} />
-        <StatTile
-          label="Plan"
-          value={<span className="capitalize">{billing?.plan ?? '—'}</span>}
-          hint={billing ? undefined : 'Usage could not be loaded'}
-        />
+        <Link href="/dashboard/templates">
+          <StatTile
+            label="Templates"
+            value={templatesFailed ? '—' : templates.length}
+            className="transition-colors hover:border-line-strong"
+          />
+        </Link>
+        <Link href="/dashboard/api-keys">
+          <StatTile
+            label="API keys"
+            value={billing?.usage?.apiKeys ?? '—'}
+            className="transition-colors hover:border-line-strong"
+          />
+        </Link>
+        <Link href="/dashboard/billing">
+          <StatTile
+            label="Plan"
+            value={<span className="capitalize">{billing?.plan ?? '—'}</span>}
+            hint={billing ? undefined : 'Usage could not be loaded'}
+            className="h-full transition-colors hover:border-line-strong"
+          />
+        </Link>
       </div>
 
       <section className="space-y-2.5">
