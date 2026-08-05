@@ -5,7 +5,7 @@
  * so the thing inside it can be the variable.
  *
  * Anything drawn on the white email canvas uses literal hex, for the same
- * reason `EmailArtifact` does: a mail client renders the canvas white in both
+ * reason the hero showreel does: a mail client renders the canvas white in both
  * themes, so its contents cannot follow ours.
  */
 

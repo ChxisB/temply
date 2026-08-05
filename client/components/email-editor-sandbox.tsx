@@ -23,7 +23,6 @@ import { Button } from './ui/button';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { PreviewEmailDialog } from './preview-email-dialog';
-import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
