@@ -1,38 +1,62 @@
-import { ArrowRightIcon, BoxIcon, EyeIcon, PaintbrushIcon, PanelRightOpenIcon, PuzzleIcon, ZapIcon } from 'lucide-react';
-import Link from 'next/link';
-import { EmailArtifact } from '~/components/marketing/email-artifact';
-import { Button } from '~/components/ui/button';
+'use client';
 
-const features = [
+import type { CSSProperties } from 'react';
+import { ArrowRightIcon, MailIcon } from 'lucide-react';
+import Link from 'next/link';
+import { BlockPalette } from '~/components/marketing/block-palette';
+import { HeroBackground } from '~/components/marketing/hero-background';
+import { HeroShowreel } from '~/components/marketing/hero-showreel';
+import { ScrollToTop } from '~/components/marketing/scroll-to-top';
+import { ShowcaseRow } from '~/components/marketing/showcase-row';
+import {
+  ApiMock,
+  EditorMock,
+  PreviewMock,
+  VariablesMock,
+} from '~/components/marketing/showcase-visuals';
+import { Button } from '~/components/ui/button';
+import { useParallax } from '~/hooks/use-parallax';
+import { useReveal } from '~/hooks/use-reveal';
+
+// Replace with the real inbox before launch. Nothing else on the page depends
+// on it, so it is a one-line change.
+const CONTACT_EMAIL = 'hello@temply.app';
+
+/** Position in the hero's entrance sequence. The stagger is declared beside the
+ *  element it belongs to rather than in a stack of numbered CSS classes. */
+const enterAt = (ms: number) => ({ '--enter-delay': `${ms}ms` }) as CSSProperties;
+
+// Four rows, in the order the work actually happens: build it, check it, ship
+// it, reuse it. That sequence is why the rows carry stage labels instead of
+// decorative numbering.
+const showcase = [
   {
-    icon: PuzzleIcon,
-    title: 'Block-based editor',
-    desc: 'Drag, drop, and arrange content blocks — no HTML, no frustration. Just point-and-click email building.',
+    stage: 'Build',
+    title: 'A block editor, not an HTML file',
+    description:
+      'Point and click your way down the canvas — logo, heading, copy, button, divider. Temply writes the table-based HTML underneath, so you never open it.',
+    visual: <EditorMock />,
   },
   {
-    icon: EyeIcon,
-    title: 'Live preview',
-    desc: 'See exactly how your email renders across clients before hitting send. What you build is what they get.',
+    stage: 'Check',
+    title: 'See it the way the inbox will',
+    description:
+      'Preview a template as it renders across clients — including the ones that force dark mode on you — before you ship it.',
+    visual: <PreviewMock />,
   },
   {
-    icon: PaintbrushIcon,
-    title: 'Dark mode preview',
-    desc: 'See how your email holds up in a client that forces dark mode — before you send it.',
+    stage: 'Ship',
+    title: 'Pull it into your app with one request',
+    description:
+      'Every template sits behind a clean API. Authenticate with a key, fetch the HTML by template id, and render it wherever your product needs it.',
+    visual: <ApiMock />,
   },
   {
-    icon: BoxIcon,
-    title: 'Pre-built components',
-    desc: 'Headers, footers, buttons, spacers, columns — grab a component and customise it in seconds.',
-  },
-  {
-    icon: ZapIcon,
-    title: 'Variable injections',
-    desc: 'Drop dynamic placeholders anywhere. Names, links, unsubscribe URLs — fill them at send time.',
-  },
-  {
-    icon: PanelRightOpenIcon,
-    title: 'Resend integration',
-    desc: 'Connect your Resend API key and send straight from the editor. No extra plumbing needed.',
+    stage: 'Reuse',
+    title: 'Placeholders in, brand on top',
+    description:
+      'Drop dynamic placeholders anywhere and fill them at request time. Save a brand once and reuse the same look across every template you build.',
+    visual: <VariablesMock />,
   },
 ];
 
@@ -47,83 +71,201 @@ const components = [
 ];
 
 export default function Home() {
+  const artifactRef = useParallax(0.12, 36);
+  const featuresRef = useReveal();
+  const blocksRef = useReveal();
+  const contactRef = useReveal();
+  // Two speeds in the Blocks section so the palette and the chip column drift
+  // relative to each other — one shared speed would just move the whole band.
+  const paletteRef = useParallax(0.05, 16, { relative: true });
+  const chipsRef = useParallax(0.09, 26, { relative: true });
+
   return (
-    <div className="bg-surface">
-      <section className="mx-auto max-w-5xl px-5 pt-16 pb-20 sm:pt-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance text-ink sm:text-4xl">
-            Write the email. We handle the HTML.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-muted">
-            Drag blocks into place and Temply produces email that holds together
-            in real inboxes. No code needed — and an API waiting for you if you
-            ever want one.
-          </p>
-
-          <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-            <Button asChild variant="primary" size="lg">
-              <Link href="/playground">
-                Open the editor
-                <ArrowRightIcon />
-              </Link>
-            </Button>
-            <Button asChild size="lg">
-              <Link href="/login">Sign in to save</Link>
-            </Button>
+    // No background class here on purpose: the body already paints bg-surface,
+    // and an opaque wrapper would hide the fixed dot field below it.
+    <div>
+      {/* One dot field for the whole page, fixed so the content scrolls over
+          it like a workbench — this is what keeps the mid-page from going
+          flat. Sections with their own opaque band (Blocks) carry their own
+          texture instead. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10"
+        style={{
+          backgroundImage:
+            'radial-gradient(color-mix(in oklab, var(--ds-ink) 6%, transparent) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }}
+      />
+      <section className="relative overflow-hidden">
+        <HeroBackground />
+        <div className="relative z-10 mx-auto max-w-5xl px-5 pt-24 pb-28 sm:pt-32">
+          <div className="mx-auto max-w-2xl text-center">
+            <h1
+              className="hero-enter font-display text-4xl font-semibold tracking-tight text-balance text-ink lg:text-5xl"
+              style={enterAt(0)}
+            >
+              Write the email. We handle the HTML.
+            </h1>
+            <p
+              className="hero-enter mx-auto mt-5 max-w-xl text-lg text-pretty text-muted"
+              style={enterAt(100)}
+            >
+              Drag blocks into place and Temply turns them into email that holds
+              together in any inbox — then pull it into your app with a clean API.
+            </p>
+            <div className="hero-enter mt-8 flex justify-center" style={enterAt(200)}>
+              <Button asChild variant="primary" size="lg">
+                <Link href="/playground">Try the editor<ArrowRightIcon /></Link>
+              </Button>
+            </div>
+            <p className="hero-enter mt-3 text-sm text-muted" style={enterAt(280)}>
+              No account needed to try it. Create one when you want to keep your work.
+            </p>
           </div>
-          <p className="mt-3 text-sm text-muted">
-            No account needed to try it. Create one when you want to keep your work.
-          </p>
-        </div>
 
-        <div className="mt-14">
-          <EmailArtifact />
+          {/* The entrance and the parallax both write `transform`, so they get
+              one element each instead of fighting over the same one. */}
+          <div className="hero-enter mt-16" style={enterAt(380)}>
+            <div
+              ref={artifactRef}
+              className="will-change-transform"
+              style={{ transform: 'translate3d(0, var(--parallax-y, 0), 0)' }}
+            >
+              <HeroShowreel />
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-5xl px-5 py-16">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">
-            Everything you need to build emails
-          </h2>
-          <p className="mt-1.5 max-w-xl text-base text-muted">
-            A block editor that outputs table-based HTML, so your email arrives
-            looking the way you built it.
-          </p>
-
-          <div className="mt-8 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <div key={feature.title} className="bg-raised p-5">
-                  <Icon className="size-4 text-accent-ink" />
-                  <h3 className="mt-3 text-sm font-semibold text-ink">{feature.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted">{feature.desc}</p>
-                </div>
-              );
-            })}
+      <section id="features" data-anchor className="border-t border-line">
+        <div className="mx-auto max-w-5xl px-5 py-24 sm:py-32">
+          <div ref={featuresRef} data-reveal className="max-w-2xl">
+            <p className="font-mono text-2xs tracking-[0.16em] text-accent-ink uppercase">
+              The workflow
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-balance text-ink">
+              Everything you need to build emails
+            </h2>
+            <p className="mt-4 max-w-xl text-lg text-pretty text-muted">
+              A block editor that outputs table-based HTML, and an API that hands it
+              to your app exactly as you built it.
+            </p>
           </div>
-        </div>
-      </section>
 
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-5xl px-5 py-16">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">Blocks in the box</h2>
-          <p className="mt-1.5 text-base text-muted">
-            Press <kbd className="rounded-xs border border-line bg-raised px-1 font-mono text-xs">/</kbd>{' '}
-            in the editor to reach any of them.
-          </p>
-
-          <ul className="mt-6 flex flex-wrap gap-1.5">
-            {components.map((component) => (
-              <li
-                key={component}
-                className="rounded-sm border border-line bg-raised px-2.5 py-1 text-sm text-muted"
-              >
-                {component}
-              </li>
+          <div className="mt-20 flex flex-col gap-24 sm:gap-32">
+            {showcase.map((row, index) => (
+              <ShowcaseRow
+                key={row.stage}
+                stage={row.stage}
+                title={row.title}
+                description={row.description}
+                visual={row.visual}
+                flipped={index % 2 === 1}
+              />
             ))}
-          </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="blocks" data-anchor className="relative overflow-hidden border-t border-line bg-sunken">
+        {/* The hero's dot texture, quieter, so the sunken band reads as part of
+            the same room rather than a flat cut. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(color-mix(in oklab, var(--ds-ink) 7%, transparent) 1px, transparent 1px)',
+            backgroundSize: '22px 22px',
+            maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+            WebkitMaskImage:
+              'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+          }}
+        />
+        <div ref={blocksRef} data-reveal className="relative mx-auto max-w-5xl px-5 py-24 sm:py-32">
+          <div className="max-w-2xl">
+            <p className="font-mono text-2xs tracking-[0.16em] text-accent-ink uppercase">
+              The slash menu
+            </p>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-balance text-ink">
+              Blocks in the box
+            </h2>
+            <p className="mt-4 max-w-xl text-lg text-pretty text-muted">
+              Press{' '}
+              <kbd className="rounded-xs border border-line bg-raised px-1.5 py-0.5 font-mono text-sm">
+                /
+              </kbd>{' '}
+              anywhere on the canvas and the whole set is one keystroke away.
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-10 lg:grid-cols-[minmax(0,25rem)_1fr] lg:items-start lg:gap-16">
+            <div
+              ref={paletteRef}
+              className="will-change-transform"
+              style={{ transform: 'translate3d(0, var(--parallax-y, 0), 0)' }}
+            >
+              <BlockPalette />
+            </div>
+
+            <div
+              ref={chipsRef}
+              className="will-change-transform"
+              style={{ transform: 'translate3d(0, var(--parallax-y, 0), 0)' }}
+            >
+              <p className="font-mono text-2xs tracking-wide text-faint uppercase">
+                All sixteen blocks
+              </p>
+              <ul className="mt-4 flex flex-wrap gap-1.5">
+                {components.map((component) => (
+                  <li
+                    key={component}
+                    className="rounded-sm border border-line bg-raised px-2.5 py-1 text-sm text-muted"
+                  >
+                    {component}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 max-w-sm text-base leading-relaxed text-muted">
+                Nest sections and columns, repeat a block over a list, or show one
+                only when a condition holds.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" data-anchor className="relative overflow-hidden border-t border-line">
+        {/* The page closes the way it opened: a soft indigo wash behind the
+            final ask. The dot texture is the page-wide fixed field. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute left-1/2 top-[-30%] h-[380px] w-[760px] -translate-x-1/2 rounded-full opacity-50 blur-3xl"
+            style={{
+              background:
+                'radial-gradient(ellipse at center, color-mix(in oklab, var(--ds-accent) 32%, transparent), transparent 70%)',
+            }}
+          />
+        </div>
+        <div
+          ref={contactRef}
+          data-reveal
+          className="relative mx-auto max-w-5xl px-5 py-24 text-center sm:py-32"
+        >
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-balance text-ink lg:text-4xl">
+            Let&apos;s build something
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-lg text-pretty text-muted">
+            Questions, enterprise plans, or feedback — we&apos;d love to hear from you.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <Button asChild variant="primary" size="lg">
+              <a href={`mailto:${CONTACT_EMAIL}`}>
+                Get in touch<MailIcon />
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -131,10 +273,12 @@ export default function Home() {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-muted">
           <p>&copy; {new Date().getFullYear()} Temply</p>
           <Link href="/playground" className="text-accent-ink underline-offset-4 hover:underline">
-            Open the editor
+            Try the editor
           </Link>
         </div>
       </footer>
+
+      <ScrollToTop />
     </div>
   );
 }

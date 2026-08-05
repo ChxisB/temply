@@ -9,7 +9,7 @@
  */
 export function EmailArtifact() {
   return (
-    <div className="rounded-xl border border-line bg-surface p-4 sm:p-8">
+    <div className="rounded-xl border border-line bg-raised p-4 shadow-lg sm:p-8">
       <div className="mb-3 flex items-center justify-between px-1">
         <span className="font-mono text-2xs tracking-wide text-faint uppercase">
           Container 600px
@@ -31,7 +31,7 @@ export function EmailArtifact() {
 
           <p className="mt-3 text-base leading-relaxed text-[#4a5160]">
             Hi Sam — the key you asked for is active. Drop it into your server
-            environment and your first send will go out on the next deploy.
+            environment and you can pull any template on the next deploy.
           </p>
 
           <div className="mt-5 rounded-md bg-[#f4f5f7] px-4 py-3 font-mono text-sm text-[#12141a]">
@@ -40,7 +40,7 @@ export function EmailArtifact() {
 
           {/* Deliberately not a link: this is a depiction of an email, and a
               button here that did nothing would be a small lie. */}
-          <span className="mt-6 inline-flex h-10 items-center rounded-md bg-[#346fe4] px-6 text-sm font-medium text-white">
+          <span className="mt-6 inline-flex h-10 items-center rounded-md bg-[#4f46e5] px-6 text-sm font-medium text-white">
             Open the dashboard
           </span>
 
