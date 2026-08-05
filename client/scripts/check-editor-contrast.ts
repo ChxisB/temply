@@ -41,6 +41,15 @@ function block(css: string, selector: string): Record<string, string> {
     if (hex) out[hex[1]] = hex[2].toLowerCase();
     const alias = line.match(/--color-([a-z0-9-]+)\s*:\s*var\(--ds-([a-z-]+)\)/);
     if (alias) out[alias[1]] = `@${alias[2]}`;
+    // The editor chrome's own per-theme pair (see core/styles/index.css):
+    // an alias may point at --mly-chrome-*, which per theme holds either a
+    // hex or a --ds-* reference.
+    const chromeHex = line.match(/--mly-chrome-([a-z-]+)\s*:\s*(#[0-9a-fA-F]{6})/);
+    if (chromeHex) out[`chrome-${chromeHex[1]}`] = chromeHex[2].toLowerCase();
+    const chromeAlias = line.match(/--mly-chrome-([a-z-]+)\s*:\s*var\(--ds-([a-z-]+)\)/);
+    if (chromeAlias) out[`chrome-${chromeAlias[1]}`] = `@${chromeAlias[2]}`;
+    const colorToChrome = line.match(/--color-([a-z0-9-]+)\s*:\s*var\(--mly-chrome-([a-z-]+)\)/);
+    if (colorToChrome) out[colorToChrome[1]] = `%chrome-${colorToChrome[2]}`;
   }
   return out;
 }
@@ -75,6 +84,10 @@ const themes = {
   dark: block(globals, '.dark'),
 };
 const aliases = block(editorCss, '@theme inline');
+const chromeVars = {
+  light: block(editorCss, ':root'),
+  dark: block(editorCss, '.dark'),
+};
 
 /**
  * The contract. A `mly:` utility on the left resolves through the editor theme
@@ -87,8 +100,13 @@ const TEXT_ON_SURFACE = ['midnight-gray', 'gray-500', 'gray-600', 'gray-700', 'g
 const MARKS = ['gray-400', 'slate-400'] as const;
 
 function resolve(alias: string, theme: 'light' | 'dark'): string | null {
-  const target = aliases[alias];
+  let target = aliases[alias];
   if (!target) return null;
+  if (target.startsWith('%')) {
+    // Chrome indirection: hop through the per-theme --mly-chrome-* value.
+    target = chromeVars[theme][target.slice(1)] ?? '';
+    if (!target) return null;
+  }
   if (!target.startsWith('@')) return target;
   return themes[theme][target.slice(1)] ?? null;
 }
