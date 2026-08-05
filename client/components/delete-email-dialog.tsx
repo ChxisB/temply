@@ -39,7 +39,7 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
   return (
     <Dialog>
       <DialogTrigger
-        className="inline-flex items-center gap-1.5 rounded-full border border-line bg-danger-wash px-4 py-2 text-sm font-medium text-danger-ink transition-all hover:border-line-strong hover:bg-danger-wash active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-danger-ink transition-colors hover:bg-danger-wash disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0"
         disabled={isDeleteTemplatePending || !templateId}
       >
         {isDeleteTemplatePending ? (

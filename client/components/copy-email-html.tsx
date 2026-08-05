@@ -7,6 +7,7 @@ import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 import { cn } from '~/lib/classname';
 import { isSafari } from '~/lib/detect-browser';
 import { httpPost } from '~/lib/http';
+import { Button } from '~/components/ui/button';
 
 type CopyEmailHtmlProps = {
   previewText?: string;
@@ -34,13 +35,8 @@ export function CopyEmailHtml(props: CopyEmailHtmlProps) {
   });
 
   return (
-    <button
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50',
-        isCopied
-          ? 'bg-green-200 text-green-600'
-          : 'bg-raised disabled:opacity-50'
-      )}
+    <Button
+      className={cn(isCopied && 'bg-success-wash text-success-ink hover:bg-success-wash')}
       onClick={async (e) => {
         if (!editor) {
           toast.error('No email content to copy');
@@ -104,6 +100,6 @@ export function CopyEmailHtml(props: CopyEmailHtmlProps) {
       <span className="hidden lg:inline-block">
         {isCopied ? 'Copied' : 'Copy HTML'}
       </span>
-    </button>
+    </Button>
   );
 }

@@ -19,6 +19,7 @@ import { httpDelete, httpPost } from '~/lib/http';
 import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
 import type { Mail } from '~/db/schema';
 import { CopyEmailHtml } from './copy-email-html';
+import { Button } from './ui/button';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { PreviewEmailDialog } from './preview-email-dialog';
@@ -29,14 +30,9 @@ import defaultEmailJSON from '~/lib/default-editor-json.json';
 import { VersionHistoryDialog } from './version-history-dialog';
 import { TemplateThemePanel } from './template-theme-panel';
 import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
-const pillBtn =
-  'inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
-
-const primaryBtn =
-  'inline-flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50';
-
+// The app-wide input treatment; the global :focus-visible ring supplies focus.
 const inputClass =
-  'w-full rounded-xl border border-line bg-raised/80 px-4 py-2.5 text-sm text-ink placeholder:text-faint focus:border-accent focus:outline-none transition-colors';
+  'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
 
 const labelClass = 'mb-1.5 block text-sm font-medium text-ink';
 
@@ -179,21 +175,17 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   return (
     <div className="space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-raised p-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
         <div className="flex flex-wrap items-center gap-2">
           {showSaveButton && (
-            <button
-              className={primaryBtn}
-              disabled={saveBtnPending}
-              onClick={handleSave}
-            >
+            <Button variant="primary" disabled={saveBtnPending} onClick={handleSave}>
               {saveBtnPending ? (
-                <Loader2Icon className="size-4 animate-spin" />
+                <Loader2Icon className="animate-spin" />
               ) : (
-                <SaveIcon className="size-4" />
+                <SaveIcon />
               )}
               {template?.id ? 'Save' : 'Save New'}
-            </button>
+            </Button>
           )}
 
           <PreviewEmailDialog
@@ -209,16 +201,21 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           <CopyEmailHtml editor={editor} />
           <DeleteEmailDialog templateId={template?.id} />
 
-          <button className={pillBtn} onClick={handleSend}>
-            <SendIcon className="size-4" />
-            <span className="hidden sm:inline">Send</span>
-          </button>
+          {/* Internal-debug delivery — only for a saved template. The
+              anonymous playground must not advertise a send capability the
+              product does not offer. */}
+          {template?.id && (
+            <Button onClick={handleSend}>
+              <SendIcon />
+              <span className="hidden sm:inline">Send</span>
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Template ID */}
       {template?.short_code && (
-        <div className="flex items-center gap-3 rounded-xl border border-line bg-raised p-3">
+        <div className="flex items-center gap-3 rounded-lg border border-line bg-raised p-3">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium text-faint">Template ID</span>
             <code className="rounded-md bg-hover px-2 py-1 text-sm font-mono text-ink">

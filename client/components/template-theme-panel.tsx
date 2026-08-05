@@ -93,7 +93,9 @@ export function TemplateThemePanel({
             label="Brand"
             value={selectedBrandId}
             onValueChange={handleBrandChange}
-            className="w-full"
+            // max-w-none: the base Select shrink-wraps for the editor's bubble
+            // menus; here the border must reach the chevron at the row's end.
+            className="w-full max-w-none"
             options={[
               { value: 'custom', label: 'Custom' },
               ...BRAND_PRESETS.map((p) => ({ value: p.id, label: p.name })),

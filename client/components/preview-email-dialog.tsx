@@ -69,7 +69,7 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
       }}
     >
       <DialogTrigger
-        className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-ink disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-line bg-raised px-3 text-sm font-medium text-ink shadow-xs transition-colors hover:bg-hover hover:border-line-strong disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

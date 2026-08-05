@@ -4,6 +4,7 @@ import { HistoryIcon, Loader2Icon, RotateCcwIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { httpGet, httpPost } from '~/lib/http';
+import { Button } from '~/components/ui/button';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import {
@@ -75,13 +76,10 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); setPreviewVersion(null); }}>
       <DialogTrigger asChild>
-        <button
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-raised px-3 py-2 text-sm font-medium text-muted transition-all hover:border-line-strong hover:bg-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
-          type="button"
-        >
-          <HistoryIcon className="size-4" />
+        <Button type="button">
+          <HistoryIcon />
           <span className="hidden sm:inline">History</span>
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent className="w-full min-w-0 max-w-lg overflow-hidden p-4">
         <DialogHeader>
