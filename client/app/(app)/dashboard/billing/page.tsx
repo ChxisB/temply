@@ -23,6 +23,66 @@ type CheckoutResponse = {
   url: string;
 };
 
+type Quota = {
+  plan: 'free' | 'pro' | 'enterprise';
+  api: { used: number; limit: number | null; remaining: number | null };
+  resetsOn: string;
+};
+
+function formatReset(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
+/** The month's API consumption with a progress bar — the same numbers the
+ *  sidebar widget shows, given room to breathe on the billing page. */
+function ApiUsageCard() {
+  const { data } = useQuery({
+    queryKey: ['quota'],
+    queryFn: () => httpGet<Quota>('/api/v1/quota', {}),
+    staleTime: 30_000,
+  });
+
+  if (!data) return null;
+
+  const { used, limit } = data.api;
+  const unlimited = limit === null;
+  const pct = unlimited || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
+  const over = !unlimited && pct >= 100;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium text-ink">API usage</p>
+        <p className="text-sm text-muted tabular-nums">
+          {unlimited
+            ? `${used.toLocaleString()} · unlimited`
+            : `${used.toLocaleString()} / ${limit!.toLocaleString()}`}
+        </p>
+      </div>
+      {!unlimited ? (
+        <div
+          className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-hover"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={pct}
+          aria-label={`${used} of ${limit} monthly API calls used`}
+        >
+          <div
+            className={cn('h-full rounded-full', over ? 'bg-danger' : 'bg-accent')}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      ) : null}
+      <div className="mt-2 flex items-center justify-between text-xs text-muted">
+        <span>API calls this month</span>
+        <span>resets {formatReset(data.resetsOn)}</span>
+      </div>
+    </Card>
+  );
+}
+
 /**
  * `included: false` means the plan does not have this. Restrictions used to be
  * listed as `included: true` — "0 API keys" and "No versioning" rendered with
@@ -147,6 +207,8 @@ function BillingContent() {
         <StatTile label="Templates" value={usage.templates} />
         <StatTile label="API keys" value={usage.apiKeys} />
       </div>
+
+      <ApiUsageCard />
 
       <section className="space-y-2.5">
         <h2 className="text-sm font-semibold text-ink">Plans</h2>
