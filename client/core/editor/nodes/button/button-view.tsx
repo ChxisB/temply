@@ -88,13 +88,18 @@ export function ButtonView(props: NodeViewProps) {
                 'mly:font-semibold mly:no-underline',
                 {
                   'mly:rounded-full!': _radius === 'round',
-                  'mly:rounded-md!': _radius === 'smooth',
                   'mly:rounded-none!': _radius === 'sharp',
                 }
               )}
               tabIndex={-1}
               style={
                 {
+                  // "smooth" follows the brand: the theme's button radius,
+                  // falling back to the classic 6px. Round and sharp stay
+                  // absolute, mirroring the render engine.
+                  ...(_radius === 'smooth'
+                    ? { borderRadius: 'var(--mly-button-border-radius, 6px)' }
+                    : {}),
                   backgroundColor:
                     variant === 'filled'
                       ? buttonColor || 'var(--mly-button-background-color)'

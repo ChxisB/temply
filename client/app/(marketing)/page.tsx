@@ -241,7 +241,7 @@ export default function Home() {
             final ask. The dot texture is the page-wide fixed field. */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div
-            className="absolute left-1/2 top-[-30%] h-[380px] w-[760px] -translate-x-1/2 rounded-full opacity-50 blur-3xl"
+            className="absolute left-1/2 top-[-30%] h-95 w-190 -translate-x-1/2 rounded-full opacity-50 blur-3xl"
             style={{
               background:
                 'radial-gradient(ellipse at center, color-mix(in oklab, var(--ds-accent) 32%, transparent), transparent 70%)',

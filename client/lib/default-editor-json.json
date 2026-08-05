@@ -48,7 +48,7 @@
         "url": "",
         "alignment": "left",
         "variant": "filled",
-        "borderRadius": "round",
+        "borderRadius": "smooth",
         "buttonColor": null,
         "textColor": null,
         "paddingTop": null,

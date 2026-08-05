@@ -93,7 +93,7 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
       </DialogTrigger>
 
       {open && (
-        <DialogContent className="z-[99999] flex max-w-[620px] flex-col border-none bg-transparent p-0 shadow-none max-[680px]:h-full max-[680px]:border-0 max-[680px]:p-2">
+        <DialogContent className="flex max-w-[620px] flex-col border-none bg-transparent p-0 shadow-none max-[680px]:h-full max-[680px]:border-0 max-[680px]:p-2">
           <DialogHeader className="sr-only">
             <DialogTitle>Preview Email</DialogTitle>
             <DialogDescription>

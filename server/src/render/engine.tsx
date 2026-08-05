@@ -1022,11 +1022,13 @@ export class Engine {
       return <></>;
     }
 
+    // "smooth" follows the brand: the theme's button radius when one is set,
+    // the classic 6px otherwise. Round and sharp are absolute choices.
     let radius: string | undefined = '0px';
     if (borderRadius === 'round') {
       radius = '9999px';
     } else if (borderRadius === 'smooth') {
-      radius = '6px';
+      radius = buttonTheme?.borderRadius || '6px';
     }
 
     const { shouldRemoveBottomMargin } = this.getMarginOverrideConditions(

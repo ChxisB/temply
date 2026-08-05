@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { NavigationLoadingBar } from '~/components/navigation-loader';
 import { ThemeProvider } from '~/components/theme-provider';
 import { queryClient } from '~/lib/query-client';
+import React from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
