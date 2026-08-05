@@ -39,7 +39,10 @@ export function EmailEditor(props: EmailEditorProps) {
             hasMenuBar: false,
             wrapClassName: cn('editor-wrap', isLoading && 'hidden'),
             bodyClassName: '!mt-0 !border-0 !p-0',
-            contentClassName: `editor-content mx-auto max-w-[calc(600px+80px)]! px-10! pt-10! pb-10!`,
+            // Layout (page background, card width, paddings) is painted by the
+            // sandbox from the live theme, so the content carries none of its
+            // own — hardcoded padding here would double what the theme sets.
+            contentClassName: 'editor-content',
             toolbarClassName: 'flex-wrap !items-start',
             spellCheck: false,
             autofocus,

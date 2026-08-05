@@ -164,34 +164,51 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const saveBtnPending = isUpdateTemplatePending || isCreateTemplatePending;
   const [shortCodeCopied, setShortCodeCopied] = useState(false);
 
-  // The editor canvas is styled by --mly-* variables (declared at :root in
-  // core/styles). Re-declaring them on this wrapper from the live theme makes
-  // a brand or colour change visible in the content immediately, instead of
-  // only at preview/render time.
-  const canvasVars = useMemo(() => {
+  // The editor canvas only consumes --mly-* variables for buttons and links;
+  // everything else (page background, card width, paddings, corners) is
+  // painted by the renderer at send time and would otherwise never show here.
+  // So the sandbox draws the page and the card itself from the live theme —
+  // outer div = the email body, inner div = the container card — and hands
+  // the button/link variables down. A brand or colour change is now visible
+  // in the content the moment it happens.
+  const { pageStyle, cardStyle } = useMemo(() => {
     const d = DEFAULT_RENDERER_THEME;
-    const v: Record<string, string> = {};
-    const set = (name: string, val?: string) => {
-      if (val) v[name] = val;
+    const pick = <K extends 'body' | 'container' | 'button' | 'link'>(part: K) =>
+      ({ ...(d[part] ?? {}), ...(theme[part] ?? {}) }) as NonNullable<RendererThemeOptions[K]>;
+
+    const body = pick('body');
+    const container = pick('container');
+    const button = pick('button');
+    const link = pick('link');
+
+    const pageStyle: React.CSSProperties = {
+      backgroundColor: body.backgroundColor,
+      paddingTop: body.paddingTop ?? '0px',
+      paddingRight: body.paddingRight ?? '16px',
+      paddingBottom: body.paddingBottom ?? body.paddingTop ?? '0px',
+      paddingLeft: body.paddingLeft ?? '16px',
+      // Button and link colours are read inside the canvas via these vars.
+      ['--mly-button-background-color' as string]: button.backgroundColor,
+      ['--mly-button-text-color' as string]: button.color,
+      ['--mly-button-border-radius' as string]: button.borderRadius,
+      ['--mly-link-color' as string]: link.color,
     };
-    set('--mly-body-background-color', theme.body?.backgroundColor ?? d.body?.backgroundColor);
-    set('--mly-body-padding-top', theme.body?.paddingTop ?? d.body?.paddingTop);
-    set('--mly-body-padding-right', theme.body?.paddingRight ?? d.body?.paddingRight);
-    set('--mly-body-padding-bottom', theme.body?.paddingBottom ?? d.body?.paddingBottom);
-    set('--mly-body-padding-left', theme.body?.paddingLeft ?? d.body?.paddingLeft);
-    set('--mly-container-background-color', theme.container?.backgroundColor ?? d.container?.backgroundColor);
-    set('--mly-container-padding-top', theme.container?.paddingTop ?? d.container?.paddingTop);
-    set('--mly-container-padding-right', theme.container?.paddingRight ?? d.container?.paddingRight);
-    set('--mly-container-padding-bottom', theme.container?.paddingBottom ?? d.container?.paddingBottom);
-    set('--mly-container-padding-left', theme.container?.paddingLeft ?? d.container?.paddingLeft);
-    set('--mly-container-border-radius', theme.container?.borderRadius ?? d.container?.borderRadius);
-    set('--mly-container-border-width', theme.container?.borderWidth ?? d.container?.borderWidth);
-    set('--mly-container-border-color', theme.container?.borderColor ?? d.container?.borderColor);
-    set('--mly-container-max-width', theme.container?.maxWidth ?? d.container?.maxWidth);
-    set('--mly-button-background-color', theme.button?.backgroundColor ?? d.button?.backgroundColor);
-    set('--mly-button-text-color', theme.button?.color ?? d.button?.color);
-    set('--mly-link-color', theme.link?.color ?? d.link?.color);
-    return v as React.CSSProperties;
+
+    const cardStyle: React.CSSProperties = {
+      maxWidth: container.maxWidth ?? '600px',
+      margin: '0 auto',
+      backgroundColor: container.backgroundColor,
+      borderRadius: container.borderRadius,
+      borderStyle: container.borderWidth ? 'solid' : undefined,
+      borderWidth: container.borderWidth,
+      borderColor: container.borderColor,
+      paddingTop: container.paddingTop,
+      paddingRight: container.paddingRight,
+      paddingBottom: container.paddingBottom,
+      paddingLeft: container.paddingLeft,
+    };
+
+    return { pageStyle, cardStyle };
   }, [theme]);
 
   const copyShortCode = async () => {
@@ -367,14 +384,16 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           <LayoutTemplateIcon className="size-4 text-faint" />
           <h2 className="text-sm font-medium text-ink">Content</h2>
         </header>
-        <div style={canvasVars}>
-          <EmailEditor
-            allowedMimeTypes={UPLOAD_MIME_TYPES}
-            autofocus={autofocus}
-            defaultContent={editorContent}
-            onImageUpload={imageUploader}
-            setEditor={setEditor}
-          />
+        <div style={pageStyle}>
+          <div style={cardStyle}>
+            <EmailEditor
+              allowedMimeTypes={UPLOAD_MIME_TYPES}
+              autofocus={autofocus}
+              defaultContent={editorContent}
+              onImageUpload={imageUploader}
+              setEditor={setEditor}
+            />
+          </div>
         </div>
       </section>
     </div>
