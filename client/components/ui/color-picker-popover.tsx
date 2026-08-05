@@ -3,6 +3,7 @@
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { COLOR_PRESETS } from '~/lib/color-presets';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
+import { pressable } from '~/components/ui/button';
 
 /**
  * The app's colour control: a swatch-plus-hex trigger opening a popover that
@@ -49,7 +50,7 @@ export function ColorPickerPopover({
                 aria-label={`Use ${preset}`}
                 aria-pressed={active}
                 onClick={() => onChange(preset)}
-                className={`size-8 rounded-sm border ${
+                className={`size-8 rounded-sm border ${pressable} ${
                   active ? 'border-accent ring-2 ring-accent/40' : 'border-line'
                 }`}
                 style={{ backgroundColor: preset }}

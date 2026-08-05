@@ -1,6 +1,7 @@
 'use client';
 import type { BrandKnobs } from '@temply/shared/brand-knobs';
 import { ColorPickerPopover } from '~/components/ui/color-picker-popover';
+import { pressable } from '~/components/ui/button';
 
 const CORNERS: { v: BrandKnobs['corner']; label: string }[] = [
   { v: 'sharp', label: 'Sharp' }, { v: 'soft', label: 'Soft' }, { v: 'round', label: 'Round' },
@@ -27,7 +28,7 @@ export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onCh
         <div className="flex gap-1">
           {CORNERS.map((c) => (
             <button key={c.v} type="button" onClick={() => onChange({ ...value, corner: c.v })}
-              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${value.corner === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
+              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${pressable} ${value.corner === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
           ))}
         </div>
       </div>
@@ -36,7 +37,7 @@ export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onCh
         <div className="flex gap-1">
           {DENSITIES.map((c) => (
             <button key={c.v} type="button" onClick={() => onChange({ ...value, density: c.v })}
-              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${value.density === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
+              className={`h-8 flex-1 rounded-sm border px-2 text-xs ${pressable} ${value.density === c.v ? 'border-accent bg-accent-wash text-accent-ink' : 'border-line text-muted hover:bg-hover'}`}>{c.label}</button>
           ))}
         </div>
       </div>

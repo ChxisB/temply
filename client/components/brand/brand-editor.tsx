@@ -5,6 +5,7 @@ import type { RendererThemeOptions } from '@temply/shared/theme';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
 import { matchThemeToBrand } from '~/lib/theme-match';
+import { pressable } from '~/components/ui/button';
 import { BrandKnobsControl } from './brand-knobs';
 import { RawThemeFields } from './raw-theme-fields';
 
@@ -27,7 +28,7 @@ export function BrandEditor({ theme, onChange }: { theme: RendererThemeOptions; 
                 type="button"
                 aria-pressed={active}
                 onClick={() => onChange(structuredClone(p.theme))}
-                className={`flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-xs transition-colors ${
+                className={`flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-xs ${pressable} ${
                   active
                     ? 'border-accent bg-accent-wash text-accent-ink'
                     : 'border-line text-ink hover:bg-hover'
