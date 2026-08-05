@@ -12,17 +12,41 @@ export function bestTextOn(bg: string): string {
   return contrast(bg, '#FFFFFF') >= contrast(bg, '#111111') ? '#FFFFFF' : '#111111';
 }
 
+/**
+ * Applies only the knobs that CHANGED relative to what the theme already
+ * expresses. A knob owns a few fields; touching one knob must not stamp the
+ * other knobs' canonical values over custom edits — picking a corner used to
+ * reset every padding and repaint the button, which read as data loss.
+ */
 export function applyKnobs(base: RendererThemeOptions, knobs: BrandKnobs): RendererThemeOptions {
-  const radius = CORNER_RADIUS[knobs.corner];
-  const cardPad = knobs.density === 'compact' ? '28px' : '40px';
-  const topPad = knobs.density === 'compact' ? '32px' : '50px';
-  return {
-    ...base,
-    body: { ...base.body, paddingTop: topPad, paddingBottom: topPad },
-    container: { ...base.container, paddingTop: cardPad, paddingRight: cardPad, paddingBottom: cardPad, paddingLeft: cardPad, borderRadius: radius },
-    button: { ...base.button, backgroundColor: knobs.accent, color: bestTextOn(knobs.accent), borderRadius: radius },
-    link: { ...base.link, color: knobs.accent },
-  };
+  const current = knobsFromTheme(base);
+  const next: RendererThemeOptions = { ...base };
+
+  if (knobs.accent.toUpperCase() !== current.accent) {
+    next.button = { ...next.button, backgroundColor: knobs.accent, color: bestTextOn(knobs.accent) };
+    next.link = { ...next.link, color: knobs.accent };
+  }
+
+  if (knobs.corner !== current.corner) {
+    const radius = CORNER_RADIUS[knobs.corner];
+    next.container = { ...next.container, borderRadius: radius };
+    next.button = { ...next.button, borderRadius: radius };
+  }
+
+  if (knobs.density !== current.density) {
+    const cardPad = knobs.density === 'compact' ? '28px' : '40px';
+    const topPad = knobs.density === 'compact' ? '32px' : '50px';
+    next.body = { ...next.body, paddingTop: topPad, paddingBottom: topPad };
+    next.container = {
+      ...next.container,
+      paddingTop: cardPad,
+      paddingRight: cardPad,
+      paddingBottom: cardPad,
+      paddingLeft: cardPad,
+    };
+  }
+
+  return next;
 }
 
 /** Approximate the knob values a theme corresponds to, for showing current
