@@ -35,12 +35,12 @@
      `mly:bg-panel`, labels keep saying `mly:text-white`. */
   --color-panel: var(--ds-raised);
 
-  --color-soft-gray: var(--ds-hover);
+  --color-soft-gray: var(--mly-chrome-hover);
   --color-midnight-gray: var(--ds-ink);
 
   --color-gray-50: var(--ds-surface);
-  --color-gray-100: var(--ds-hover);
-  --color-gray-200: var(--ds-line);
+  --color-gray-100: var(--mly-chrome-hover);
+  --color-gray-200: var(--mly-chrome-line);
   --color-gray-300: var(--ds-line-strong);
   /* `faint` is the borders-and-decoration tier and does not clear 3:1 on a
      tinted surface. Editor icons are not decoration — you have to see them to
@@ -55,7 +55,7 @@
      to 950; unmapped it stays near-black and vanishes on the dark panel. */
   --color-gray-950: var(--ds-ink);
 
-  --color-slate-200: var(--ds-line);
+  --color-slate-200: var(--mly-chrome-line);
   --color-slate-400: var(--ds-muted);
   --color-slate-500: var(--ds-muted);
   --color-slate-600: var(--ds-muted);
@@ -77,6 +77,19 @@
   --radius-md: 6px;
   --radius-lg: 10px;
   --radius-xl: 14px;
+}
+
+/* The app's hover and line tokens are tuned for its own surfaces; on the
+   editor's floating dark panels they land within a step of the background
+   and disappear. Editor chrome gets its own pair: the app values in light
+   mode, brightened in dark so a hover or divider actually reads. */
+:root {
+  --mly-chrome-hover: var(--ds-hover);
+  --mly-chrome-line: var(--ds-line);
+}
+.dark {
+  --mly-chrome-hover: #34363c;
+  --mly-chrome-line: #3a3c43;
 }
 
 /*
