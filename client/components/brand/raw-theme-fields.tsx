@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
+import { ColorPickerPopover } from '~/components/ui/color-picker-popover';
 import { issuesForField, ThemeIssueHint } from '~/components/theme-warnings';
 
 type Theme = RendererThemeOptions;
@@ -35,16 +36,7 @@ function ColorField({
         </label>
         {hint}
       </span>
-      <div className="flex items-center gap-1.5">
-        <input
-          id={id}
-          type="color"
-          value={current}
-          onChange={(event) => onChange(event.target.value.toUpperCase())}
-          className="size-6 shrink-0 cursor-pointer rounded-xs border border-line bg-raised p-0.5"
-        />
-        <span className="font-mono text-2xs text-faint uppercase">{current}</span>
-      </div>
+      <ColorPickerPopover id={id} label={label} value={current} onChange={onChange} />
     </div>
   );
 }
@@ -54,17 +46,21 @@ function NumberField({
   value,
   fallback,
   onChange,
+  max = 120,
   id: idOverride,
 }: {
   label: string;
   value?: string;
   fallback: string;
   onChange: (next: string) => void;
+  /** Upper bound for both the slider and the number box. */
+  max?: number;
   /** Needed when two groups share a label (both cards and buttons have a
    *  "Corner") — the derived id would otherwise collide. */
   id?: string;
 }) {
-  const current = parseInt(value ?? fallback, 10);
+  const parsed = parseInt(value ?? fallback, 10);
+  const current = Number.isNaN(parsed) ? 0 : parsed;
   const id = idOverride ?? `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
@@ -72,15 +68,27 @@ function NumberField({
       <label htmlFor={id} className={SWATCH_LABEL}>
         {label}
       </label>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {/* The slider moves in 4px steps for quick coarse setting; the box
+            beside it accepts any exact value and stays the source of truth. */}
+        <input
+          type="range"
+          min={0}
+          max={max}
+          step={4}
+          value={current}
+          aria-label={`${label} slider`}
+          onChange={(event) => onChange(`${event.target.value}px`)}
+          className="min-w-0 flex-1 cursor-pointer accent-accent"
+        />
         <input
           id={id}
           type="number"
           min={0}
-          max={120}
-          value={Number.isNaN(current) ? 0 : current}
+          max={max}
+          value={current}
           onChange={(event) => onChange(`${event.target.value || 0}px`)}
-          className="h-7 w-16 rounded-xs border border-line bg-raised px-1.5 text-right text-sm tabular-nums text-ink"
+          className="h-7 w-14 shrink-0 rounded-xs border border-line bg-raised px-1.5 text-right text-sm tabular-nums text-ink"
         />
         <span className="text-2xs text-faint">px</span>
       </div>
@@ -132,6 +140,7 @@ export function RawThemeFields({
         />
         <NumberField
           label="Padding"
+          max={80}
           value={theme.container?.paddingTop}
           fallback={d.container?.paddingTop ?? '40px'}
           onChange={(v) =>
@@ -148,6 +157,7 @@ export function RawThemeFields({
         />
         <NumberField
           label="Corner"
+          max={24}
           value={theme.container?.borderRadius}
           fallback={d.container?.borderRadius ?? '0'}
           onChange={(borderRadius) =>
@@ -176,6 +186,7 @@ export function RawThemeFields({
         <NumberField
           id="theme-button-corner"
           label="Corner"
+          max={24}
           value={theme.button?.borderRadius}
           fallback={d.button?.borderRadius ?? '6px'}
           onChange={(borderRadius) =>

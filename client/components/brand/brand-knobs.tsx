@@ -1,5 +1,6 @@
 'use client';
 import type { BrandKnobs } from '@temply/shared/brand-knobs';
+import { ColorPickerPopover } from '~/components/ui/color-picker-popover';
 
 const CORNERS: { v: BrandKnobs['corner']; label: string }[] = [
   { v: 'sharp', label: 'Sharp' }, { v: 'soft', label: 'Soft' }, { v: 'round', label: 'Round' },
@@ -11,13 +12,16 @@ const DENSITIES: { v: BrandKnobs['density']; label: string }[] = [
 export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onChange: (k: BrandKnobs) => void }) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      <label className="space-y-1.5">
+      <div className="space-y-1.5">
         <span className="block text-xs font-medium text-ink">Brand color</span>
-        <span className="flex items-center gap-2">
-          <input type="color" value={value.accent} onChange={(e) => onChange({ ...value, accent: e.target.value.toUpperCase() })} className="size-8 shrink-0 cursor-pointer rounded-sm border border-line bg-raised p-0.5" />
-          <span className="font-mono text-xs text-muted uppercase">{value.accent}</span>
-        </span>
-      </label>
+        <ColorPickerPopover
+          label="Brand color"
+          value={value.accent}
+          onChange={(accent) => onChange({ ...value, accent })}
+          swatchClassName="size-8"
+          hexClassName="text-xs text-muted"
+        />
+      </div>
       <div className="space-y-1.5">
         <span className="block text-xs font-medium text-ink">Corner</span>
         <div className="flex gap-1">

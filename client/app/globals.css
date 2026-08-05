@@ -224,6 +224,31 @@
     outline-offset: 2px;
     border-radius: var(--radius-xs);
   }
+
+  /* Text fields trade the hard outline for a soft ring that fades in, so
+     focus reads as a state change rather than a flash while typing. Range
+     inputs keep the outline — a ring around the whole track looks broken. */
+  input:not([type='range']),
+  textarea,
+  select {
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+  input:not([type='range']):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    border-color: var(--ds-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-accent) 25%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    input:not([type='range']),
+    textarea,
+    select {
+      transition: none;
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------------
