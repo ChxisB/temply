@@ -7,7 +7,7 @@ import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
 import { ChevronDownIcon, ChevronUpIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import { Select } from '~/components/ui/select';
+import { BrandSelect } from '~/components/brand/brand-select';
 import { BrandKnobsControl } from '~/components/brand/brand-knobs';
 import { RawThemeFields } from '~/components/brand/raw-theme-fields';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
@@ -126,22 +126,12 @@ export function TemplateThemePanel({
       <div className="space-y-4 p-3.5">
         <div className="space-y-1.5">
           <span className="block text-xs font-medium text-ink">Brand</span>
-          <Select
-            label="Brand"
+          <BrandSelect
             value={selectedBrandId}
             onValueChange={handleBrandChange}
-            // max-w-none: the base Select shrink-wraps for the editor's bubble
-            // menus; here the border must reach the chevron at the row's end.
-            className="w-full max-w-none"
-            options={[
-              // Custom is a state, not a choice: it appears only once this
-              // template's settings have drifted from every brand.
-              ...(selectedBrandId === 'custom'
-                ? [{ value: 'custom', label: 'Custom' }]
-                : []),
-              ...BRAND_PRESETS.map((p) => ({ value: p.id, label: p.name })),
-              ...brands.map((brand) => ({ value: brand.id, label: brand.name })),
-            ]}
+            brands={brands}
+            theme={theme}
+            className="w-full"
           />
         </div>
 
