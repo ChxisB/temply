@@ -5,7 +5,7 @@ import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
 import { ChevronDownIcon, ChevronUpIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Select } from '~/components/ui/select';
 import { BrandKnobsControl } from '~/components/brand/brand-knobs';
@@ -34,6 +34,37 @@ function safeParse(raw: string, fallback: Theme): Theme {
   }
 }
 
+/** Structural equality, order-insensitive — themes pass through JSON and
+ *  object spreads, so key order cannot be trusted. */
+function sameTheme(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (a === null || b === null || typeof a !== 'object') return a === b;
+  const ka = Object.keys(a as object).filter((k) => (a as any)[k] !== undefined);
+  const kb = Object.keys(b as object).filter((k) => (b as any)[k] !== undefined);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) => sameTheme((a as any)[k], (b as any)[k]));
+}
+
+/** Which preset or saved brand this theme IS, or 'custom' when it matches none. */
+function matchThemeToBrand(theme: Theme, brands: { id: string; theme: string }[]): string {
+  for (const p of BRAND_PRESETS) {
+    if (sameTheme(p.theme, theme)) return p.id;
+  }
+  for (const b of brands) {
+    try {
+      if (sameTheme(JSON.parse(b.theme), theme)) return b.id;
+    } catch {
+      // A malformed stored theme can never match.
+    }
+  }
+  return 'custom';
+}
+
+function isFreshTheme(theme: Theme): boolean {
+  return sameTheme(theme, DEFAULT_RENDERER_THEME);
+}
+
 export function TemplateThemePanel({
   theme,
   onChange,
@@ -43,10 +74,47 @@ export function TemplateThemePanel({
   onChange: (next: Theme) => void;
   className?: string;
 }) {
-  const { data } = useQuery(brandsQueryOptions());
+  const { data, isError } = useQuery(brandsQueryOptions());
   const brands = data?.brands ?? [];
-  const [selectedBrandId, setSelectedBrandId] = useState('custom');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // The selection starts on whatever the theme already IS: a preset, a saved
+  // brand, or — for a template that was edited before — Custom. A fresh
+  // template (still on the shipped default theme) adopts the user's default
+  // brand once the brands load. "Custom" is not offered as a choice; it only
+  // appears, selected, after a config is edited in this session, and belongs
+  // to this template alone.
+  const [selectedBrandId, setSelectedBrandId] = useState(() => matchThemeToBrand(theme, []));
+  const resolvedDefault = useRef(false);
+
+  useEffect(() => {
+    if (resolvedDefault.current) return;
+    if (!data && !isError) return; // wait until brands (and the default) are known
+    resolvedDefault.current = true;
+
+    // A saved-brand theme can only be recognised once the brands arrive.
+    const match = matchThemeToBrand(theme, data?.brands ?? []);
+    if (match !== 'custom') {
+      setSelectedBrandId(match);
+      return;
+    }
+
+    // Fresh canvas → start from the user's default brand.
+    if (isFreshTheme(theme) && data?.defaultBrandId) {
+      const id = data.defaultBrandId;
+      const preset = BRAND_PRESETS.find((p) => p.id === id);
+      const brand = data.brands.find((b) => b.id === id);
+      const brandTheme = preset?.theme ?? (brand ? safeParse(brand.theme, theme) : null);
+      if (brandTheme) {
+        setSelectedBrandId(id);
+        onChange(structuredClone(brandTheme));
+        return;
+      }
+    }
+
+    setSelectedBrandId('custom');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, isError]);
 
   const handleBrandChange = (id: string) => {
     setSelectedBrandId(id);
@@ -96,7 +164,11 @@ export function TemplateThemePanel({
             // menus; here the border must reach the chevron at the row's end.
             className="w-full max-w-none"
             options={[
-              { value: 'custom', label: 'Custom' },
+              // Custom is a state, not a choice: it appears only once this
+              // template's settings have drifted from every brand.
+              ...(selectedBrandId === 'custom'
+                ? [{ value: 'custom', label: 'Custom' }]
+                : []),
               ...BRAND_PRESETS.map((p) => ({ value: p.id, label: p.name })),
               ...brands.map((brand) => ({ value: brand.id, label: brand.name })),
             ]}
