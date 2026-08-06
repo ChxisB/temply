@@ -114,9 +114,15 @@ export default function Home() {
               Drag blocks into place and Temply turns them into email that holds
               together in any inbox — then pull it into your app with a clean API.
             </p>
-            <div className="hero-enter mt-8 flex justify-center" style={enterAt(200)}>
+            <div
+              className="hero-enter mt-8 flex flex-wrap items-center justify-center gap-3"
+              style={enterAt(200)}
+            >
               <Button asChild variant="primary" size="lg">
                 <Link href="/playground">Try the editor<ArrowRightIcon /></Link>
+              </Button>
+              <Button asChild variant="secondary" size="lg">
+                <Link href="/docs">Documentation</Link>
               </Button>
             </div>
             <p className="hero-enter mt-3 text-sm text-muted" style={enterAt(280)}>
