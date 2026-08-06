@@ -222,6 +222,12 @@ export interface RenderOptions {
    */
   pretty?: boolean;
   plainText?: boolean;
+  /**
+   * The data the template's variables and "Show if" conditions read. Omit it
+   * and variables pass through as `{{name}}` while every conditional block
+   * shows — the behaviour a template author wants while composing.
+   */
+  payload?: Record<string, PayloadValue>;
 }
 
 export type VariableFormatter = (options: {
@@ -1708,6 +1714,14 @@ export class Engine {
   private shouldShow(node: JSONContent, options?: NodeOptions): boolean {
     const showIfKey = node?.attrs?.showIfKey ?? '';
     if (!showIfKey) {
+      return true;
+    }
+
+    // No data was supplied, so no condition can be evaluated — show everything.
+    // Without this a template that used "Show if" lost the block from every
+    // render the app performs, since preview, Copy HTML and test send all call
+    // render() with content and theme only. Variables already work this way.
+    if (!this.shouldReplaceVariableValues) {
       return true;
     }
 

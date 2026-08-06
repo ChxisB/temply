@@ -33,12 +33,25 @@ export const emailsRoutes = new Elysia()
   .post(
     '/api/v1/emails/preview',
     async ({ body }: any) => {
-      const { content, theme, previewText } = body;
+      const { content, theme, previewText, payload } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
-      const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
+      const html = await render(contentJson, {
+        theme: theme || undefined,
+        preview: previewText,
+        // Absent means "composing": variables stay as placeholders and every
+        // conditional block shows.
+        payload: payload || undefined,
+      });
       return json({ html });
     },
-    { body: t.Object({ previewText: t.Optional(t.String()), content: t.Any(), theme: t.Optional(t.Any()) }) },
+    {
+      body: t.Object({
+        previewText: t.Optional(t.String()),
+        content: t.Any(),
+        theme: t.Optional(t.Any()),
+        payload: t.Optional(t.Any()),
+      }),
+    },
   )
 
   .post(

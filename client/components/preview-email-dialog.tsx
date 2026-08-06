@@ -9,7 +9,14 @@ import {
 } from './ui/dialog';
 import { httpPost } from '~/lib/http';
 import type { Editor } from '@tiptap/core';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { collectDataKeys, type TemplateDataKeys } from '@temply/shared/template-data';
+import {
+  initialPreviewData,
+  PreviewDataPanel,
+  toPayload,
+  type PreviewData,
+} from './preview-data-panel';
 import { EmailPreviewIFrame } from './email-preview-iframe';
 import { cn } from '~/lib/classname';
 import { EyeIcon, Loader2Icon } from 'lucide-react';
@@ -42,13 +49,20 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
   // it never touches the canvas or the saved template.
   const [forceDark, setForceDark] = useState(false);
 
+  // The keys this template asks for, read off the document each time the
+  // dialog opens — there is nowhere else they are recorded.
+  const [keys, setKeys] = useState<TemplateDataKeys>({ conditions: [], variables: [] });
+  const [data, setData] = useState<PreviewData>({ conditions: {}, variables: {} });
+  const hasKeys = keys.conditions.length > 0 || keys.variables.length > 0;
+
   const { mutate, isPending } = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (payload?: Record<string, unknown>) => {
       const json = editor?.getJSON();
       return httpPost<PreviewEmailResponse>('/api/v1/emails/preview', {
         content: JSON.stringify(json),
         previewText,
         theme,
+        payload,
       });
     },
     onSuccess: (data) => {
@@ -59,6 +73,21 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
       toast.error(error?.message || 'Failed to preview email');
     },
   });
+
+  // Re-render as the panel is used. Debounced so typing a variable value does
+  // not fire a request per keystroke; skipped while closed and on the first
+  // pass, where the opening request already covers it.
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (!open || !hasKeys) return;
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => mutate(toPayload(data)), 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, open, hasKeys]);
 
   return (
     <Dialog
@@ -80,7 +109,13 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
           }
 
           setHtml('');
-          mutate();
+          const found = collectDataKeys(editor.getJSON());
+          setKeys(found);
+          setData(initialPreviewData(found));
+          firstRender.current = true;
+          // No payload on the first look: the complete email, placeholders and
+          // all, is what an author expects to see.
+          mutate(undefined);
         }}
         disabled={isPending}
       >
@@ -141,6 +176,8 @@ export function PreviewEmailDialog(props: PreviewEmailDialogProps) {
               />
             </button>
           </div>
+
+          <PreviewDataPanel keys={keys} data={data} onChange={setData} />
 
           <div className="flex min-h-[70vh] w-full grow overflow-hidden rounded-lg border border-line bg-canvas shadow-xs">
             <EmailPreviewIFrame
