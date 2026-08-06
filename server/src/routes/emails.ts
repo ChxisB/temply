@@ -33,7 +33,7 @@ export const emailsRoutes = new Elysia()
   .post(
     '/api/v1/emails/preview',
     async ({ body }: any) => {
-      const { content, theme, previewText, payload } = body;
+      const { content, theme, previewText, payload, pretty } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
       const html = await render(contentJson, {
         theme: theme || undefined,
@@ -41,6 +41,9 @@ export const emailsRoutes = new Elysia()
         // Absent means "composing": variables stay as placeholders and every
         // conditional block shows.
         payload: payload || undefined,
+        // Indented output for the source view. The email itself stays as
+        // rendered — whitespace between table cells is not always harmless.
+        pretty: pretty === true,
       });
       return json({ html });
     },
@@ -50,6 +53,7 @@ export const emailsRoutes = new Elysia()
         content: t.Any(),
         theme: t.Optional(t.Any()),
         payload: t.Optional(t.Any()),
+        pretty: t.Optional(t.Boolean()),
       }),
     },
   )

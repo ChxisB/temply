@@ -9,20 +9,31 @@ import {
   LayoutTemplateIcon,
   Loader2Icon,
   MailIcon,
+  MoonIcon,
   SaveIcon,
   SendIcon,
+  SlidersHorizontalIcon,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
+import { cn } from '~/lib/classname';
 import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
 import type { Mail } from '~/db/schema';
-import { CopyEmailHtml } from './copy-email-html';
 import { Button } from './ui/button';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
-import { PreviewEmailDialog } from './preview-email-dialog';
+import { ContentModeSwitch, type ContentMode } from './content-mode-switch';
+import { ContentPreview } from './content-preview';
+import { ContentHtml } from './content-html';
+import {
+  initialPreviewData,
+  PreviewDataPanel,
+  toPayload,
+  type PreviewData,
+} from './preview-data-panel';
+import { collectDataKeys, type TemplateDataKeys } from '@temply/shared/template-data';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
@@ -34,6 +45,33 @@ const inputClass =
   'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
 
 const labelClass = 'block text-sm font-medium text-ink';
+
+const hasKeys = (keys: TemplateDataKeys) =>
+  keys.conditions.length > 0 || keys.variables.length > 0;
+
+/** Copies the HTML already on screen — no second render to fetch it. */
+function CopyHtmlButton({ html }: { html: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      aria-label={copied ? 'Copied' : 'Copy HTML'}
+      title={copied ? 'Copied' : 'Copy HTML'}
+      onClick={async () => {
+        await navigator.clipboard.writeText(html);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className={cn(
+        'flex size-7 items-center justify-center rounded-sm transition-colors',
+        copied ? 'text-accent-ink' : 'text-muted hover:bg-hover hover:text-ink'
+      )}
+    >
+      {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
+    </button>
+  );
+}
 
 type UpdateTemplateData = {
   title: string;
@@ -118,6 +156,129 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     });
 
   const imageUploader = useMemo(() => createImageKitUploader(), []);
+
+  // --- Content section: edit / preview -------------------------------------
+  const [mode, setMode] = useState<ContentMode>('edit');
+  const [forceDark, setForceDark] = useState(false);
+  const [previewKeys, setPreviewKeys] = useState<TemplateDataKeys>({
+    conditions: [],
+    variables: [],
+  });
+  const [previewData, setPreviewData] = useState<PreviewData>({
+    conditions: {},
+    variables: {},
+  });
+  const [previewHtml, setPreviewHtml] = useState('');
+  // The source view gets its own, indented render; the email in the frame stays
+  // byte-for-byte what would be sent.
+  const [htmlSource, setHtmlSource] = useState('');
+  // Drives the one-shot enter animation. The editor is hidden rather than
+  // unmounted, so showing it again fires no transition of its own.
+  const [switching, setSwitching] = useState(false);
+  const paneClass = switching ? 'content-pane-in' : undefined;
+  const editorPaneRef = useRef<HTMLDivElement>(null);
+  const [paneHeight, setPaneHeight] = useState<number>();
+
+  const [pendingMode, setPendingMode] = useState<ContentMode | null>(null);
+
+  const showPane = (next: ContentMode) => {
+    setPendingMode(null);
+    setMode(next);
+    setSwitching(true);
+  };
+
+  const changeMode = (next: ContentMode) => {
+    if (next === 'edit') showPane('edit');
+    else enterRendered(next);
+  };
+
+  useEffect(() => {
+    if (!switching) return;
+    const timer = setTimeout(() => setSwitching(false), 220);
+    return () => clearTimeout(timer);
+  }, [switching, mode]);
+  // What the current HTML was rendered from. Re-entering preview without
+  // touching anything should not cost a round trip.
+  const renderedSignature = useRef('');
+  const sourceSignature = useRef('');
+  const hasPreviewData =
+    previewKeys.conditions.length > 0 || previewKeys.variables.length > 0;
+
+  const { mutate: renderPreview, isPending: isPreviewPending } = useMutation({
+    mutationFn: async ({ signature, payload, pretty }: { signature: string; payload?: Record<string, unknown>; enter?: ContentMode; pretty?: boolean }) => {
+      const html = await httpPost<{ html: string }>('/api/v1/emails/preview', {
+        content: JSON.stringify(editor?.getJSON()),
+        previewText,
+        theme,
+        payload,
+        pretty,
+      });
+      return { html: html?.html ?? '', signature };
+    },
+    onSuccess: ({ html, signature }, variables) => {
+      if (variables.pretty) {
+        setHtmlSource(html);
+        sourceSignature.current = signature;
+      } else {
+        setPreviewHtml(html);
+        renderedSignature.current = signature;
+      }
+      // Swapping panes before the HTML exists shows an empty frame for as long
+      // as the round trip takes, then pops the email in. Wait, then swap once.
+      if (variables.enter) showPane(variables.enter);
+    },
+    onError: (error: any) => {
+      setPendingMode(null);
+      toast.error(error?.message || 'Failed to render the preview');
+    },
+  });
+
+  /** Everything the rendered HTML depends on, so we can tell when it is stale. */
+  const previewSignature = (payload?: Record<string, unknown>) =>
+    JSON.stringify([editor?.getJSON(), theme, previewText, payload ?? null]);
+
+  /** Preview and HTML both show the same render, so both go through here. */
+  const enterRendered = (next: Exclude<ContentMode, 'edit'>) => {
+    if (!editor) return;
+    // Hold the section at the height it already has, so swapping panes does not
+    // shove everything below it up or down.
+    if (mode === 'edit') setPaneHeight(editorPaneRef.current?.offsetHeight);
+
+    const keys = collectDataKeys(editor.getJSON());
+    setPreviewKeys(keys);
+    // Seed fresh each time: the document may have gained or lost keys.
+    const data = initialPreviewData(keys);
+    setPreviewData(data);
+
+    const payload = hasKeys(keys) ? toPayload(data) : undefined;
+    const signature = previewSignature(payload);
+    const pretty = next === 'html';
+    const cached = pretty
+      ? signature === sourceSignature.current && htmlSource
+      : signature === renderedSignature.current && previewHtml;
+    if (cached) {
+      showPane(next);
+      return;
+    }
+    setPendingMode(next);
+    renderPreview({ signature, payload, pretty, enter: next });
+  };
+
+  // Re-render as the data panel is used, debounced so typing a variable value
+  // does not fire a request per keystroke.
+  useEffect(() => {
+    if (mode === 'edit' || !hasPreviewData) return;
+    const timer = setTimeout(() => {
+      const payload = toPayload(previewData);
+      const signature = previewSignature(payload);
+      const pretty = mode === 'html';
+      const current = pretty ? sourceSignature.current : renderedSignature.current;
+      if (signature === current) return;
+      renderPreview({ signature, payload, pretty });
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewData, mode, hasPreviewData]);
 
   const [editorContent, setEditorContent] = useState(() => {
     if (template?.content) {
@@ -233,19 +394,16 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             </Button>
           )}
 
-          <PreviewEmailDialog
-            editor={editor}
-            previewText={previewText}
-            subject={subject}
-            theme={theme}
-          />
+          {/* Preview lives in the Content header now, beside what it shows. */}
           {/* History and Delete act on a saved template; on the anonymous
               playground they would only ever render disabled. */}
           {template?.id && <VersionHistoryDialog templateId={template.id} />}
         </div>
 
         <div className="flex items-center gap-2">
-          <CopyEmailHtml editor={editor} />
+          {/* Copying the HTML now lives in the Content section's HTML view,
+              beside the source it copies — and it copies what is on screen
+              instead of rendering the email a second time. */}
           {template?.id && <DeleteEmailDialog templateId={template.id} />}
 
           {/* Internal-debug delivery — only for a saved template. The
@@ -384,11 +542,75 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
       {/* Editor — same section/header shape as Email details and Brand */}
       <section className="overflow-hidden rounded-lg border border-line bg-raised">
-        <header className="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
-          <LayoutTemplateIcon className="size-4 text-faint" />
-          <h2 className="text-sm font-medium text-ink">Content</h2>
+        <header className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2">
+          <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
+            <LayoutTemplateIcon className="size-4 text-faint" />
+            Content
+            {mode !== 'edit' && (
+              <span className="font-normal text-muted">
+                ({mode === 'preview' ? 'Preview' : 'HTML'})
+              </span>
+            )}
+          </h2>
+
+          <ContentModeSwitch
+            mode={mode}
+            pending={pendingMode}
+            onModeChange={changeMode}
+            viewControls={
+              mode === 'html' ? (
+                <CopyHtmlButton html={htmlSource} />
+              ) : mode === 'preview' ? (
+              <>
+                {hasPreviewData && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Preview data"
+                        title="Preview data"
+                        className="flex size-7 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink"
+                      >
+                        <SlidersHorizontalIcon className="size-3.5" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 p-3">
+                      <PreviewDataPanel
+                        keys={previewKeys}
+                        data={previewData}
+                        onChange={setPreviewData}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                <button
+                  type="button"
+                  aria-label="Preview as a client that forces dark mode"
+                  aria-pressed={forceDark}
+                  title="Forced dark"
+                  onClick={() => setForceDark((current) => !current)}
+                  className={cn(
+                    'flex size-7 items-center justify-center rounded-sm transition-colors',
+                    forceDark
+                      ? 'bg-accent-wash text-accent-ink'
+                      : 'text-muted hover:bg-hover hover:text-ink'
+                  )}
+                >
+                  <MoonIcon className="size-3.5" />
+                </button>
+              </>
+              ) : null
+            }
+          />
         </header>
-        <div style={pageStyle}>
+
+        {/* The editor is hidden rather than unmounted: it holds the caret,
+            the selection and the undo history, and previewing is a glance. */}
+        <div
+          ref={editorPaneRef}
+          className={cn(mode !== 'edit' ? 'hidden' : paneClass)}
+          style={pageStyle}
+        >
           <div style={cardStyle}>
             <EmailEditor
               allowedMimeTypes={UPLOAD_MIME_TYPES}
@@ -399,6 +621,23 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             />
           </div>
         </div>
+
+        {mode === 'preview' && (
+          <ContentPreview
+            className={paneClass}
+            minHeight={paneHeight}
+            html={previewHtml}
+            isPending={isPreviewPending}
+            forceDark={forceDark}
+            subject={subject}
+            previewText={previewText}
+            from={fromName}
+          />
+        )}
+
+        {mode === 'html' && (
+          <ContentHtml className={paneClass} minHeight={paneHeight} html={htmlSource} />
+        )}
       </section>
     </div>
   );

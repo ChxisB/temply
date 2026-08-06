@@ -41,7 +41,9 @@ export function PreviewDataPanel({
   if (keys.conditions.length === 0 && keys.variables.length === 0) return null;
 
   return (
-    <div className="space-y-3 rounded-lg border border-line bg-raised p-3">
+    // No card of its own: this is popover content, and a bordered box inside a
+    // bordered popover reads as two panels with mismatched corners.
+    <div className="space-y-3">
       <div>
         <p className="text-sm font-medium text-ink">Preview data</p>
         <p className="text-xs text-muted">
