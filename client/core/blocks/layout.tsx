@@ -1,4 +1,5 @@
 import type { BlockItem } from './types';
+import { DEFAULT_SPACER_HEIGHT } from '@/editor/nodes/spacer';
 import {
   ColumnsIcon,
   Repeat2,
@@ -53,8 +54,14 @@ export const spacer: BlockItem = {
   searchTerms: ['space', 'gap', 'divider'],
   icon: <MoveVertical className="mly:h-4 mly:w-4" />,
   command: ({ editor, range }) => {
-    // @ts-ignore
-    editor.chain().focus().deleteRange(range).setSpacer({ height: 'sm' }).run();
+    // The attribute is a pixel count, not the toolbar's size name: passing
+    // 'sm' put `height: smpx` in the stylesheet and collapsed the spacer.
+    editor
+      .chain()
+      .focus()
+      .deleteRange(range)
+      .setSpacer({ height: DEFAULT_SPACER_HEIGHT })
+      .run();
   },
 };
 

@@ -50,6 +50,33 @@ export interface MarkType {
   attrs?: Record<string, any> | undefined;
 }
 
+/**
+ * A spacer's height in pixels.
+ *
+ * The attribute is meant to be a number, but the slash command inserted the
+ * toolbar's size name instead — so documents in the wild carry `"sm"`, which
+ * reached the stylesheet as `height: smpx` and collapsed the spacer to
+ * nothing. Names are translated, anything else falls back to the default.
+ */
+const SPACER_SIZES: Record<string, number> = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 32,
+  xl: 64,
+};
+const DEFAULT_SPACER_HEIGHT = 8;
+
+function spacerHeight(height: unknown): number {
+  if (typeof height === 'number' && Number.isFinite(height)) return height;
+  if (typeof height === 'string') {
+    if (SPACER_SIZES[height] !== undefined) return SPACER_SIZES[height];
+    const parsed = Number.parseInt(height, 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return DEFAULT_SPACER_HEIGHT;
+}
+
 const antialiased: CSSProperties = {
   WebkitFontSmoothing: 'antialiased',
   MozOsxFontSmoothing: 'grayscale',
@@ -1092,7 +1119,7 @@ export class Engine {
     return (
       <Container
         style={{
-          height: `${height}px`,
+          height: `${spacerHeight(height)}px`,
         }}
       />
     );

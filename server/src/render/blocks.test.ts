@@ -121,6 +121,28 @@ const CASES: { name: string; node: unknown; expect: RegExp }[] = [
   },
 ];
 
+describe('spacer height', () => {
+  const spacer = (height: unknown) => doc({ type: 'spacer', attrs: { height } });
+
+  it('uses a numeric height as pixels', async () => {
+    expect(await render(spacer(32) as any)).toContain('height:32px');
+  });
+
+  it('understands the size names the toolbar shows', async () => {
+    // Templates saved before the slash command was fixed carry `height: "sm"`,
+    // which reached the stylesheet as `height: smpx` — invalid, so the spacer
+    // collapsed to nothing in the email.
+    expect(await render(spacer('sm') as any)).toContain('height:8px');
+    expect(await render(spacer('xl') as any)).toContain('height:64px');
+  });
+
+  it('falls back to the default rather than emitting invalid CSS', async () => {
+    const html = await render(spacer('nonsense') as any);
+    expect(html).toContain('height:8px');
+    expect(html).not.toContain('nonsensepx');
+  });
+});
+
 describe('repeat', () => {
   const repeated = doc({
     type: 'repeat',
