@@ -55,7 +55,7 @@ export function QuotaWidget() {
       </div>
       {data.plan === 'free' ? (
         <Link
-          href="/dashboard/billing"
+          href="/dashboard/settings/plan"
           className="mt-2 flex h-7 w-full items-center justify-center rounded-md bg-accent text-xs font-medium text-white transition-colors hover:bg-accent-hover"
         >
           Upgrade

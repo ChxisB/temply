@@ -31,7 +31,7 @@ export const billingRoutes = new Elysia()
       if (!sub) await ctx.db.insert(subscriptions).values({ id: crypto.randomUUID(), user_id: ctx.userId, stripe_customer_id: stripeCustomerId, plan: 'free', status: 'active' });
       else await ctx.db.update(subscriptions).set({ stripe_customer_id: stripeCustomerId }).where(eq(subscriptions.user_id, ctx.userId));
     }
-    const session = await stripe.checkout.sessions.create({ customer: stripeCustomerId, mode: 'subscription', line_items: [{ price: priceId, quantity: 1 }], success_url: `${appUrl}/dashboard/billing?success=true`, cancel_url: `${appUrl}/dashboard/billing?canceled=true`, metadata: { userId: ctx.userId, plan } });
+    const session = await stripe.checkout.sessions.create({ customer: stripeCustomerId, mode: 'subscription', line_items: [{ price: priceId, quantity: 1 }], success_url: `${appUrl}/dashboard/settings/plan?success=true`, cancel_url: `${appUrl}/dashboard/settings/plan?canceled=true`, metadata: { userId: ctx.userId, plan } });
     return json({ url: session.url });
   }, { body: t.Object({ plan: t.Literal('pro') }) })
 
@@ -40,6 +40,6 @@ export const billingRoutes = new Elysia()
     const [sub] = await ctx.db.select().from(subscriptions).where(eq(subscriptions.user_id, ctx.userId)).limit(1);
     if (!sub?.stripe_customer_id) return json({ status: 400, message: 'No subscription found', errors: ['Bad Request'] }, 400);
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9000';
-    const session = await getStripe().billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: `${appUrl}/dashboard/billing` });
+    const session = await getStripe().billingPortal.sessions.create({ customer: sub.stripe_customer_id, return_url: `${appUrl}/dashboard/settings/plan` });
     return json({ url: session.url });
   });

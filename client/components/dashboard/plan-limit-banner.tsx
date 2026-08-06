@@ -23,7 +23,7 @@ export function PlanLimitBanner({
         </div>
       </div>
       <Link
-        href="/dashboard/billing"
+        href="/dashboard/settings/plan"
         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
       >
         Upgrade

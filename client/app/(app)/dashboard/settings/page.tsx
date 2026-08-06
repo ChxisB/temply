@@ -2,7 +2,6 @@
 
 import { UserProfile } from '@clerk/nextjs';
 import { useTheme } from '~/components/theme-provider';
-import { PageHeader } from '~/components/ui/surfaces';
 
 export default function SettingsPage() {
   // Clerk renders its own DOM and cannot read our CSS variables, so the theme
@@ -12,8 +11,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Settings" description="Your account and how you sign in." />
-
       {/* Clerk's own navbar stays visible: hiding it forced the mobile menu
           row (a separate element) to act as the only navigation at every
           width. With it restored, desktop gets the two-pane layout and narrow

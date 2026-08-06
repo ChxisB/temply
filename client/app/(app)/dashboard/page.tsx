@@ -44,14 +44,14 @@ export default async function DashboardPage() {
             className="transition-colors hover:border-line-strong"
           />
         </Link>
-        <Link href="/dashboard/api-keys">
+        <Link href="/dashboard/settings/api-keys">
           <StatTile
             label="API keys"
             value={billing?.usage?.apiKeys ?? '—'}
             className="transition-colors hover:border-line-strong"
           />
         </Link>
-        <Link href="/dashboard/billing">
+        <Link href="/dashboard/settings/plan">
           <StatTile
             label="Plan"
             value={<span className="capitalize">{billing?.plan ?? '—'}</span>}

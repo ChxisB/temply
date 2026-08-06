@@ -7,7 +7,7 @@ import { httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '~/components/ui/button';
-import { Badge, Card, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
+import { Badge, Card, ErrorState, StatTile } from '~/components/ui/surfaces';
 import { cn } from '~/lib/classname';
 
 type PlanInfo = {
@@ -35,7 +35,7 @@ function formatReset(iso: string): string {
 }
 
 /** The month's API consumption with a progress bar — the same numbers the
- *  sidebar widget shows, given room to breathe on the billing page. */
+ *  sidebar widget shows, given room to breathe on the plan page. */
 function ApiUsageCard() {
   const { data } = useQuery({
     queryKey: ['quota'],
@@ -128,7 +128,7 @@ const plans = [
   },
 ];
 
-function BillingContent() {
+function PlanContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -175,7 +175,6 @@ function BillingContent() {
   if (isError || !data) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Billing" description="Your plan and what you have used." />
         <ErrorState
           description="We could not load your plan. Nothing has changed on your account — this is only a display problem."
           onRetry={() => refetch()}
@@ -190,18 +189,16 @@ function BillingContent() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Billing"
-        description="Your plan and what you have used."
-        actions={
-          hasSubscription ? (
-            <Button onClick={() => createPortal()} disabled={isPortalLoading}>
-              {isPortalLoading ? <Loader2Icon className="animate-spin" /> : null}
-              Manage subscription
-            </Button>
-          ) : undefined
-        }
-      />
+      {/* The layout's header carries the title now, so the one action the page
+          owns sits on its own row rather than being dropped with it. */}
+      {hasSubscription ? (
+        <div className="flex justify-end">
+          <Button onClick={() => createPortal()} disabled={isPortalLoading}>
+            {isPortalLoading ? <Loader2Icon className="animate-spin" /> : null}
+            Manage subscription
+          </Button>
+        </div>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <StatTile label="Templates" value={usage.templates} />
@@ -293,10 +290,10 @@ function BillingContent() {
   );
 }
 
-export default function BillingPage() {
+export default function PlanPage() {
   return (
     <Suspense>
-      <BillingContent />
+      <PlanContent />
     </Suspense>
   );
 }

@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
-import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
+import { Badge, Card, EmptyState, ErrorState } from '~/components/ui/surfaces';
 
 type ApiKeyItem = {
   id: string;
@@ -101,23 +101,21 @@ export default function ApiKeysPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="API keys"
-        description="Reach your templates from your own code."
-        actions={
-          <Button
-            variant="primary"
-            disabled={featureLocked || atLimit}
-            onClick={() => {
-              setNewlyCreatedKey(null);
-              setShowCreate(true);
-            }}
-          >
-            <PlusIcon />
-            Create key
-          </Button>
-        }
-      />
+      {/* The layout's header carries the title now, so the one action the page
+          owns sits on its own row rather than being dropped with it. */}
+      <div className="flex justify-end">
+        <Button
+          variant="primary"
+          disabled={featureLocked || atLimit}
+          onClick={() => {
+            setNewlyCreatedKey(null);
+            setShowCreate(true);
+          }}
+        >
+          <PlusIcon />
+          Create key
+        </Button>
+      </div>
 
       {atLimit && !featureLocked ? (
         <PlanLimitBanner
@@ -160,7 +158,7 @@ export default function ApiKeysPage() {
           description="Upgrade to create keys and read your templates from your own application."
           action={
             <Button variant="primary" asChild>
-              <Link href="/dashboard/billing">Upgrade to Pro</Link>
+              <Link href="/dashboard/settings/plan">Upgrade to Pro</Link>
             </Button>
           }
         />
