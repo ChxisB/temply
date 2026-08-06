@@ -1677,6 +1677,17 @@ export class Engine {
     let { payloadValue } = options || {};
     payloadValue = typeof payloadValue === 'object' ? payloadValue : {};
 
+    // No data was supplied, so there is nothing to iterate — show the contents
+    // once. Without this the block rendered as empty space in the editor's
+    // preview, in Copy HTML and in a test send, since all three call render()
+    // with content and theme only. "Show if" needs the same guard for the same
+    // reason.
+    if (!this.shouldReplaceVariableValues) {
+      return (
+        <>{this.getMappedContent(node, { ...options, parent: node })}</>
+      );
+    }
+
     const values = this.payloadValues.get(each) ?? payloadValue[each] ?? [];
     if (!Array.isArray(values)) {
       throw new Error(`Payload value for each "${each}" is not an array`);
