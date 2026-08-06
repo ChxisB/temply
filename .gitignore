@@ -51,5 +51,7 @@ server/*.db
 server/*.db-shm
 server/*.db-wal
 
-# SDD/brainstorming paperwork stays out of the repo (user rule: no docs commits)
-docs/superpowers/
+# Specs, plans and other working paperwork stay out of the repo (user rule: no
+# docs commits). The whole directory, not just docs/superpowers/ — an agent
+# running `git add -A` had already staged docs/plans and docs/specs once.
+docs/

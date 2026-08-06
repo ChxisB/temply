@@ -33,13 +33,20 @@ export function QuotaWidget() {
     <div className="rounded-md border border-rail-line bg-rail-raised p-2.5">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-rail-ink capitalize">{data.plan} plan</span>
+        {/* A percentage answers the question this widget exists for — how
+            close am I? — in a glance. The exact counts are a click away on the
+            plan page, and the progress bar's label carries them for anyone
+            reading with assistive tech. */}
         <span className="text-2xs text-rail-muted tabular-nums">
-          {unlimited ? `${used.toLocaleString()} · ∞` : `${used.toLocaleString()}/${limit!.toLocaleString()}`}
+          {unlimited ? `${used.toLocaleString()} · ∞` : `${pct}%`}
         </span>
       </div>
       {!unlimited ? (
         <div
-          className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-rail-hover"
+          // The empty track has to read against the card it sits on. `hover`
+          // is one value away from `raised`, so at zero usage — a new account,
+          // every time — the bar looked missing rather than empty.
+          className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-rail-line"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
