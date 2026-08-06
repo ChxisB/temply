@@ -17,6 +17,8 @@ import { Variable } from './variable';
 export type VariableSuggestionsPopoverProps = {
   items: Variable[];
   onSelectItem: (item: Variable) => void;
+  /** Called with the hovered item, and with null when the pointer leaves it. */
+  onHoverItem?: (item: Variable | null) => void;
 };
 
 export type VariableSuggestionsPopoverRef = {
@@ -32,7 +34,7 @@ export type VariableSuggestionsPopoverType = React.ForwardRefExoticComponent<
 
 export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
   forwardRef((props, ref) => {
-    const { items, onSelectItem } = props;
+    const { items, onSelectItem, onHoverItem } = props;
 
     const [selectedIndex, setSelectedIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -106,6 +108,8 @@ export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
                   key={index}
                   ref={(el) => { itemRefs.current[index] = el; }}
                   onClick={() => onSelectItem(item)}
+                  onMouseEnter={() => onHoverItem?.(item)}
+                  onMouseLeave={() => onHoverItem?.(null)}
                   className={cn(
                     'mly:flex mly:w-fit mly:min-w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-sm mly:text-gray-900 mly:hover:bg-soft-gray',
                     index === selectedIndex

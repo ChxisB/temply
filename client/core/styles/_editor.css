@@ -443,3 +443,11 @@
     }
   }
 }
+
+/* Hovering a "Show if" suggestion outlines every block that reads the same
+   key, so a condition's reach is visible without hunting for it. */
+.mly-show-if-highlight {
+  outline: 2px solid var(--ds-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

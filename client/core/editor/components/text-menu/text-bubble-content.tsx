@@ -19,6 +19,7 @@ import { LinkInputPopover } from '../ui/link-input-popover';
 import { Divider } from '../ui/divider';
 import { ColorPicker } from '../ui/color-picker';
 import { BaseButton } from '../base-button';
+import { ShowPopover } from '../show-popover';
 
 type TextBubbleContentProps = {
   editor: Editor;
@@ -173,6 +174,30 @@ export function TextBubbleContent(props: TextBubbleContentProps) {
           </div>
         </BaseButton>
       </ColorPicker>
+
+      {/* Paragraphs and headings have carried a showIfKey all along — the
+          renderer honours it and this menu's state already read it — but no
+          control ever offered it, so text was the one block type you could not
+          make conditional. */}
+      {(state.isParagraphActive || state.isHeadingActive) && (
+        <>
+          <Divider />
+          <ShowPopover
+            showIfKey={
+              state.isHeadingActive ? state.headingShowIfKey : state.paragraphShowIfKey
+            }
+            onShowIfKeyValueChange={(showIfKey) => {
+              editor
+                ?.chain()
+                .updateAttributes(state.isHeadingActive ? 'heading' : 'paragraph', {
+                  showIfKey,
+                })
+                .run();
+            }}
+            editor={editor}
+          />
+        </>
+      )}
     </>
   );
 }

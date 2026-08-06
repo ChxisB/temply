@@ -38,6 +38,11 @@
   --color-soft-gray: var(--mly-chrome-hover);
   --color-midnight-gray: var(--ds-ink);
 
+  /* For chrome that marks a configured state — a block with a condition on it
+     — rather than a problem. */
+  --color-accent-wash: var(--ds-accent-wash);
+  --color-accent-ink: var(--ds-accent-ink);
+
   --color-gray-50: var(--ds-surface);
   --color-gray-100: var(--mly-chrome-hover);
   --color-gray-200: var(--mly-chrome-line);

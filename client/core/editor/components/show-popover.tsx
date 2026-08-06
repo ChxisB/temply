@@ -1,7 +1,9 @@
 import { Editor } from '@tiptap/core';
 import { Eye, InfoIcon } from 'lucide-react';
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { collectDataKeys } from '@temply/shared/template-data';
 import { cn } from '../utils/classname';
+import { highlightShowIfKey } from '../utils/highlight-show-if';
 import { useVariableOptions } from '../utils/node-options';
 import { processVariables } from '../utils/variable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
@@ -20,28 +22,44 @@ function _ShowPopover(props: ShowPopoverProps) {
 
   const opts = useVariableOptions(editor);
   const variables = opts?.variables;
-  const renderVariable = opts?.renderVariable;
-  const [isUpdatingKey, setIsUpdatingKey] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Keys already used elsewhere in this email. Nothing records them, so the
+  // document is the list — and reusing one key across blocks is the normal
+  // case (a section, its spacer, and its button all hang off `isMember`).
+  // Read on open: the document is not reactive.
+  const [keysInUse, setKeysInUse] = useState<string[]>([]);
+  // Controlled so picking a suggestion can dismiss the panel: the choice is
+  // made, leaving it open just hides the block it applies to.
+  const [open, setOpen] = useState(false);
+
+  const knownVariables = useMemo(() => {
+    const fromDocument = keysInUse.map((name) => ({ name }));
+    if (!Array.isArray(variables)) return fromDocument;
+    return [
+      ...fromDocument,
+      ...variables.filter((variable) => !keysInUse.includes(variable.name)),
+    ];
+  }, [keysInUse, variables]);
+
   const autoCompleteOptions = useMemo(() => {
-    return processVariables(variables, {
+    return processVariables(knownVariables, {
       query: showIfKey || '',
       from: 'bubble-variable',
       editor,
     }).map((variable) => variable.name);
-  }, [variables, showIfKey, editor]);
+  }, [knownVariables, showIfKey, editor]);
 
-  const isValidWhenKey = showIfKey || autoCompleteOptions.includes(showIfKey);
+  // A highlight must not outlive the popover that painted it.
+  useEffect(() => () => highlightShowIfKey(editor, null), [editor]);
 
   return (
     <Popover
-      onOpenChange={(open) => {
-        if (open) {
-          return;
-        }
-
-        setIsUpdatingKey(false);
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setKeysInUse(collectDataKeys(editor.getJSON()).conditions);
+        else highlightShowIfKey(editor, null);
       }}
     >
       <Tooltip>
@@ -49,8 +67,10 @@ function _ShowPopover(props: ShowPopoverProps) {
           <PopoverTrigger
             className={cn(
               'mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:data-[state=open]:bg-soft-gray mly:hover:bg-soft-gray mly:focus-visible:relative mly:focus-visible:z-10 ',
-              showIfKey &&
-                'mly:bg-rose-100 mly:text-rose-800 mly:data-[state=open]:bg-rose-100 mly:hover:bg-rose-100'
+              // A configured condition is a normal state, not a problem: it
+                // used to light up in the danger colour.
+                showIfKey &&
+                'mly:bg-accent-wash mly:text-accent-ink mly:data-[state=open]:bg-accent-wash mly:hover:bg-accent-wash'
             )}
           >
             <Eye className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
@@ -64,7 +84,10 @@ function _ShowPopover(props: ShowPopoverProps) {
         sideOffset={8}
         align="end"
         onOpenAutoFocus={(e) => {
+          // Put the caret in the key field rather than on the panel, so the
+          // popover opens ready to type.
           e.preventDefault();
+          setTimeout(() => inputRef.current?.focus(), 0);
         }}
         onCloseAutoFocus={(e) => {
           e.preventDefault();
@@ -83,61 +106,33 @@ function _ShowPopover(props: ShowPopoverProps) {
               className="mly:max-w-[285px]"
               align="start"
             >
-              Show the block if the selected variable is true.
+              Show this block only when the named value is true in the data you
+              send. Leave it empty and the block always shows.
             </TooltipContent>
           </Tooltip>
         </div>
 
-        {!isUpdatingKey && (
-          <button
-            onClick={() => {
-              setIsUpdatingKey(true);
-              setTimeout(() => {
-                inputRef.current?.focus();
-              }, 0);
+        {/* The field is always mounted. It used to be a pill that swapped
+            itself for an input on click — but unmounting the very element
+            being clicked leaves Radix comparing against a detached node, which
+            reads as a click outside, so the whole popover closed and the input
+            could never be reached. */}
+        <form onSubmit={(e) => e.preventDefault()}>
+          <InputAutocomplete
+            editor={editor}
+            value={showIfKey || ''}
+            onValueChange={(value) => onShowIfKeyValueChange?.(value)}
+            onSelectOption={(value) => {
+              highlightShowIfKey(editor, null);
+              onShowIfKeyValueChange?.(value);
+              setOpen(false);
             }}
-          >
-            {renderVariable({
-              variable: {
-                name: showIfKey,
-                valid: !!isValidWhenKey,
-              },
-              fallback: '',
-              from: 'bubble-variable',
-              editor,
-            })}
-          </button>
-        )}
-        {isUpdatingKey && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              setIsUpdatingKey(false);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setIsUpdatingKey(false);
-              }
-            }}
-          >
-            <InputAutocomplete
-              editor={editor}
-              value={showIfKey || ''}
-              onValueChange={(value) => {
-                onShowIfKeyValueChange?.(value);
-              }}
-              onOutsideClick={() => {
-                setIsUpdatingKey(false);
-              }}
-              onSelectOption={(value) => {
-                onShowIfKeyValueChange?.(value);
-                setIsUpdatingKey(false);
-              }}
-              autoCompleteOptions={autoCompleteOptions}
-              ref={inputRef}
-            />
-          </form>
-        )}
+            onHoverOption={(key) => highlightShowIfKey(editor, key)}
+            autoCompleteOptions={autoCompleteOptions}
+            placeholder="e.g. isMember"
+            ref={inputRef}
+          />
+        </form>
       </PopoverContent>
     </Popover>
   );

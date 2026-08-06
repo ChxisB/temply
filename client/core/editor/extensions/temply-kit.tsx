@@ -17,6 +17,7 @@ import { HorizontalRule } from './horizontal-rule';
 import { Footer } from '../nodes/footer';
 import { Spacer } from '../nodes/spacer';
 import { LinkCardExtension, LinkCardOptions } from './link-card';
+import { ShowIfHighlight } from './show-if-highlight';
 import { ColumnsExtension } from '../nodes/columns/columns';
 import { ColumnExtension } from '../nodes/columns/column';
 import { SectionExtension } from '../nodes/section/section';
@@ -61,6 +62,7 @@ export const TemplyKit = Extension.create<TemplyKitOptions>({
   addExtensions() {
     const extensions: AnyExtension[] = [
       BlockKeyboardShortcuts,
+      ShowIfHighlight,
       Document.extend({
         content: '(block|columns)+',
       }),
