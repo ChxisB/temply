@@ -290,12 +290,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             <PopoverContent align="end" className="w-72">
               <p className="text-sm font-medium text-ink">Using this template ID</p>
               <p className="mt-1 text-sm text-muted">
-                Fetch this template from your own code with an API key, so your app
-                pulls the latest version instead of hardcoding the email.
+                Render this template from your own code with an API key. Send the values
+                your variables and conditions read, and you get back the finished HTML —
+                always the current version, never a copy pasted into your app.
               </p>
               <pre className="mt-2.5 overflow-x-auto rounded-sm border border-line bg-surface p-2 font-mono text-2xs text-ink">
-{`curl -H "Authorization: Bearer tply_..." \\
-  ${typeof window !== 'undefined' ? window.location.origin : ''}/api/public/v1/templates/${template.short_code}`}
+{`curl -X POST -H "Authorization: Bearer tply_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"data":{"firstName":"Ada","isMember":true}}' \\
+  ${typeof window !== 'undefined' ? window.location.origin : ''}/api/public/v1/templates/${template.short_code}/render`}
               </pre>
               <p className="mt-2 text-2xs text-faint">
                 API access is a Pro feature — create a key under API keys first.

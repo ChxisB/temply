@@ -29,17 +29,42 @@ async function seedKey(userId: string, { revoked = false } = {}) {
   return { id, fullKey };
 }
 
-async function seedTemplate(userId: string) {
+async function seedTemplate(userId: string, content = '{"type":"doc"}') {
   const shortCode = generateShortCode();
   await db.insert(mails).values({
     id: crypto.randomUUID(),
     user_id: userId,
     title: 'Welcome email',
     preview_text: 'Hello there',
-    content: '{"type":"doc"}',
+    content,
     short_code: shortCode,
   });
   return shortCode;
+}
+
+/** A document whose one paragraph is gated on `isMember`. */
+const CONDITIONAL_DOC = JSON.stringify({
+  type: 'doc',
+  content: [
+    {
+      type: 'paragraph',
+      attrs: { showIfKey: 'isMember' },
+      content: [{ type: 'text', text: 'Members only' }],
+    },
+  ],
+});
+
+function renderTemplate(shortCode: string, apiKey?: string, data?: unknown) {
+  return app.handle(
+    new Request(`http://localhost/api/public/v1/templates/${shortCode}/render`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify(data === undefined ? {} : { data }),
+    }),
+  );
 }
 
 function fetchTemplate(shortCode: string, apiKey?: string) {
@@ -117,6 +142,15 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
     expect(body.content).toBeUndefined();
   });
 
+  it('404s for a template belonging to another account', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const someoneElses = await seedTemplate('user_stranger');
+
+    const res = await fetchTemplate(someoneElses, fullKey);
+    expect(res.status).toBe(404);
+  });
+
   it('stamps last_used_at on a successful call', async () => {
     await givePlan(db, OWNER, 'pro');
     const { id, fullKey } = await seedKey(OWNER);
@@ -129,5 +163,70 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
 
     const [after] = await db.select().from(apiKeysTable).where(eq(apiKeysTable.id, id));
     expect(after.last_used_at).not.toBeNull();
+  });
+});
+
+describe('POST /api/public/v1/templates/:shortCode/render', () => {
+  it('401s without a key', async () => {
+    const shortCode = await seedTemplate(OWNER);
+    expect((await renderTemplate(shortCode)).status).toBe(401);
+  });
+
+  it('404s for a template belonging to another account', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const someoneElses = await seedTemplate('user_stranger');
+
+    expect((await renderTemplate(someoneElses, fullKey)).status).toBe(404);
+  });
+
+  it('returns the rendered HTML', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC);
+
+    const res = await renderTemplate(shortCode, fullKey);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.shortCode).toBe(shortCode);
+    expect(body.html).toContain('<html');
+  });
+
+  it('shows a conditional block when no data is sent', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC);
+
+    const { html } = await (await renderTemplate(shortCode, fullKey)).json();
+    expect(html).toContain('Members only');
+  });
+
+  it('drops a conditional block when the data says so', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC);
+
+    const { html } = await (await renderTemplate(shortCode, fullKey, { isMember: false })).json();
+    expect(html).not.toContain('Members only');
+  });
+
+  it('keeps a conditional block when the data allows it', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC);
+
+    const { html } = await (await renderTemplate(shortCode, fullKey, { isMember: true })).json();
+    expect(html).toContain('Members only');
+  });
+
+  it('counts against the monthly quota', async () => {
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER);
+
+    await renderTemplate(shortCode, fullKey);
+
+    const { getApiUsage } = await import('../lib/api-quota');
+    expect(await getApiUsage(db, OWNER)).toBe(1);
   });
 });

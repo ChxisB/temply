@@ -251,8 +251,15 @@ export default function ApiKeysPage() {
             Send it as a bearer token when you call the public API.
           </p>
           <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
-            <code>{`curl -H "Authorization: Bearer tply_live_..." \\
-  https://temply.app/api/public/v1/templates/tpl_abc123`}</code>
+            <code>{`# The template's details
+curl -H "Authorization: Bearer tply_live_..." \\
+  https://temply.app/api/public/v1/templates/tpl_abc123
+
+# The finished email, with your data
+curl -X POST -H "Authorization: Bearer tply_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"data":{"firstName":"Ada","isMember":true}}' \\
+  https://temply.app/api/public/v1/templates/tpl_abc123/render`}</code>
           </pre>
         </Card>
       )}
