@@ -10,6 +10,7 @@ import {
   Loader2Icon,
   MailIcon,
   MoonIcon,
+  RotateCcwIcon,
   SaveIcon,
   SendIcon,
   SlidersHorizontalIcon,
@@ -19,6 +20,13 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { httpDelete, httpPost } from '~/lib/http';
 import { cn } from '~/lib/classname';
+import {
+  clearDraft,
+  isNewerThan,
+  readDraft,
+  writeDraft,
+  type Draft,
+} from '~/lib/drafts';
 import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
 import type { Mail } from '~/db/schema';
 import { Button } from './ui/button';
@@ -45,6 +53,18 @@ const inputClass =
   'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
 
 const labelClass = 'block text-sm font-medium text-ink';
+
+/** "12 minutes ago" tells you whether the draft is worth having; a timestamp
+ *  would make you do the subtraction. */
+function formatDraftAge(savedAt: number): string {
+  const minutes = Math.round((Date.now() - savedAt) / 60_000);
+  if (minutes < 1) return 'a moment ago';
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+}
 
 const hasKeys = (keys: TemplateDataKeys) =>
   keys.conditions.length > 0 || keys.variables.length > 0;
@@ -280,6 +300,41 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewData, mode, hasPreviewData]);
 
+  // --- Unsaved work ---------------------------------------------------------
+  // Kept in the browser rather than on the row: the public render API serves
+  // that row, so autosaving into it would ship a half-finished email to
+  // whoever asked for one next.
+  const [draftFound, setDraftFound] = useState<Draft | null>(null);
+  const hasUnsavedWork = useRef(false);
+  const lastWritten = useRef('');
+
+  // Offer a draft that holds work the saved row does not; clear one that was
+  // already published, so it cannot resurface months later.
+  useEffect(() => {
+    if (!template?.id) return;
+    const draft = readDraft(template.id);
+    if (!draft) return;
+    if (isNewerThan(draft, template.updated_at)) setDraftFound(draft);
+    else clearDraft(template.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [template?.id]);
+
+  const restoreDraft = () => {
+    if (!draftFound) return;
+    setSubject(draftFound.subject);
+    setPreviewText(draftFound.previewText);
+    setFromName(draftFound.fromName);
+    setReplyTo(draftFound.replyTo);
+    setTheme(draftFound.theme as RendererThemeOptions);
+    editor?.commands.setContent(draftFound.content as any);
+    setDraftFound(null);
+  };
+
+  const discardDraft = () => {
+    if (template?.id) clearDraft(template.id);
+    setDraftFound(null);
+  };
+
   const [editorContent, setEditorContent] = useState(() => {
     if (template?.content) {
       return typeof template.content === 'string'
@@ -297,7 +352,78 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     } else {
       await createTemplate({ title: subject, previewText, content, theme: serialisedTheme });
     }
+    // The row is now the newest copy of this work, so the draft has nothing
+    // left to protect.
+    if (template?.id) {
+      clearDraft(template.id);
+      setDraftFound(null);
+      hasUnsavedWork.current = false;
+    }
   };
+
+  // Autosave: debounced, local only, and silent. It writes when something
+  // actually changed, so an idle tab does nothing, and it never snapshots a
+  // version — the cap is ten, and autosaves would flush every real save point
+  // out of history within minutes.
+  useEffect(() => {
+    const id = template?.id;
+    if (!id || !editor) return;
+
+    const capture = () => {
+      const draft: Draft = {
+        subject,
+        previewText,
+        fromName,
+        replyTo,
+        content: editor.getJSON(),
+        theme,
+        savedAt: Date.now(),
+      };
+      const fingerprint = JSON.stringify([
+        draft.subject,
+        draft.previewText,
+        draft.fromName,
+        draft.replyTo,
+        draft.content,
+        draft.theme,
+      ]);
+      if (fingerprint === lastWritten.current) return;
+
+      lastWritten.current = fingerprint;
+      hasUnsavedWork.current = true;
+      writeDraft(id, draft);
+    };
+
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(capture, 1000);
+    };
+
+    // Typing is heard through the editor's own event rather than React state:
+    // a state bump per keystroke would re-render this whole component for
+    // nothing. Field edits re-run the effect, which schedules the same write.
+    editor.on('update', schedule);
+    schedule();
+
+    return () => {
+      editor.off('update', schedule);
+      clearTimeout(timer);
+    };
+  }, [subject, previewText, fromName, replyTo, theme, editor, template?.id]);
+
+  // Closing the tab is the one exit the draft cannot cover on its own, since
+  // there is no return trip. In-app navigation needs no guard: the draft
+  // survives it and the banner offers it back.
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedWork.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
 
   const handleSend = async () => {
     if (!to) {
@@ -380,6 +506,27 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
   return (
     <div className="space-y-6">
+      {/* A banner rather than a modal: the question is about the work on the
+          screen behind it, so covering that up would be the wrong move. */}
+      {draftFound && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent bg-accent-wash px-3.5 py-2.5">
+          <p className="text-sm text-ink">
+            <span className="font-medium">Unsaved changes</span> from{' '}
+            {formatDraftAge(draftFound.savedAt)}. You left this template without
+            saving.
+          </p>
+          <div className="flex items-center gap-2">
+            <Button onClick={restoreDraft}>
+              <RotateCcwIcon />
+              Restore
+            </Button>
+            <Button variant="ghost" onClick={discardDraft}>
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
         <div className="flex flex-wrap items-center gap-2">
