@@ -54,4 +54,10 @@ server/*.db-wal
 # Specs, plans and other working paperwork stay out of the repo (user rule: no
 # docs commits). The whole directory, not just docs/superpowers/ — an agent
 # running `git add -A` had already staged docs/plans and docs/specs once.
-docs/
+#
+# Anchored to the repo root on purpose. Written as `docs/` it matches a
+# directory of that name at any depth, which swallowed client/components/docs
+# and client/app/(marketing)/docs — and Tailwind skips whatever .gitignore
+# excludes, so the utilities used only in those files stopped being generated
+# and the documentation page lost its layout.
+/docs/
