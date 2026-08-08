@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { CodeIcon, EyeIcon, Loader2Icon, PencilIcon } from 'lucide-react';
+import { AlignLeftIcon, CodeIcon, EyeIcon, Loader2Icon, PencilIcon } from 'lucide-react';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
-export type ContentMode = 'edit' | 'preview' | 'html';
+export type ContentMode = 'edit' | 'preview' | 'html' | 'text';
 
 const MODES: { value: ContentMode; label: string; icon: ReactNode }[] = [
   { value: 'edit', label: 'Edit', icon: <PencilIcon className="size-3.5" /> },
   { value: 'preview', label: 'Preview', icon: <EyeIcon className="size-3.5" /> },
   { value: 'html', label: 'HTML', icon: <CodeIcon className="size-3.5" /> },
+  { value: 'text', label: 'Text', icon: <AlignLeftIcon className="size-3.5" /> },
 ];
 
 /** 24px segment plus the 2px gap between them. */

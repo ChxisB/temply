@@ -33,9 +33,12 @@ export const emailsRoutes = new Elysia()
   .post(
     '/api/v1/emails/preview',
     async ({ body }: any) => {
-      const { content, theme, previewText, payload, pretty } = body;
+      const { content, theme, previewText, payload, pretty, plainText } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
       const html = await render(contentJson, {
+        // The text alternative is the same render with the markup stripped, so
+        // it stays in step with the email rather than being written twice.
+        plainText: plainText === true,
         theme: theme || undefined,
         preview: previewText,
         // Absent means "composing": variables stay as placeholders and every
@@ -54,6 +57,7 @@ export const emailsRoutes = new Elysia()
         theme: t.Optional(t.Any()),
         payload: t.Optional(t.Any()),
         pretty: t.Optional(t.Boolean()),
+        plainText: t.Optional(t.Boolean()),
       }),
     },
   )
@@ -83,7 +87,12 @@ export const emailsRoutes = new Elysia()
 
       const { previewText, subject, fromName, replyTo, content, theme } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
-      const html = await render(contentJson, { theme: theme || undefined, preview: previewText });
+      const renderOptions = { theme: theme || undefined, preview: previewText };
+      const html = await render(contentJson, renderOptions);
+      // A test send should be the email people actually receive, and a real one
+      // carries a text alternative: filters score HTML-only mail worse, and
+      // some clients show nothing else.
+      const text = await render(contentJson, { ...renderOptions, plainText: true });
 
       const resend = new Resend(apiKey);
       const { error } = await resend.emails.send({
@@ -92,6 +101,7 @@ export const emailsRoutes = new Elysia()
         replyTo: replyTo || undefined,
         subject,
         html,
+        text,
       });
       if (error) return json({ status: 500, message: error.message, errors: [error.message] }, 500);
 

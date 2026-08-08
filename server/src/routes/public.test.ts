@@ -193,6 +193,18 @@ describe('POST /api/public/v1/templates/:shortCode/render', () => {
     expect(body.html).toContain('<html');
   });
 
+  it('returns a text alternative beside the HTML', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC);
+
+    const { html, text } = await (await renderTemplate(shortCode, fullKey)).json();
+    expect(text).toContain('Members only');
+    // The point of the alternative: no markup for a client that cannot show it.
+    expect(text).not.toContain('<table');
+    expect(text.length).toBeLessThan(html.length);
+  });
+
   it('shows a conditional block when no data is sent', async () => {
     await givePlan(db, OWNER, 'pro');
     const { fullKey } = await seedKey(OWNER);

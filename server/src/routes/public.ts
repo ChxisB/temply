@@ -91,15 +91,21 @@ export const publicRoutes = new Elysia()
         );
       }
 
-      const html = await render(content as any, {
+      const renderOptions = {
         theme: template.theme ? JSON.parse(template.theme) : undefined,
         preview: template.preview_text ?? undefined,
         // Omitted entirely when the caller sends none, which keeps variables as
         // `{{placeholders}}` and every conditional block visible.
         payload: ctx.body?.data,
-      });
+      };
 
-      return json({ html, shortCode: template.short_code, updatedAt: template.updated_at });
+      const html = await render(content as any, renderOptions);
+      // The same email with the markup stripped. A caller building a multipart
+      // message needs it, and generating it here keeps the two in step —
+      // writing the text version by hand is how they drift.
+      const text = await render(content as any, { ...renderOptions, plainText: true });
+
+      return json({ html, text, shortCode: template.short_code, updatedAt: template.updated_at });
     },
     { body: t.Optional(t.Object({ data: t.Optional(t.Any()) })) },
   );

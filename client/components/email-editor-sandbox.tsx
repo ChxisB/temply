@@ -34,7 +34,7 @@ import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { ContentModeSwitch, type ContentMode } from './content-mode-switch';
 import { ContentPreview } from './content-preview';
-import { ContentHtml } from './content-html';
+import { ContentSource } from './content-source';
 import {
   initialPreviewData,
   PreviewDataPanel,
@@ -65,6 +65,13 @@ function formatDraftAge(savedAt: number): string {
   const days = Math.round(hours / 24);
   return `${days} day${days === 1 ? '' : 's'} ago`;
 }
+
+/** Which render a view needs. Preview and the two source views differ only in
+ *  what they ask the renderer for. */
+type RenderVariant = 'preview' | 'html' | 'text';
+
+const variantFor = (mode: ContentMode): RenderVariant =>
+  mode === 'html' ? 'html' : mode === 'text' ? 'text' : 'preview';
 
 const hasKeys = (keys: TemplateDataKeys) =>
   keys.conditions.length > 0 || keys.variables.length > 0;
@@ -192,6 +199,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // The source view gets its own, indented render; the email in the frame stays
   // byte-for-byte what would be sent.
   const [htmlSource, setHtmlSource] = useState('');
+  // The text alternative — what a client that cannot show markup would print.
+  const [textSource, setTextSource] = useState('');
   // Drives the one-shot enter animation. The editor is hidden rather than
   // unmounted, so showing it again fires no transition of its own.
   const [switching, setSwitching] = useState(false);
@@ -221,26 +230,32 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // touching anything should not cost a round trip.
   const renderedSignature = useRef('');
   const sourceSignature = useRef('');
+  const textSignature = useRef('');
   const hasPreviewData =
     previewKeys.conditions.length > 0 || previewKeys.variables.length > 0;
 
   const { mutate: renderPreview, isPending: isPreviewPending } = useMutation({
-    mutationFn: async ({ signature, payload, pretty }: { signature: string; payload?: Record<string, unknown>; enter?: ContentMode; pretty?: boolean }) => {
-      const html = await httpPost<{ html: string }>('/api/v1/emails/preview', {
+    mutationFn: async ({ signature, payload, variant }: { signature: string; payload?: Record<string, unknown>; enter?: ContentMode; variant: RenderVariant }) => {
+      const res = await httpPost<{ html: string }>('/api/v1/emails/preview', {
         content: JSON.stringify(editor?.getJSON()),
         previewText,
         theme,
         payload,
-        pretty,
+        // The three views are the same render asked for three ways.
+        pretty: variant === 'html',
+        plainText: variant === 'text',
       });
-      return { html: html?.html ?? '', signature };
+      return { output: res?.html ?? '', signature };
     },
-    onSuccess: ({ html, signature }, variables) => {
-      if (variables.pretty) {
-        setHtmlSource(html);
+    onSuccess: ({ output, signature }, variables) => {
+      if (variables.variant === 'html') {
+        setHtmlSource(output);
         sourceSignature.current = signature;
+      } else if (variables.variant === 'text') {
+        setTextSource(output);
+        textSignature.current = signature;
       } else {
-        setPreviewHtml(html);
+        setPreviewHtml(output);
         renderedSignature.current = signature;
       }
       // Swapping panes before the HTML exists shows an empty frame for as long
@@ -272,16 +287,19 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
     const payload = hasKeys(keys) ? toPayload(data) : undefined;
     const signature = previewSignature(payload);
-    const pretty = next === 'html';
-    const cached = pretty
-      ? signature === sourceSignature.current && htmlSource
-      : signature === renderedSignature.current && previewHtml;
+    const variant = variantFor(next);
+    const cached =
+      variant === 'html'
+        ? signature === sourceSignature.current && htmlSource
+        : variant === 'text'
+          ? signature === textSignature.current && textSource
+          : signature === renderedSignature.current && previewHtml;
     if (cached) {
       showPane(next);
       return;
     }
     setPendingMode(next);
-    renderPreview({ signature, payload, pretty, enter: next });
+    renderPreview({ signature, payload, variant, enter: next });
   };
 
   // Re-render as the data panel is used, debounced so typing a variable value
@@ -291,10 +309,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     const timer = setTimeout(() => {
       const payload = toPayload(previewData);
       const signature = previewSignature(payload);
-      const pretty = mode === 'html';
-      const current = pretty ? sourceSignature.current : renderedSignature.current;
+      const variant = variantFor(mode);
+      const current =
+        variant === 'html'
+          ? sourceSignature.current
+          : variant === 'text'
+            ? textSignature.current
+            : renderedSignature.current;
       if (signature === current) return;
-      renderPreview({ signature, payload, pretty });
+      renderPreview({ signature, payload, variant });
     }, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -695,7 +718,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             Content
             {mode !== 'edit' && (
               <span className="font-normal text-muted">
-                ({mode === 'preview' ? 'Preview' : 'HTML'})
+                ({mode === 'preview' ? 'Preview' : mode === 'html' ? 'HTML' : 'Text'})
               </span>
             )}
           </h2>
@@ -705,8 +728,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             pending={pendingMode}
             onModeChange={changeMode}
             viewControls={
-              mode === 'html' ? (
-                <CopyHtmlButton html={htmlSource} />
+              mode === 'html' || mode === 'text' ? (
+                <CopyHtmlButton html={mode === 'html' ? htmlSource : textSource} />
               ) : mode === 'preview' ? (
               <>
                 {hasPreviewData && (
@@ -783,7 +806,11 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         )}
 
         {mode === 'html' && (
-          <ContentHtml className={paneClass} minHeight={paneHeight} html={htmlSource} />
+          <ContentSource className={paneClass} minHeight={paneHeight} source={htmlSource} />
+        )}
+
+        {mode === 'text' && (
+          <ContentSource className={paneClass} minHeight={paneHeight} source={textSource} wrap />
         )}
       </section>
     </div>
