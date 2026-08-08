@@ -35,6 +35,7 @@ const sections = [
       { id: 'blocks-media', label: 'Media blocks' },
       { id: 'blocks-layout', label: 'Layout blocks' },
       { id: 'blocks-advanced', label: 'Advanced blocks' },
+      { id: 'shortcuts', label: 'Shortcuts' },
       { id: 'variables', label: 'Variables' },
       { id: 'show-if', label: 'Show if' },
     ],

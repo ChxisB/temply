@@ -30,6 +30,7 @@ import { DemoEditor } from '~/components/docs/demo-editor';
 import { DemoShowIf } from '~/components/docs/demo-show-if';
 import { FigureAnatomy } from '~/components/docs/figure-anatomy';
 import { FigureFlow } from '~/components/docs/figure-flow';
+import { ShortcutTable } from '~/components/docs/shortcut-table';
 
 /* --------------------------------------------------------------- primitives */
 
@@ -311,6 +312,16 @@ export function Editor() {
         and footers. Each one inserts a small arrangement of the blocks above,
         which you then edit like anything else.
       </P>
+
+      <div className="mt-12">
+        <H3 id="shortcuts">Shortcuts</H3>
+        <P>
+          The editor answers to more than its menus. Everything below works
+          while the cursor is in the canvas; the same list is a click away in
+          the editor itself, under the question mark beside the view switch.
+        </P>
+        <ShortcutTable />
+      </div>
 
       <div className="mt-12">
         <H3 id="variables">Variables</H3>

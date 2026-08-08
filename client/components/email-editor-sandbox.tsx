@@ -35,6 +35,7 @@ import { EmailEditor } from './email-editor';
 import { ContentModeSwitch, type ContentMode } from './content-mode-switch';
 import { ContentPreview } from './content-preview';
 import { ContentSource } from './content-source';
+import { EditorCheatsheet } from './editor-cheatsheet';
 import {
   initialPreviewData,
   PreviewDataPanel,
@@ -330,6 +331,24 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [draftFound, setDraftFound] = useState<Draft | null>(null);
   const hasUnsavedWork = useRef(false);
   const lastWritten = useRef('');
+  /** The state as last saved. Null until the editor exists to be read. */
+  const savedFingerprint = useRef<string | null>(null);
+
+  /**
+   * Only what Save persists counts as work worth warning about. From name and
+   * Reply To belong to a test send, not to the template — they ride along in
+   * the draft so restoring feels complete, but a template is not "unsaved"
+   * because you typed a sender address into it.
+   */
+  const persistedFingerprint = () =>
+    JSON.stringify([subject, previewText, editor?.getJSON() ?? null, theme]);
+
+  // The baseline: whatever the row held when this editor opened.
+  useEffect(() => {
+    if (!editor) return;
+    savedFingerprint.current = persistedFingerprint();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, template?.id]);
 
   // Offer a draft that holds work the saved row does not; clear one that was
   // already published, so it cannot resurface months later.
@@ -381,6 +400,10 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       clearDraft(template.id);
       setDraftFound(null);
       hasUnsavedWork.current = false;
+      lastWritten.current = '';
+      // The row now holds what is on screen, so that becomes the baseline the
+      // next edit is measured against.
+      savedFingerprint.current = persistedFingerprint();
     }
   };
 
@@ -393,7 +416,24 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     if (!id || !editor) return;
 
     const capture = () => {
-      const draft: Draft = {
+      const fingerprint = persistedFingerprint();
+
+      // The saved state is the baseline, not an empty string: comparing
+      // against nothing marked every template dirty the moment it opened, so
+      // leaving one you had only read warned you about work you never did.
+      // A warning that always fires is a warning nobody reads.
+      if (fingerprint === savedFingerprint.current) {
+        hasUnsavedWork.current = false;
+        lastWritten.current = '';
+        clearDraft(id);
+        return;
+      }
+
+      if (fingerprint === lastWritten.current) return;
+
+      lastWritten.current = fingerprint;
+      hasUnsavedWork.current = true;
+      writeDraft(id, {
         subject,
         previewText,
         fromName,
@@ -401,20 +441,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         content: editor.getJSON(),
         theme,
         savedAt: Date.now(),
-      };
-      const fingerprint = JSON.stringify([
-        draft.subject,
-        draft.previewText,
-        draft.fromName,
-        draft.replyTo,
-        draft.content,
-        draft.theme,
-      ]);
-      if (fingerprint === lastWritten.current) return;
-
-      lastWritten.current = fingerprint;
-      hasUnsavedWork.current = true;
-      writeDraft(id, draft);
+      });
     };
 
     let timer: ReturnType<typeof setTimeout>;
@@ -723,9 +750,10 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             )}
           </h2>
 
-          <ContentModeSwitch
-            mode={mode}
-            pending={pendingMode}
+          <div className="flex items-center gap-2">
+            <ContentModeSwitch
+              mode={mode}
+              pending={pendingMode}
             onModeChange={changeMode}
             viewControls={
               mode === 'html' || mode === 'text' ? (
@@ -770,8 +798,13 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
                 </button>
               </>
               ) : null
-            }
-          />
+              }
+            />
+
+            {/* Not floating in a corner: the bottom right already carries
+                toasts and, in development, Clerk's own badge. */}
+            <EditorCheatsheet />
+          </div>
         </header>
 
         {/* The editor is hidden rather than unmounted: it holds the caret,
