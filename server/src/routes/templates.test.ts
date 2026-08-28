@@ -45,7 +45,7 @@ describe('POST /api/v1/templates', () => {
 
   it('rejects a title shorter than 3 characters', async () => {
     const res = await post(app, '/api/v1/templates', { title: 'ab', content: '{}' }, OWNER);
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
   });
 
   it('returns 402 once a free user hits the template cap', async () => {

@@ -32,11 +32,11 @@ beforeEach(() => {
 const submit = (body: unknown) => post(app, '/api/v1/contact', body, null);
 
 describe('POST /api/v1/contact', () => {
-  it('422s on a missing name and an oversized message', async () => {
-    expect((await submit({ email: 'a@b.co', message: 'hi' })).status).toBe(422);
+  it('400s on a missing name and an oversized message', async () => {
+    expect((await submit({ email: 'a@b.co', message: 'hi' })).status).toBe(400);
     expect(
       (await submit({ name: 'A', email: 'a@b.co', message: 'x'.repeat(5001) })).status,
-    ).toBe(422);
+    ).toBe(400);
   });
 
   it('stores the message and delivers it with replyTo the submitter', async () => {

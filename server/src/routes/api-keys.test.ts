@@ -55,7 +55,7 @@ describe('POST /api/v1/api-keys', () => {
   it('rejects an empty name', async () => {
     await givePlan(db, OWNER, 'pro');
     const res = await post(app, '/api/v1/api-keys', { name: '' }, OWNER);
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
   });
 
   it('stops a pro user after 5 keys', async () => {

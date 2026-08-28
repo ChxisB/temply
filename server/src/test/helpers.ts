@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@temply/shared/schema';
 import { Elysia } from 'elysia';
 import { initTables } from '../plugins/db';
+import { errorResponse } from '../lib/errors';
 
 export type TestDb = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -35,6 +36,9 @@ export function createTestApp(db: TestDb, routes: any) {
       })),
     )
     .use(new Elysia({ name: 'db' }).derive({ as: 'global' }, () => ({ db })))
+    // The same error mapping index.ts installs — same scope, same position —
+    // so the statuses these tests assert are the ones production answers with.
+    .onError({ as: 'global' }, ({ error, code }) => errorResponse(code, error))
     .use(routes);
 }
 

@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { errorResponse } from './lib/errors';
 import { authPlugin } from './plugins/auth';
 import { dbPlugin } from './plugins/db';
 import { templatesRoutes } from './routes/templates';
@@ -14,6 +15,13 @@ import { webhookRoutes } from './routes/webhooks/stripe';
 import { authRoutes } from './routes/auth/logout';
 
 const app = new Elysia()
+  // Registered before the route modules and scoped global: a local onError
+  // added after .use() never sees errors raised inside the mounted modules,
+  // so validation failures would fall back to Elysia's own 422.
+  .onError({ as: 'global' }, ({ error, code }) => {
+    console.error(`Error [${code}]:`, error);
+    return errorResponse(code, error);
+  })
   .use(authPlugin)
   .use(dbPlugin)
   .use(templatesRoutes)
@@ -27,14 +35,6 @@ const app = new Elysia()
   .use(contactRoutes)
   .use(webhookRoutes)
   .use(authRoutes)
-  .onError(({ error, code }) => {
-    console.error(`Error [${code}]:`, error);
-    const message = error instanceof Error ? error.message : 'Internal Server Error';
-    return new Response(JSON.stringify({ status: 500, message, errors: [message] }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  })
   // Bind to loopback only: this service trusts a proxy-forwarded user id and
   // must never be reachable directly from the network.
   .listen({ port: 3001, hostname: '127.0.0.1' });
