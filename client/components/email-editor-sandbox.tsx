@@ -577,7 +577,10 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         </div>
       )}
 
-      {/* Toolbar */}
+      {/* Toolbar — every control in it needs a save button or a saved
+          template, so on the anonymous playground it would render as an
+          empty box. */}
+      {(showSaveButton || template?.id) && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
         <div className="flex flex-wrap items-center gap-2">
           {showSaveButton && (
@@ -614,6 +617,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           )}
         </div>
       </div>
+      )}
 
       {/* Template ID */}
       {template?.short_code && (
