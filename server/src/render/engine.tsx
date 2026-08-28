@@ -1029,7 +1029,8 @@ export class Engine {
       buttonColor: _buttonColor,
       textColor: _textColor,
       borderRadius,
-      // @TODO: Update the attribute to `textAlign`
+      // The editor and stored templates both say `alignment`; renaming it is a
+      // breaking content migration, not a cleanup.
       alignment = 'left',
 
       paddingTop: _paddingTop,
@@ -1137,7 +1138,8 @@ export class Engine {
       alt,
       title,
       size,
-      // @TODO: Update the attribute to `textAlign`
+      // The editor and stored templates both say `alignment`; renaming it is a
+      // breaking content migration, not a cleanup.
       alignment = 'left',
     } = attrs || {};
 

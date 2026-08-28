@@ -103,7 +103,6 @@ export function resolveRobots(data: RobotsFile): string {
   }
   if (data.sitemap) {
     const sitemap = resolveArray(data.sitemap);
-    // TODO-METADATA: support injecting sitemap url into robots.txt
     sitemap.forEach((item) => {
       content += `Sitemap: ${item}\n`;
     });
