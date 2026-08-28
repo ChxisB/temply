@@ -809,9 +809,12 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
         {/* The editor is hidden rather than unmounted: it holds the caret,
             the selection and the undo history, and previewing is a glance. */}
+        {/* In dark mode the canvas is dimmed a touch to take the glare off —
+            comfort only, the theme's colours still hold: recipients get them
+            at full brightness, and so does the preview. */}
         <div
           ref={editorPaneRef}
-          className={cn(mode !== 'edit' ? 'hidden' : paneClass)}
+          className={cn(mode !== 'edit' ? 'hidden' : paneClass, 'dark:brightness-90')}
           style={pageStyle}
         >
           <div style={cardStyle}>
