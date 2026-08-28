@@ -36,27 +36,30 @@ export function themeIssues(theme: RendererThemeOptions): ContrastIssue[] {
 /** Which colour field each finding belongs beside. */
 export type ThemeIssueField = 'card-background' | 'link' | 'button-text';
 
+/**
+ * One entry per subject — the harsher of the light/forced-dark pair is the
+ * one worth acting on.
+ */
+export function worstPerSubject(issues: ContrastIssue[]): ContrastIssue[] {
+  const worst = new Map<string, ContrastIssue>();
+  for (const issue of issues) {
+    const seen = worst.get(issue.subject);
+    if (!seen || issue.ratio < seen.ratio) worst.set(issue.subject, issue);
+  }
+  return [...worst.values()];
+}
+
 export function issuesForField(
   theme: RendererThemeOptions,
   field: ThemeIssueField,
 ): ContrastIssue[] {
-  const issues = themeIssues(theme);
   const subjects: Record<ThemeIssueField, string[]> = {
     'card-background': ['Headings', 'Body copy', 'Footer text'],
     link: ['Links'],
     'button-text': ['The button label'],
   };
   const wanted = subjects[field];
-
-  // One entry per subject — the harsher of the light/forced-dark pair is the
-  // one worth acting on.
-  const worst = new Map<string, ContrastIssue>();
-  for (const issue of issues) {
-    if (!wanted.includes(issue.subject)) continue;
-    const seen = worst.get(issue.subject);
-    if (!seen || issue.ratio < seen.ratio) worst.set(issue.subject, issue);
-  }
-  return [...worst.values()];
+  return worstPerSubject(themeIssues(theme).filter((issue) => wanted.includes(issue.subject)));
 }
 
 /**

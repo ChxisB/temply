@@ -43,6 +43,15 @@ import {
   type PreviewData,
 } from './preview-data-panel';
 import { collectDataKeys, type TemplateDataKeys } from '@temply/shared/template-data';
+import {
+  assessSize,
+  checkFields,
+  collectContentFindings,
+  unresolvedVariables,
+  type PreflightIssue,
+} from '@temply/shared/preflight';
+import { PreflightPanel } from './preflight-panel';
+import { themeIssues, worstPerSubject } from './theme-warnings';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
@@ -324,6 +333,125 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewData, mode, hasPreviewData]);
 
+  // --- Preflight ------------------------------------------------------------
+  // The checks a send or export should survive, computed from editor state.
+  // Findings and the measured byte size travel together: the size is only
+  // meaningful for the document the findings describe.
+  const [preflight, setPreflight] = useState<{ issues: PreflightIssue[]; bytes: number | null }>({
+    issues: [],
+    bytes: null,
+  });
+  const [preflightExpanded, setPreflightExpanded] = useState(false);
+  // Two-step send: armedFor holds the serialized error set the first click
+  // acknowledged. The second click only goes through while the errors still
+  // match, so a confirmation never carries over to a different mistake.
+  const [armedFor, setArmedFor] = useState<string | null>(null);
+  const preflightSerialized = useRef('');
+
+  const hasPreflightErrors = preflight.issues.some((issue) => issue.severity === 'error');
+  const sendArmed = armedFor !== null && hasPreflightErrors;
+
+  const errorKey = (issues: PreflightIssue[]) =>
+    JSON.stringify(issues.filter((issue) => issue.severity === 'error'));
+
+  /** Contrast findings folded to the worse of the light/forced-dark pair per
+   *  subject, the way issuesForField presents them beside the colour fields. */
+  const themeWarnings = (): PreflightIssue[] =>
+    worstPerSubject(themeIssues(theme)).map((issue) => ({
+      id: `contrast-${issue.subject}`,
+      severity: 'warn' as const,
+      message: `${issue.subject} may be hard to read: ${issue.ratio}:1 against the background${
+        issue.where === 'forced dark' ? ' once a client forces dark mode' : ''
+      } — aim for ${issue.required}:1.`,
+    }));
+
+  /** One pass over the live document. Both the debounced effect and Send call
+   *  this — Send must not trust state that can be half a second stale. */
+  const computePreflight = (): { issues: PreflightIssue[]; bytes: number | null } => {
+    if (!editor) return { issues: [], bytes: null };
+    const json = editor.getJSON();
+    // Fresh keys, not the previewKeys state — that only updates on entering
+    // a rendered view, and the document may have changed since.
+    const keys = collectDataKeys(json);
+    const issues: PreflightIssue[] = [
+      ...checkFields(subject, previewText),
+      ...collectContentFindings(json),
+      ...unresolvedVariables(keys, previewData.variables).map((key) => ({
+        id: `variable-${key}`,
+        severity: 'warn' as const,
+        message: `The variable {{${key}}} has no preview value — a send would show the literal placeholder.`,
+      })),
+      ...themeWarnings(),
+    ];
+
+    // Size is read off the as-sent preview render — never the pretty HTML
+    // source, which indentation inflates — and only while that render still
+    // matches the document; stale bytes would grade an old email.
+    const payload = hasKeys(keys) ? toPayload(previewData) : undefined;
+    const fresh = previewHtml && previewSignature(payload) === renderedSignature.current;
+    const bytes = fresh ? new TextEncoder().encode(previewHtml).length : null;
+    if (bytes != null) {
+      const sizeIssue = assessSize(bytes);
+      if (sizeIssue) issues.push(sizeIssue);
+    }
+    return { issues, bytes };
+  };
+
+  /** Store only when the findings changed, so keystrokes don't re-render the
+   *  sandbox for identical results. */
+  const publishPreflight = (next: { issues: PreflightIssue[]; bytes: number | null }) => {
+    const serialized = JSON.stringify([next.issues, next.bytes]);
+    if (serialized === preflightSerialized.current) return;
+    preflightSerialized.current = serialized;
+    setPreflight(next);
+    // A confirmation only covers the error set it was given.
+    setArmedFor((current) =>
+      current !== null && current !== errorKey(next.issues) ? null : current,
+    );
+  };
+
+  /** The as-sent render the size check measures. Fires a render only when the
+   *  HTML on hand no longer matches the current document. */
+  const ensureSizeMeasured = () => {
+    if (!editor) return;
+    const keys = collectDataKeys(editor.getJSON());
+    const payload = hasKeys(keys) ? toPayload(previewData) : undefined;
+    const signature = previewSignature(payload);
+    if (signature === renderedSignature.current && previewHtml) return;
+    // No `enter`: the HTML refreshes without switching panes.
+    renderPreview({ signature, payload, variant: 'preview' });
+  };
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const compute = () => {
+      const next = computePreflight();
+      // No current measurement means the size check cannot run — an oversized
+      // email with nothing else wrong would sail through. Ask for the render;
+      // the debounce bounds the cost and the fresh HTML re-runs this effect.
+      if (next.bytes == null) ensureSizeMeasured();
+      publishPreflight(next);
+    };
+
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      clearTimeout(timer);
+      timer = setTimeout(compute, 500);
+    };
+
+    // Same shape as autosave below: typing is heard through the editor's own
+    // event so a keystroke does not re-render the component to be noticed.
+    editor.on('update', schedule);
+    schedule();
+
+    return () => {
+      editor.off('update', schedule);
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject, previewText, theme, previewData, editor, previewHtml]);
+
   // --- Unsaved work ---------------------------------------------------------
   // Kept in the browser rather than on the row: the public render API serves
   // that row, so autosaving into it would ship a half-finished email to
@@ -480,7 +608,22 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       toast.error('Add a To address before sending.');
       return;
     }
-    const content = JSON.stringify(editor?.getJSON());
+    // The gate reads the document directly, not the debounced findings — a
+    // URL cleared half a second before the click must still count.
+    const current = computePreflight();
+    publishPreflight(current);
+    const errors = errorKey(current.issues);
+    // Never hard-blocked: with error-level findings the first click opens the
+    // preflight panel and relabels the button; the second click sends anyway.
+    if (errors !== '[]' && armedFor !== errors) {
+      setArmedFor(errors);
+      setPreflightExpanded(true);
+      ensureSizeMeasured();
+      return;
+    }
+    const json = editor?.getJSON();
+    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [] };
+    const content = JSON.stringify(json);
     try {
       await httpPost('/api/v1/emails/send', {
         theme,
@@ -490,8 +633,12 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         replyTo,
         to,
         content,
+        // The typed preview data rides along, so a test send resolves
+        // variables the way a real render would instead of showing {{name}}.
+        payload: hasKeys(keys) ? toPayload(previewData) : undefined,
       });
       toast.success('Email sent.');
+      setArmedFor(null);
     } catch (error: any) {
       toast.error(error?.message || 'Could not send the email.');
     }
@@ -612,7 +759,11 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           {template?.id && (
             <Button onClick={handleSend}>
               <SendIcon />
-              <span className="hidden sm:inline">Send</span>
+              {/* "Send anyway" must be readable to mean anything, so the
+                  armed label stays visible even where "Send" would hide. */}
+              <span className={sendArmed ? undefined : 'hidden sm:inline'}>
+                {sendArmed ? 'Send anyway' : 'Send'}
+              </span>
             </Button>
           )}
         </div>
@@ -810,6 +961,13 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             <EditorCheatsheet />
           </div>
         </header>
+
+        <PreflightPanel
+          issues={preflight.issues}
+          bytes={preflight.bytes}
+          expanded={preflightExpanded}
+          onToggle={() => setPreflightExpanded((current) => !current)}
+        />
 
         {/* The editor is hidden rather than unmounted: it holds the caret,
             the selection and the undo history, and previewing is a glance. */}

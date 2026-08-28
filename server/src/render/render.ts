@@ -14,9 +14,20 @@ export async function render(
   // Supplying data — even an empty object — is what switches the engine from
   // "composing" to "rendering for a recipient": variables resolve and
   // conditions are evaluated.
-  if (payload) {
+  // The routes accept payload as t.Any(), so any JSON shape arrives here.
+  // Only a plain object is data — a string would hand Object.entries its
+  // characters as keys.
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
     engine.setShouldReplaceVariableValues(true);
     engine.setPayloadValues(payload);
+    // The payload map only feeds "Show if" and repeat lookups; variable pills
+    // read the variable-values map, so the flat text entries go there too or
+    // {{name}} never resolves.
+    for (const [key, value] of Object.entries(payload)) {
+      if (typeof value === 'string' || typeof value === 'number') {
+        engine.setVariableValue(key, String(value));
+      }
+    }
   }
 
   return engine.render(rest);

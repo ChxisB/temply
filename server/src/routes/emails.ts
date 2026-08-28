@@ -85,9 +85,15 @@ export const emailsRoutes = new Elysia()
         return json({ status: 500, message: 'Sending is not configured', errors: ['RESEND_API_KEY missing'] }, 500);
       }
 
-      const { previewText, subject, fromName, replyTo, content, theme } = body;
+      const { previewText, subject, fromName, replyTo, content, theme, payload } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
-      const renderOptions = { theme: theme || undefined, preview: previewText };
+      // Absent payload means "composing": variables pass through as {{name}}.
+      // With one, a test send resolves them the way a real render would.
+      const renderOptions = {
+        theme: theme || undefined,
+        preview: previewText,
+        payload: payload || undefined,
+      };
       const html = await render(contentJson, renderOptions);
       // A test send should be the email people actually receive, and a real one
       // carries a text alternative: filters score HTML-only mail worse, and
@@ -116,6 +122,7 @@ export const emailsRoutes = new Elysia()
         to: t.String({ minLength: 1 }),
         content: t.String({ minLength: 1 }),
         theme: t.Optional(t.Any()),
+        payload: t.Optional(t.Any()),
       }),
     },
   );

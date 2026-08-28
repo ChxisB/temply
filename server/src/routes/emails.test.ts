@@ -66,6 +66,52 @@ describe('POST /api/v1/emails/send', () => {
     expect(sent[0].from.split(' via Temply <')[0]).not.toContain('<');
   });
 
+  const variableContent = JSON.stringify({
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [
+          { type: 'text', text: 'Hi ' },
+          { type: 'variable', attrs: { id: 'firstName' } },
+        ],
+      },
+    ],
+  });
+
+  it('resolves variables from the payload, and leaves placeholders without one', async () => {
+    const content = variableContent;
+
+    const withPayload = await post(
+      app,
+      '/api/v1/emails/send',
+      body({ content, payload: { firstName: 'Ada' } }),
+      USER,
+    );
+    expect(withPayload.status).toBe(200);
+    expect(sent[0].html).toContain('Ada');
+    expect(sent[0].html).not.toContain('{{firstName}}');
+    // The text alternative is the same render, so it resolves too.
+    expect(sent[0].text).toContain('Ada');
+
+    const withoutPayload = await post(app, '/api/v1/emails/send', body({ content }), USER);
+    expect(withoutPayload.status).toBe(200);
+    expect(sent[1].html).toContain('{{firstName}}');
+  });
+
+  it('ignores a payload that is not an object', async () => {
+    const res = await post(
+      app,
+      '/api/v1/emails/send',
+      body({ content: variableContent, payload: 'junk' }),
+      USER,
+    );
+    expect(res.status).toBe(200);
+    // Composing behaviour: the placeholder passes through untouched instead
+    // of the string's characters becoming variable values.
+    expect(sent[0].html).toContain('{{firstName}}');
+  });
+
   it('rate-limits after 20 sends in the hour', async () => {
     // Use a dedicated user so this test's exact 20/21 counts aren't skewed by
     // the sends the other tests above already made for USER in this file's

@@ -10,7 +10,8 @@
     "./plans": "./plans.ts",
     "./brand-presets": "./brand-presets.ts",
     "./brand-knobs": "./brand-knobs.ts",
-    "./template-data": "./template-data.ts"
+    "./template-data": "./template-data.ts",
+    "./preflight": "./preflight.ts"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",
