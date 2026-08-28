@@ -56,6 +56,10 @@ export function TemplateThemePanel({
   // to this template alone.
   const [selectedBrandId, setSelectedBrandId] = useState(() => matchThemeToBrand(theme, []));
   const resolvedDefault = useRef(false);
+  // What Reset returns to: the theme this editing session opened on, settled
+  // only after the default brand (if any) has been adopted — resetting to the
+  // shipped default would land somewhere the user has never been.
+  const baseline = useRef<{ theme: Theme; brandId: string } | null>(null);
 
   useEffect(() => {
     if (resolvedDefault.current) return;
@@ -66,6 +70,7 @@ export function TemplateThemePanel({
     const match = matchThemeToBrand(theme, data?.brands ?? []);
     if (match !== 'custom') {
       setSelectedBrandId(match);
+      baseline.current = { theme: structuredClone(theme), brandId: match };
       return;
     }
 
@@ -77,14 +82,25 @@ export function TemplateThemePanel({
       const brandTheme = preset?.theme ?? (brand ? safeParse(brand.theme, theme) : null);
       if (brandTheme) {
         setSelectedBrandId(id);
+        baseline.current = { theme: structuredClone(brandTheme), brandId: id };
         onChange(structuredClone(brandTheme));
         return;
       }
     }
 
     setSelectedBrandId('custom');
+    baseline.current = { theme: structuredClone(theme), brandId: 'custom' };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isError]);
+
+  const handleReset = () => {
+    const target = baseline.current ?? {
+      theme: DEFAULT_RENDERER_THEME,
+      brandId: matchThemeToBrand(DEFAULT_RENDERER_THEME, brands),
+    };
+    setSelectedBrandId(target.brandId);
+    onChange(structuredClone(target.theme));
+  };
 
   const handleBrandChange = (id: string) => {
     setSelectedBrandId(id);
@@ -116,7 +132,7 @@ export function TemplateThemePanel({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleEdit(structuredClone(DEFAULT_RENDERER_THEME))}
+          onClick={handleReset}
         >
           <RotateCcwIcon />
           Reset
