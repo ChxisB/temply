@@ -1,6 +1,8 @@
 import { Elysia } from 'elysia';
 import ImageKit from 'imagekit';
 import { json, unauthorized } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin } from '../plugins/db';
 
 let client: ImageKit | null = null;
 
@@ -15,7 +17,10 @@ function getImageKit(): ImageKit | null {
   return client;
 }
 
-export const imagekitRoutes = new Elysia().get('/api/v1/imagekit-auth', async (ctx: any) => {
+export const imagekitRoutes = new Elysia()
+  .use(authPlugin)
+  .use(dbPlugin)
+  .get('/api/v1/imagekit-auth', async (ctx) => {
   if (!ctx.userId) return unauthorized();
 
   const ik = getImageKit();

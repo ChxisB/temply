@@ -3,8 +3,13 @@ import { getPlan } from '../lib/billing';
 import { getApiUsage, nextResetDate } from '../lib/api-quota';
 import { PLAN_LIMITS } from '@temply/shared/plans';
 import { json, unauthorized } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin } from '../plugins/db';
 
-export const quotaRoutes = new Elysia().get('/api/v1/quota', async (ctx: any) => {
+export const quotaRoutes = new Elysia()
+  .use(authPlugin)
+  .use(dbPlugin)
+  .get('/api/v1/quota', async (ctx) => {
   if (!ctx.userId) return unauthorized();
   const { plan } = await getPlan(ctx.db, ctx.userId);
   const rawLimit = PLAN_LIMITS[plan].maxApiCalls;

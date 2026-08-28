@@ -2,6 +2,8 @@ import { Elysia, t } from 'elysia';
 import { Resend } from 'resend';
 import { contactMessages } from '@temply/shared/schema';
 import { json } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin } from '../plugins/db';
 
 /**
  * The landing page's contact form. Public — a visitor has no account.
@@ -10,9 +12,12 @@ import { json } from '../lib/errors';
  * outage (or simply an unconfigured RESEND_API_KEY in dev) never loses it.
  * Delivery is best-effort on top.
  */
-export const contactRoutes = new Elysia().post(
+export const contactRoutes = new Elysia()
+  .use(authPlugin)
+  .use(dbPlugin)
+  .post(
   '/api/v1/contact',
-  async (ctx: any) => {
+  async (ctx) => {
     const { name, email, message, company } = ctx.body;
 
     // Honeypot: humans never see this field. Pretend success so the bot moves on.

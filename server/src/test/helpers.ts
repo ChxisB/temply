@@ -21,13 +21,20 @@ export function createTestDb(): TestDb {
  * Wraps a route module with the two things every handler reads off the context:
  * `db` and `userId`. The `x-user-id` header mirrors the trusted-header path of
  * the real auth plugin, so requests without it exercise the signed-out branch.
+ *
+ * The stubs are registered under the real plugin names ('auth', 'db') so that
+ * Elysia's name-based deduplication skips the real plugins the route modules
+ * chain via `.use(authPlugin).use(dbPlugin)` — otherwise tests would hit Clerk
+ * and open the on-disk database.
  */
 export function createTestApp(db: TestDb, routes: any) {
   return new Elysia()
-    .derive({ as: 'global' }, ({ request }: any) => ({
-      db,
-      userId: request.headers.get('x-user-id'),
-    }))
+    .use(
+      new Elysia({ name: 'auth' }).derive({ as: 'global' }, ({ request }) => ({
+        userId: request.headers.get('x-user-id'),
+      })),
+    )
+    .use(new Elysia({ name: 'db' }).derive({ as: 'global' }, () => ({ db })))
     .use(routes);
 }
 

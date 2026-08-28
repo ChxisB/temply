@@ -3,7 +3,9 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@temply/shared/schema';
 import { Elysia } from 'elysia';
 
-let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+export type Db = ReturnType<typeof drizzle<typeof schema>>;
+
+let db: Db | null = null;
 
 export function initTables(sqlite: Database) {
   sqlite.run(`CREATE TABLE IF NOT EXISTS mails (

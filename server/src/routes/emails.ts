@@ -2,6 +2,8 @@ import { Elysia, t } from 'elysia';
 import { Resend } from 'resend';
 import { render } from '../render/render';
 import { json, unauthorized } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin } from '../plugins/db';
 
 const FROM_ADDRESS = process.env.SENDING_FROM_ADDRESS || 'send@temply.app';
 const FROM_LABEL = process.env.SENDING_FROM_LABEL || 'Temply';
@@ -30,9 +32,11 @@ function overRateLimit(userId: string): boolean {
 }
 
 export const emailsRoutes = new Elysia()
+  .use(authPlugin)
+  .use(dbPlugin)
   .post(
     '/api/v1/emails/preview',
-    async ({ body }: any) => {
+    async ({ body }) => {
       const { content, theme, previewText, payload, pretty, plainText } = body;
       const contentJson = typeof content === 'string' ? JSON.parse(content) : content;
       const html = await render(contentJson, {
@@ -64,7 +68,7 @@ export const emailsRoutes = new Elysia()
 
   .post(
     '/api/v1/emails/send',
-    async (ctx: any) => {
+    async (ctx) => {
       const { body, userId } = ctx;
       if (!userId) return unauthorized();
 

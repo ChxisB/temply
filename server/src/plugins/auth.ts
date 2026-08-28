@@ -62,7 +62,7 @@ export const authPlugin = new Elysia({ name: 'auth' })
         const authState = await clerk.authenticateRequest(request);
         if (authState.status === 'signed-in' && authState.isSignedIn) {
           const authObj = authState.toAuth();
-          const userId = (authObj as any)?.userId;
+          const userId: string | undefined = (authObj as any)?.userId;
           if (userId) {
             console.log('[auth] verified via authenticateRequest:', userId);
             return { userId };

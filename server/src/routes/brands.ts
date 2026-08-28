@@ -5,23 +5,27 @@ import { PLAN_LIMITS } from '@temply/shared/plans';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { checkBrandLimit, getPlan } from '../lib/billing';
 import { json, unauthorized, paymentRequired, notFound } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin, type Db } from '../plugins/db';
 
 const PRESET_IDS = new Set(BRAND_PRESETS.map((p) => p.id));
 const FALLBACK_PRESET_ID = BRAND_PRESETS[0].id;
 
 /** The user's default look: a preset id or a custom brand id, or null. */
-async function readDefault(db: any, userId: string): Promise<string | null> {
+async function readDefault(db: Db, userId: string): Promise<string | null> {
   const [row] = await db.select().from(userPrefs).where(eq(userPrefs.user_id, userId)).limit(1);
   return row?.default_brand_id ?? null;
 }
 
-async function writeDefault(db: any, userId: string, id: string | null): Promise<void> {
+async function writeDefault(db: Db, userId: string, id: string | null): Promise<void> {
   await db.insert(userPrefs).values({ user_id: userId, default_brand_id: id })
     .onConflictDoUpdate({ target: userPrefs.user_id, set: { default_brand_id: id } });
 }
 
 export const brandsRoutes = new Elysia()
-  .get('/api/v1/brands', async (ctx: any) => {
+  .use(authPlugin)
+  .use(dbPlugin)
+  .get('/api/v1/brands', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const list = await ctx.db.select().from(brands).where(eq(brands.user_id, ctx.userId)).orderBy(desc(brands.created_at));
     // The client needs the cap to render the "custom brands used up" banner.
@@ -35,7 +39,7 @@ export const brandsRoutes = new Elysia()
     });
   })
 
-  .post('/api/v1/brands', async (ctx: any) => {
+  .post('/api/v1/brands', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const limit = await checkBrandLimit(ctx.db, ctx.userId);
     if (!limit.allowed) return paymentRequired(limit.message!);
@@ -46,7 +50,7 @@ export const brandsRoutes = new Elysia()
     return json({ brand: { id, name, theme, is_default: 0 } });
   }, { body: t.Object({ name: t.String({ minLength: 1 }), theme: t.String({ minLength: 1 }) }) })
 
-  .put('/api/v1/brands/:id', async (ctx: any) => {
+  .put('/api/v1/brands/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const [owned] = await ctx.db.select({ id: brands.id }).from(brands)
       .where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId))).limit(1);
@@ -58,7 +62,7 @@ export const brandsRoutes = new Elysia()
     return json({ status: 'ok' });
   }, { body: t.Object({ name: t.Optional(t.String({ minLength: 1 })), theme: t.Optional(t.String({ minLength: 1 })) }) })
 
-  .delete('/api/v1/brands/:id', async (ctx: any) => {
+  .delete('/api/v1/brands/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const [target] = await ctx.db.select().from(brands)
       .where(and(eq(brands.id, ctx.params.id), eq(brands.user_id, ctx.userId))).limit(1);
@@ -74,7 +78,7 @@ export const brandsRoutes = new Elysia()
     return json({ status: 'ok' });
   })
 
-  .post('/api/v1/brands/:id/default', async (ctx: any) => {
+  .post('/api/v1/brands/:id/default', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     // The default may be a preset (not a row) or one of the caller's own brands.
     let valid = PRESET_IDS.has(ctx.params.id);

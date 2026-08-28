@@ -5,6 +5,8 @@ import { hashApiKey } from '../lib/codes';
 import { checkApiQuota, recordApiCall } from '../lib/api-quota';
 import { render } from '../render/render';
 import { json, notFound, unauthorized } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin, type Db } from '../plugins/db';
 
 type Resolved =
   | { error: Response }
@@ -16,7 +18,7 @@ type Resolved =
  * to match on the short code alone, so any valid key could read any account's
  * template by guessing one.
  */
-async function resolve(ctx: any): Promise<Resolved> {
+async function resolve(ctx: { request: Request; params: { shortCode: string }; db: Db }): Promise<Resolved> {
   const authHeader = ctx.request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return { error: unauthorized('Missing or invalid Authorization header') };
@@ -54,7 +56,9 @@ async function resolve(ctx: any): Promise<Resolved> {
 }
 
 export const publicRoutes = new Elysia()
-  .get('/api/public/v1/templates/:shortCode', async (ctx: any) => {
+  .use(authPlugin)
+  .use(dbPlugin)
+  .get('/api/public/v1/templates/:shortCode', async (ctx) => {
     const resolved = await resolve(ctx);
     if ('error' in resolved) return resolved.error;
     const { template } = resolved;
@@ -76,7 +80,7 @@ export const publicRoutes = new Elysia()
    */
   .post(
     '/api/public/v1/templates/:shortCode/render',
-    async (ctx: any) => {
+    async (ctx) => {
       const resolved = await resolve(ctx);
       if ('error' in resolved) return resolved.error;
       const { template } = resolved;

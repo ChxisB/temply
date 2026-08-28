@@ -3,9 +3,13 @@ import { eq } from 'drizzle-orm';
 import { subscriptions } from '@temply/shared/schema';
 import { getStripe } from '../../lib/billing';
 import { json } from '../../lib/errors';
+import { authPlugin } from '../../plugins/auth';
+import { dbPlugin } from '../../plugins/db';
 
 export const webhookRoutes = new Elysia()
-  .post('/api/webhooks/stripe', async (ctx: any) => {
+  .use(authPlugin)
+  .use(dbPlugin)
+  .post('/api/webhooks/stripe', async (ctx) => {
     const stripe = getStripe();
     const sig = ctx.request.headers.get('stripe-signature');
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

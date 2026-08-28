@@ -4,9 +4,13 @@ import { subscriptions } from '@temply/shared/schema';
 import { getPlan, getUsage, getStripe } from '../lib/billing';
 import { PLAN_LIMITS, serialiseLimits } from '@temply/shared/plans';
 import { json, unauthorized } from '../lib/errors';
+import { authPlugin } from '../plugins/auth';
+import { dbPlugin } from '../plugins/db';
 
 export const billingRoutes = new Elysia()
-  .get('/api/v1/billing', async (ctx: any) => {
+  .use(authPlugin)
+  .use(dbPlugin)
+  .get('/api/v1/billing', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const plan = await getPlan(ctx.db, ctx.userId);
     const usage = await getUsage(ctx.db, ctx.userId);
@@ -16,7 +20,7 @@ export const billingRoutes = new Elysia()
     return json({ ...plan, usage, limits });
   })
 
-  .post('/api/v1/billing/checkout', async (ctx: any) => {
+  .post('/api/v1/billing/checkout', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const { plan } = ctx.body;
     const priceId = process.env[`STRIPE_PRICE_${plan.toUpperCase()}`];
@@ -35,7 +39,7 @@ export const billingRoutes = new Elysia()
     return json({ url: session.url });
   }, { body: t.Object({ plan: t.Literal('pro') }) })
 
-  .post('/api/v1/billing/portal', async (ctx: any) => {
+  .post('/api/v1/billing/portal', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const [sub] = await ctx.db.select().from(subscriptions).where(eq(subscriptions.user_id, ctx.userId)).limit(1);
     if (!sub?.stripe_customer_id) return json({ status: 400, message: 'No subscription found', errors: ['Bad Request'] }, 400);
