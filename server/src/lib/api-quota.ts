@@ -1,5 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { apiUsage } from '@temply/shared/schema';
+import type { Db } from '../plugins/db';
 import { PLAN_LIMITS } from '@temply/shared/plans';
 import { getPlan } from './billing';
 
@@ -27,7 +28,7 @@ export function nextResetDate(now: Date = new Date()): string {
   return `${year}-${String(month).padStart(2, '0')}-01`;
 }
 
-export async function getApiUsage(db: any, userId: string, now: Date = new Date()): Promise<number> {
+export async function getApiUsage(db: Db, userId: string, now: Date = new Date()): Promise<number> {
   const period = ukMonthString(now);
   const [row] = await db
     .select()
@@ -38,7 +39,7 @@ export async function getApiUsage(db: any, userId: string, now: Date = new Date(
 }
 
 export async function checkApiQuota(
-  db: any,
+  db: Db,
   userId: string,
   now: Date = new Date(),
 ): Promise<{ allowed: boolean; message?: string; used: number; limit: number; remaining: number }> {
@@ -59,7 +60,7 @@ export async function checkApiQuota(
   return { allowed: true, used, limit, remaining };
 }
 
-export async function recordApiCall(db: any, userId: string, now: Date = new Date()): Promise<void> {
+export async function recordApiCall(db: Db, userId: string, now: Date = new Date()): Promise<void> {
   const period = ukMonthString(now);
   await db
     .insert(apiUsage)

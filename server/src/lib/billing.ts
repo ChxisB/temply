@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { eq, sql } from 'drizzle-orm';
 import { subscriptions, mails, apiKeysTable, brands } from '@temply/shared/schema';
+import type { Db } from '../plugins/db';
 import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
 
 
@@ -10,7 +11,7 @@ export function getStripe(): Stripe {
   return new Stripe(key, {});
 }
 
-export async function getPlan(db: any, userId: string): Promise<{ plan: Plan; status: string }> {
+export async function getPlan(db: Db, userId: string): Promise<{ plan: Plan; status: string }> {
   const [sub] = await db
     .select()
     .from(subscriptions)
@@ -23,7 +24,7 @@ export async function getPlan(db: any, userId: string): Promise<{ plan: Plan; st
   return { plan: sub.plan as Plan, status: sub.status };
 }
 
-export async function getUsage(db: any, userId: string) {
+export async function getUsage(db: Db, userId: string) {
   const [templateCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(mails)
@@ -37,7 +38,7 @@ export async function getUsage(db: any, userId: string) {
   return { templates: templateCount?.count ?? 0, apiKeys: apiKeyCount?.count ?? 0 };
 }
 
-export async function checkTemplateLimit(db: any, userId: string): Promise<{ allowed: boolean; message?: string }> {
+export async function checkTemplateLimit(db: Db, userId: string): Promise<{ allowed: boolean; message?: string }> {
   const { plan } = await getPlan(db, userId);
   const limits = planLimits[plan];
   const usage = await getUsage(db, userId);
@@ -47,7 +48,7 @@ export async function checkTemplateLimit(db: any, userId: string): Promise<{ all
   return { allowed: true };
 }
 
-export async function checkApiKeyLimit(db: any, userId: string): Promise<{ allowed: boolean; message?: string }> {
+export async function checkApiKeyLimit(db: Db, userId: string): Promise<{ allowed: boolean; message?: string }> {
   const { plan } = await getPlan(db, userId);
   const limits = planLimits[plan];
   if (limits.maxApiKeys === 0) {
@@ -60,7 +61,7 @@ export async function checkApiKeyLimit(db: any, userId: string): Promise<{ allow
   return { allowed: true };
 }
 
-export async function checkBrandLimit(db: any, userId: string): Promise<{ allowed: boolean; message?: string }> {
+export async function checkBrandLimit(db: Db, userId: string): Promise<{ allowed: boolean; message?: string }> {
   const { plan } = await getPlan(db, userId);
   const limit = planLimits[plan].maxBrands;
   if (!Number.isFinite(limit)) return { allowed: true };
@@ -71,7 +72,7 @@ export async function checkBrandLimit(db: any, userId: string): Promise<{ allowe
   return { allowed: true };
 }
 
-export async function shouldSnapshot(db: any, userId: string): Promise<boolean> {
+export async function shouldSnapshot(db: Db, userId: string): Promise<boolean> {
   const { plan } = await getPlan(db, userId);
   return plan !== 'free';
 }
