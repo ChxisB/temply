@@ -39,9 +39,24 @@ export function readDraft(templateId: string): Draft | null {
   try {
     const raw = window.localStorage.getItem(key(templateId));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Draft;
-    // A hand-edited or half-written entry is worse than none.
-    return typeof parsed?.savedAt === 'number' ? parsed : null;
+    const parsed: unknown = JSON.parse(raw);
+    // A hand-edited or half-written entry is worse than none: whatever this
+    // returns goes straight into the editor and the theme panel, so every
+    // field is checked, not just the timestamp.
+    if (typeof parsed !== 'object' || parsed === null) return null;
+    const d = parsed as Record<string, unknown>;
+    const isRecord = (v: unknown) => typeof v === 'object' && v !== null;
+    if (typeof d.savedAt !== 'number') return null;
+    if (
+      typeof d.subject !== 'string' ||
+      typeof d.previewText !== 'string' ||
+      typeof d.fromName !== 'string' ||
+      typeof d.replyTo !== 'string'
+    ) {
+      return null;
+    }
+    if (!isRecord(d.content) || !isRecord(d.theme)) return null;
+    return d as Draft;
   } catch {
     return null;
   }

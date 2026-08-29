@@ -119,3 +119,36 @@ describe('isNewerThan', () => {
     expect(isNewerThan(draft(savedMs), 'not a date')).toBe(true);
   });
 });
+
+describe('corrupt drafts', () => {
+  const raw = (value: unknown) =>
+    store.set('temply:draft:tpl_1', typeof value === 'string' ? value : JSON.stringify(value));
+
+  test('rejects a draft missing its content', () => {
+    const { content: _content, ...rest } = draft(1);
+    raw(rest);
+    expect(readDraft('tpl_1')).toBeNull();
+  });
+
+  test('rejects a draft whose theme is not an object', () => {
+    raw({ ...draft(1), theme: 'null' });
+    expect(readDraft('tpl_1')).toBeNull();
+  });
+
+  test('rejects a draft whose fields lost their types', () => {
+    raw({ ...draft(1), subject: 42 });
+    expect(readDraft('tpl_1')).toBeNull();
+  });
+
+  test('rejects non-object and unparsable entries', () => {
+    raw('"just a string"');
+    expect(readDraft('tpl_1')).toBeNull();
+    raw('{oops');
+    expect(readDraft('tpl_1')).toBeNull();
+  });
+
+  test('still accepts everything writeDraft produces', () => {
+    writeDraft('tpl_1', draft(7));
+    expect(readDraft('tpl_1')).not.toBeNull();
+  });
+});
