@@ -39,6 +39,12 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
     },
   });
 
+  // The API decides what may be cached (template previews send immutable
+  // versioned responses); without forwarding, the browser treats every proxied
+  // response as uncacheable and refetches thumbnails on each visit.
+  const cacheControl = res.headers.get('Cache-Control');
+  if (cacheControl) response.headers.set('Cache-Control', cacheControl);
+
   // Forward any Set-Cookie the API returns so cookie-setting routes work through
   // the proxy; getSetCookie keeps multiple cookies intact.
   const setCookies =

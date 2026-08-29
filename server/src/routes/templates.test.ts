@@ -74,6 +74,82 @@ describe('GET /api/v1/templates', () => {
   });
 });
 
+describe('GET /api/v1/templates/:id/preview', () => {
+  const doc = JSON.stringify({
+    type: 'doc',
+    content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello thumbnail' }] }],
+  });
+
+  async function createPreviewTemplate(extra: Record<string, string> = {}) {
+    const res = await post(app, '/api/v1/templates', { title: 'Thumbnail source', content: doc, ...extra }, OWNER);
+    return (await res.json()).template;
+  }
+
+  it('rejects a request with no user', async () => {
+    const res = await get(app, '/api/v1/templates/some-id/preview');
+    expect(res.status).toBe(401);
+  });
+
+  it('hides another user’s template behind a 404', async () => {
+    const template = await createPreviewTemplate();
+    const res = await get(app, `/api/v1/templates/${template.id}/preview`, OTHER);
+    expect(res.status).toBe(404);
+  });
+
+  it('renders the owner’s template as a full HTML document', async () => {
+    const template = await createPreviewTemplate();
+    const res = await get(app, `/api/v1/templates/${template.id}/preview`, OWNER);
+
+    expect(res.status).toBe(200);
+    const { html } = await res.json();
+    expect(html).toContain('Hello thumbnail');
+    expect(html).toContain('<html');
+  });
+
+  it('500s when the stored content is corrupt', async () => {
+    const template = await createPreviewTemplate();
+    await db.update(mails).set({ content: 'not json' }).where(eq(mails.id, template.id));
+
+    const res = await get(app, `/api/v1/templates/${template.id}/preview`, OWNER);
+    expect(res.status).toBe(500);
+    expect((await res.json()).message).toBe('Template content is corrupt');
+  });
+
+  it('still renders when only the theme is corrupt', async () => {
+    const template = await createPreviewTemplate({ theme: '{nope' });
+    const res = await get(app, `/api/v1/templates/${template.id}/preview`, OWNER);
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).html).toContain('Hello thumbnail');
+  });
+
+  it('is immutable-cacheable only when ?v matches the current updated_at', async () => {
+    const template = await createPreviewTemplate();
+    // Drizzle writes NULL for omitted columns, so a fresh insert has no
+    // updated_at; give it one so there is a version for ?v to match.
+    const updatedAt = '2026-08-29 10:00:00';
+    await db.update(mails).set({ updated_at: updatedAt }).where(eq(mails.id, template.id));
+
+    const versioned = await get(
+      app,
+      `/api/v1/templates/${template.id}/preview?v=${encodeURIComponent(updatedAt)}`,
+      OWNER,
+    );
+    expect(versioned.headers.get('cache-control')).toContain('immutable');
+
+    const unversioned = await get(app, `/api/v1/templates/${template.id}/preview`, OWNER);
+    expect(unversioned.headers.get('cache-control')).toBe('no-store');
+
+    // A stale ?v must NOT pin a year of cache — only an exact match may.
+    const mismatched = await get(
+      app,
+      `/api/v1/templates/${template.id}/preview?v=${encodeURIComponent('2020-01-01 00:00:00')}`,
+      OWNER,
+    );
+    expect(mismatched.headers.get('cache-control')).toBe('no-store');
+  });
+});
+
 describe('POST /api/v1/templates/:id', () => {
   it('updates the template in place', async () => {
     const template = await createTemplate(OWNER, 'Before');

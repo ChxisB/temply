@@ -1,8 +1,10 @@
 import { Elysia, t } from 'elysia';
+import type { JSONContent } from '@tiptap/core';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { mails, templateVersions } from '@temply/shared/schema';
 import { generateShortCode } from '../lib/codes';
 import { checkTemplateLimit, shouldSnapshot } from '../lib/billing';
+import { render } from '../render/render';
 import { json, unauthorized, notFound, paymentRequired } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
 import { dbPlugin } from '../plugins/db';
@@ -20,6 +22,54 @@ export const templatesRoutes = new Elysia()
     const [template] = await ctx.db.select().from(mails).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId))).limit(1);
     if (!template) return notFound('Template not found');
     return json({ template });
+  })
+
+  /**
+   * The template rendered as the dashboard thumbnails show it: no payload, so
+   * the engine stays in composing mode — variable pills keep their names and
+   * every conditional block is visible. Recipient-shaped output belongs to the
+   * public render endpoint, not here.
+   */
+  .get('/api/v1/templates/:id/preview', async (ctx) => {
+    if (!ctx.userId) return unauthorized();
+    const [template] = await ctx.db.select().from(mails).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId))).limit(1);
+    if (!template) return notFound('Template not found');
+
+    let content: unknown;
+    try {
+      content = JSON.parse(template.content);
+    } catch {
+      return json({ status: 500, message: 'Template content is corrupt', errors: ['Unparseable content'] }, 500);
+    }
+
+    // A corrupt theme degrades the thumbnail to the default theme; only the
+    // document itself being unreadable is worth failing the card over.
+    let theme;
+    try {
+      theme = template.theme ? JSON.parse(template.theme) : undefined;
+    } catch {
+      theme = undefined;
+    }
+
+    const html = await render(content as JSONContent, {
+      theme,
+      preview: template.preview_text ?? undefined,
+    });
+
+    // Cacheable forever only when the caller keyed the URL to this exact
+    // updated_at (?v=…) — an edit changes the key, so stale HTML is never
+    // served. An unversioned request has no such guarantee and must not stick.
+    const versioned = ctx.query.v !== undefined && ctx.query.v === template.updated_at;
+    return new Response(JSON.stringify({ html, updatedAt: template.updated_at }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': versioned ? 'private, max-age=31536000, immutable' : 'no-store',
+        // The browser HTTP cache keys by URL alone; this keeps a cached
+        // preview from surviving a session change on a shared profile.
+        Vary: 'Cookie',
+      },
+    });
   })
 
   .post('/api/v1/templates', async (ctx) => {
