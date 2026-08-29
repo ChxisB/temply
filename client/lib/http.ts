@@ -64,8 +64,9 @@ export async function httpCall<ResponseType = AppResponse>(
       headers,
     });
 
-    // @ts-ignore
-    const doesAcceptHtml = options?.headers?.['Accept'] === 'text/html';
+    // Read from the Headers actually sent — case-insensitive, and no reach
+    // back into the loose options shape.
+    const doesAcceptHtml = headers.get('Accept') === 'text/html';
 
     const data = doesAcceptHtml ? await response.text() : await response.json();
 
