@@ -23,6 +23,7 @@ import { cn } from '~/lib/classname';
 import {
   clearDraft,
   isNewerThan,
+  PLAYGROUND_DRAFT_ID,
   readDraft,
   writeDraft,
   type Draft,
@@ -456,8 +457,19 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // Kept in the browser rather than on the row: the public render API serves
   // that row, so autosaving into it would ship a half-finished email to
   // whoever asked for one next.
+  // The playground has no row, so its work is keyed under a fixed id instead
+  // of being unprotected.
+  const draftId = template?.id ?? PLAYGROUND_DRAFT_ID;
   const [draftFound, setDraftFound] = useState<Draft | null>(null);
   const hasUnsavedWork = useRef(false);
+  /**
+   * True while the banner offers a draft nobody has answered for. The autosave
+   * capture must stand down until the offer is answered, or the first debounce tick would
+   * overwrite the very draft on offer with the untouched document. A ref, not
+   * draftFound itself: the autosave effect's dependency list deliberately
+   * leaves banner state out, so its closure would go stale.
+   */
+  const offerPending = useRef(false);
   const lastWritten = useRef('');
   /** The state as last saved. Null until the editor exists to be read. */
   const savedFingerprint = useRef<string | null>(null);
@@ -476,18 +488,22 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     if (!editor) return;
     savedFingerprint.current = persistedFingerprint();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, template?.id]);
+  }, [editor, draftId]);
 
   // Offer a draft that holds work the saved row does not; clear one that was
   // already published, so it cannot resurface months later.
   useEffect(() => {
-    if (!template?.id) return;
-    const draft = readDraft(template.id);
+    const draft = readDraft(draftId);
     if (!draft) return;
-    if (isNewerThan(draft, template.updated_at)) setDraftFound(draft);
-    else clearDraft(template.id);
+    // With no row to compare against, any draft counts as newer.
+    if (isNewerThan(draft, template?.updated_at)) {
+      offerPending.current = true;
+      setDraftFound(draft);
+    } else {
+      clearDraft(draftId);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template?.id]);
+  }, [draftId]);
 
   const restoreDraft = () => {
     if (!draftFound) return;
@@ -497,11 +513,13 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     setReplyTo(draftFound.replyTo);
     setTheme(draftFound.theme as RendererThemeOptions);
     editor?.commands.setContent(draftFound.content as any);
+    offerPending.current = false;
     setDraftFound(null);
   };
 
   const discardDraft = () => {
-    if (template?.id) clearDraft(template.id);
+    clearDraft(draftId);
+    offerPending.current = false;
     setDraftFound(null);
   };
 
@@ -522,17 +540,18 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     } else {
       await createTemplate({ title: subject, previewText, content, theme: serialisedTheme });
     }
-    // The row is now the newest copy of this work, so the draft has nothing
-    // left to protect.
-    if (template?.id) {
-      clearDraft(template.id);
-      setDraftFound(null);
-      hasUnsavedWork.current = false;
-      lastWritten.current = '';
-      // The row now holds what is on screen, so that becomes the baseline the
-      // next edit is measured against.
-      savedFingerprint.current = persistedFingerprint();
-    }
+    // A row is now the newest copy of this work, so the draft has nothing
+    // left to protect. On the create branch this must happen before the
+    // redirect, or the playground draft would greet the next visitor with
+    // work that is already saved.
+    clearDraft(draftId);
+    setDraftFound(null);
+    offerPending.current = false;
+    hasUnsavedWork.current = false;
+    lastWritten.current = '';
+    // The row now holds what is on screen, so that becomes the baseline the
+    // next edit is measured against.
+    savedFingerprint.current = persistedFingerprint();
   };
 
   // Autosave: debounced, local only, and silent. It writes when something
@@ -540,11 +559,19 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // version — the cap is ten, and autosaves would flush every real save point
   // out of history within minutes.
   useEffect(() => {
-    const id = template?.id;
-    if (!id || !editor) return;
+    if (!editor) return;
 
     const capture = () => {
       const fingerprint = persistedFingerprint();
+
+      // While the offer stands, writing would overwrite the very draft on
+      // offer and clearing would destroy it — but the pause must not blind
+      // the beforeunload guard: typing past an unanswered banner is still
+      // unsaved work, so the dirtiness signal keeps tracking.
+      if (offerPending.current) {
+        hasUnsavedWork.current = fingerprint !== savedFingerprint.current;
+        return;
+      }
 
       // The saved state is the baseline, not an empty string: comparing
       // against nothing marked every template dirty the moment it opened, so
@@ -553,7 +580,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       if (fingerprint === savedFingerprint.current) {
         hasUnsavedWork.current = false;
         lastWritten.current = '';
-        clearDraft(id);
+        clearDraft(draftId);
         return;
       }
 
@@ -561,7 +588,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
 
       lastWritten.current = fingerprint;
       hasUnsavedWork.current = true;
-      writeDraft(id, {
+      writeDraft(draftId, {
         subject,
         previewText,
         fromName,
@@ -588,7 +615,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       editor.off('update', schedule);
       clearTimeout(timer);
     };
-  }, [subject, previewText, fromName, replyTo, theme, editor, template?.id]);
+  }, [subject, previewText, fromName, replyTo, theme, editor, draftId]);
 
   // Closing the tab is the one exit the draft cannot cover on its own, since
   // there is no return trip. In-app navigation needs no guard: the draft
@@ -709,8 +736,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent bg-accent-wash px-3.5 py-2.5">
           <p className="text-sm text-ink">
             <span className="font-medium">Unsaved changes</span> from{' '}
-            {formatDraftAge(draftFound.savedAt)}. You left this template without
-            saving.
+            {formatDraftAge(draftFound.savedAt)}. You left{' '}
+            {template?.id ? 'this template' : 'the playground'} without saving.
           </p>
           <div className="flex items-center gap-2">
             <Button onClick={restoreDraft}>

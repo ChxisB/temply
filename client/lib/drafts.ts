@@ -20,6 +20,14 @@ export type Draft = {
   savedAt: number;
 };
 
+/**
+ * The playground has no template row, so it stores its draft under this fixed
+ * key. Safe from collision because real template ids come from
+ * crypto.randomUUID(); two playground tabs sharing it (last writer wins) is
+ * accepted.
+ */
+export const PLAYGROUND_DRAFT_ID = 'playground';
+
 const key = (templateId: string) => `temply:draft:${templateId}`;
 
 /**

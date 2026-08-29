@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
-import { clearDraft, isNewerThan, readDraft, writeDraft, type Draft } from './drafts';
+import {
+  clearDraft,
+  isNewerThan,
+  PLAYGROUND_DRAFT_ID,
+  readDraft,
+  writeDraft,
+  type Draft,
+} from './drafts';
 
 const store = new Map<string, string>();
 
@@ -60,6 +67,22 @@ describe('draft storage', () => {
     expect(readDraft('tpl_1')).toBeNull();
   });
 
+  test('round-trips a playground draft under the fixed key', () => {
+    writeDraft(PLAYGROUND_DRAFT_ID, draft(1000));
+    expect(readDraft(PLAYGROUND_DRAFT_ID)).toEqual(draft(1000));
+  });
+
+  test('the playground draft and a template draft stay apart', () => {
+    writeDraft(PLAYGROUND_DRAFT_ID, { ...draft(1000), subject: 'Scratch' });
+    writeDraft('tpl_1', draft(2000));
+    expect(readDraft(PLAYGROUND_DRAFT_ID)?.subject).toBe('Scratch');
+    expect(readDraft('tpl_1')?.subject).toBe('Welcome');
+    clearDraft('tpl_1');
+    expect(readDraft(PLAYGROUND_DRAFT_ID)).not.toBeNull();
+    clearDraft(PLAYGROUND_DRAFT_ID);
+    expect(readDraft(PLAYGROUND_DRAFT_ID)).toBeNull();
+  });
+
   test('a write that throws leaves the caller unharmed', () => {
     const original = (globalThis as any).window.localStorage.setItem;
     (globalThis as any).window.localStorage.setItem = () => {
@@ -84,6 +107,12 @@ describe('isNewerThan', () => {
 
   test('a template that has never been saved keeps its draft', () => {
     expect(isNewerThan(draft(savedMs), null)).toBe(true);
+  });
+
+  test('a row with no timestamp at all keeps the draft', () => {
+    // The playground path evaluates exactly this: template?.updated_at is
+    // undefined because there is no template.
+    expect(isNewerThan(draft(savedMs), undefined)).toBe(true);
   });
 
   test('an unparseable timestamp keeps the draft rather than dropping work', () => {
