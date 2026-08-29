@@ -28,6 +28,9 @@ export interface BubbleMenuItem {
 }
 
 export type EditorBubbleMenuProps = Omit<BubbleMenuProps, 'children'> & {
+  // Vendor plumbing (maily): the same field carries the ref callers hand in
+  // AND the unwrapped `.current` element spread back in below — only `any`
+  // satisfies both shapes without restructuring the pass-through.
   appendTo?: React.RefObject<any>;
 };
 

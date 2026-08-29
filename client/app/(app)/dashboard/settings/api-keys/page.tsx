@@ -73,7 +73,7 @@ export default function ApiKeysPage() {
       setKeyName('');
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not create the key'),
+    onError: (error) => toast.error(error.message || 'Could not create the key'),
   });
 
   const { mutateAsync: revokeKey } = useMutation({
@@ -82,7 +82,7 @@ export default function ApiKeysPage() {
       toast.success('Key revoked');
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not revoke the key'),
+    onError: (error) => toast.error(error.message || 'Could not revoke the key'),
   });
 
   const handleCreate = async () => {

@@ -3,7 +3,7 @@
 import { Loader2Icon, PaletteIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { httpDelete, httpPost, httpPut } from '~/lib/http';
+import { FetchError, httpDelete, httpPost, httpPut } from '~/lib/http';
 import { toast } from 'sonner';
 import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
@@ -72,11 +72,11 @@ export default function BrandsPage() {
       toast.success('Brand created');
       invalidate();
     },
-    onError: (error: any) => {
-      if (error?.status === 402) {
+    onError: (error) => {
+      if (FetchError.isFetchError(error) && error.status === 402) {
         toast.error(error.message);
       } else {
-        toast.error(error?.message || 'Could not create the brand');
+        toast.error(error.message || 'Could not create the brand');
       }
     },
   });
@@ -88,7 +88,7 @@ export default function BrandsPage() {
       toast.success('Brand saved');
       invalidate();
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not save the brand'),
+    onError: (error) => toast.error(error.message || 'Could not save the brand'),
   });
 
   const { mutateAsync: deleteBrand } = useMutation({
@@ -97,7 +97,7 @@ export default function BrandsPage() {
       toast.success('Brand deleted');
       invalidate();
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not delete the brand'),
+    onError: (error) => toast.error(error.message || 'Could not delete the brand'),
   });
 
   const { mutateAsync: setDefaultBrand } = useMutation({
@@ -105,7 +105,7 @@ export default function BrandsPage() {
     onSuccess: () => {
       invalidate();
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not set the default brand'),
+    onError: (error) => toast.error(error.message || 'Could not set the default brand'),
   });
 
   const openCreate = () => {

@@ -24,13 +24,15 @@ export default async function TemplatesPage() {
     serverFetch('/api/v1/billing').catch(() => null),
   ]);
   const failed = !res.ok;
-  const { templates = [] } = failed ? { templates: [] } : await res.json();
+  const { templates = [] }: { templates: TemplateListItem[] } = failed
+    ? { templates: [] }
+    : await res.json();
 
   // The API returns full rows — content, theme, user_id and all. Project down
   // to the fields the list renders before the array crosses into the client
   // component, so nothing else rides along in the RSC payload.
   const list: TemplateListItem[] = templates.map(
-    (template: any): TemplateListItem => ({
+    (template): TemplateListItem => ({
       id: template.id,
       title: template.title,
       preview_text: template.preview_text ?? null,

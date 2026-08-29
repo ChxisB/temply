@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@temply/shared/schema';
-import { Elysia } from 'elysia';
+import { Elysia, type AnyElysia } from 'elysia';
 import { initTables } from '../plugins/db';
 import { errorResponse } from '../lib/errors';
 
@@ -28,7 +28,7 @@ export function createTestDb(): TestDb {
  * chain via `.use(authPlugin).use(dbPlugin)` — otherwise tests would hit Clerk
  * and open the on-disk database.
  */
-export function createTestApp(db: TestDb, routes: any) {
+export function createTestApp(db: TestDb, routes: AnyElysia) {
   return new Elysia()
     .use(
       new Elysia({ name: 'auth' }).derive({ as: 'global' }, ({ request }) => ({
@@ -42,11 +42,15 @@ export function createTestApp(db: TestDb, routes: any) {
     .use(routes);
 }
 
-export function get(app: any, path: string, userId?: string | null, headers: Record<string, string> = {}) {
+/** All the request helpers need from an app — Elysia's full generic type
+ *  changes with every route module and buys these helpers nothing. */
+type TestApp = { handle: (request: Request) => Promise<Response> };
+
+export function get(app: TestApp, path: string, userId?: string | null, headers: Record<string, string> = {}) {
   return app.handle(new Request(`http://localhost${path}`, { headers: withUser(headers, userId) }));
 }
 
-export function post(app: any, path: string, body: unknown, userId?: string | null, headers: Record<string, string> = {}) {
+export function post(app: TestApp, path: string, body: unknown, userId?: string | null, headers: Record<string, string> = {}) {
   return app.handle(
     new Request(`http://localhost${path}`, {
       method: 'POST',
@@ -56,7 +60,7 @@ export function post(app: any, path: string, body: unknown, userId?: string | nu
   );
 }
 
-export function put(app: any, path: string, body: unknown, userId?: string | null, headers: Record<string, string> = {}) {
+export function put(app: TestApp, path: string, body: unknown, userId?: string | null, headers: Record<string, string> = {}) {
   return app.handle(
     new Request(`http://localhost${path}`, {
       method: 'PUT',
@@ -66,7 +70,7 @@ export function put(app: any, path: string, body: unknown, userId?: string | nul
   );
 }
 
-export function del(app: any, path: string, userId?: string | null) {
+export function del(app: TestApp, path: string, userId?: string | null) {
   return app.handle(
     new Request(`http://localhost${path}`, { method: 'DELETE', headers: withUser({}, userId) }),
   );

@@ -18,14 +18,14 @@ export function TemplateActions({ templateId, canDuplicate = true }: TemplateAct
 
   const { mutateAsync: duplicateTemplate, isPending: isDuplicating } = useMutation({
     mutationFn: async () => {
-      return httpPost(`/api/v1/templates/${templateId}/duplicate`, {});
+      return httpPost<{ template: { id: string } }>(`/api/v1/templates/${templateId}/duplicate`, {});
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       toast.success('Template duplicated');
       router.push(`/templates/${data.template.id}`);
     },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Failed to duplicate template');
+    onError: (error) => {
+      toast.error(error.message || 'Failed to duplicate template');
     },
   });
 
@@ -37,8 +37,8 @@ export function TemplateActions({ templateId, canDuplicate = true }: TemplateAct
       toast.success('Template deleted');
       router.refresh();
     },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Failed to delete template');
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete template');
     },
   });
 

@@ -151,7 +151,7 @@ function PlanContent() {
     onSuccess: (data) => {
       window.location.href = data.url;
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not start checkout'),
+    onError: (error) => toast.error(error.message || 'Could not start checkout'),
   });
 
   const { mutateAsync: createPortal, isPending: isPortalLoading } = useMutation({
@@ -159,7 +159,7 @@ function PlanContent() {
     onSuccess: (data) => {
       window.location.href = data.url;
     },
-    onError: (error: any) => toast.error(error?.message || 'Could not open the billing portal'),
+    onError: (error) => toast.error(error.message || 'Could not open the billing portal'),
   });
 
   if (isLoading) {

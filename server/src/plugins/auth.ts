@@ -62,13 +62,13 @@ export const authPlugin = new Elysia({ name: 'auth' })
         const authState = await clerk.authenticateRequest(request);
         if (authState.status === 'signed-in' && authState.isSignedIn) {
           const authObj = authState.toAuth();
-          const userId: string | undefined = (authObj as any)?.userId;
+          const userId: string | undefined = authObj?.userId ?? undefined;
           if (userId) {
             console.log('[auth] verified via authenticateRequest:', userId);
             return { userId };
           }
         }
-        console.log('[auth] authenticateRequest status:', authState.status, 'reason:', (authState as any).reason);
+        console.log('[auth] authenticateRequest status:', authState.status, 'reason:', authState.reason);
       } catch (e) {
         console.error('[auth] authenticateRequest error:', (e as Error)?.message);
       }

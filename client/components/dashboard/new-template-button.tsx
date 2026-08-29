@@ -25,8 +25,8 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
     onSuccess: (data) => {
       router.push(`/templates/${data.template.id}`);
     },
-    onError: (error: any) => {
-      toast.error(error?.message || 'Failed to create template');
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create template');
     },
   });
 

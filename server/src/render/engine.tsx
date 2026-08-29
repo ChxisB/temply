@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties, type JSX } from 'react';
+import { Fragment, type ComponentProps, type CSSProperties, type JSX } from 'react';
 import {
   Text,
   Html,
@@ -45,7 +45,7 @@ interface NodeOptions {
 }
 
 export interface MarkType {
-  [key: string]: any;
+  [key: string]: unknown;
   type: string;
   attrs?: Record<string, any> | undefined;
 }
@@ -528,7 +528,11 @@ export class Engine {
     const markup = (
       <Html {...htmlProps}>
         <Head>
-          <Font {...(fontOptions as any)} />
+          {/* The shared FallbackFont union allows stacks like 'system-ui' that
+              react-email's narrower union does not name, though it renders them
+              fine — hence the cast to Font's own props rather than a rewrite of
+              stored themes. */}
+          <Font {...(fontOptions as ComponentProps<typeof Font>)} />
 
           <style
             dangerouslySetInnerHTML={{

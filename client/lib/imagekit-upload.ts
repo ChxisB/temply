@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { httpGet } from './http';
+import { errorMessage, httpGet } from './http';
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 // Email-safe: no f-auto (WebP breaks Outlook). w-1200 = 2x the 600px email
@@ -34,8 +34,8 @@ export function createImageKitUploader(): (file: Blob) => Promise<string> {
     let auth: ImageKitAuth;
     try {
       auth = await httpGet<ImageKitAuth>('/api/v1/imagekit-auth', {});
-    } catch (err: any) {
-      toast.error(err?.message || 'Could not start the upload.');
+    } catch (err) {
+      toast.error(errorMessage(err) || 'Could not start the upload.');
       throw err;
     }
 

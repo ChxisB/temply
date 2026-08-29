@@ -10,10 +10,14 @@ export function sameTheme(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (typeof a !== typeof b) return false;
   if (a === null || b === null || typeof a !== 'object') return a === b;
-  const ka = Object.keys(a as object).filter((k) => (a as any)[k] !== undefined);
-  const kb = Object.keys(b as object).filter((k) => (b as any)[k] !== undefined);
+  // Both sides are non-null objects here, so key access is safe — but the
+  // values stay unknown and go back through sameTheme rather than being read.
+  const ra = a as Record<string, unknown>;
+  const rb = b as Record<string, unknown>;
+  const ka = Object.keys(ra).filter((k) => ra[k] !== undefined);
+  const kb = Object.keys(rb).filter((k) => rb[k] !== undefined);
   if (ka.length !== kb.length) return false;
-  return ka.every((k) => sameTheme((a as any)[k], (b as any)[k]));
+  return ka.every((k) => sameTheme(ra[k], rb[k]));
 }
 
 /** Which preset or saved brand this theme IS, or 'custom' when it matches none. */

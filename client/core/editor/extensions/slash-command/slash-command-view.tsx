@@ -2,11 +2,10 @@ import { BlockGroupItem, BlockItem } from '@/blocks/types';
 import { cn } from '@/editor/utils/classname';
 import { Editor, Range } from '@tiptap/core';
 import { ReactRenderer } from '@tiptap/react';
-import { SuggestionOptions } from '@tiptap/suggestion';
+import { SuggestionKeyDownProps, SuggestionOptions } from '@tiptap/suggestion';
 import {
   forwardRef,
   Fragment,
-  KeyboardEvent,
   RefObject,
   useCallback,
   useEffect,
@@ -29,7 +28,7 @@ type CommandListProps = {
   query: string;
 };
 
-const CommandList = forwardRef<unknown, CommandListProps>((props, ref) => {
+const CommandList = forwardRef<SuggestionListRef, CommandListProps>((props, ref) => {
   const { items: groups, command, editor, range, query } = props;
 
   const [selectedGroupIndex, setSelectedGroupIndex] = useState(0);
@@ -53,7 +52,7 @@ const CommandList = forwardRef<unknown, CommandListProps>((props, ref) => {
   );
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+    onKeyDown: ({ event }: SuggestionKeyDownProps) => {
       const navigationKeys = [
         'ArrowUp',
         'ArrowDown',
@@ -258,6 +257,12 @@ const CommandList = forwardRef<unknown, CommandListProps>((props, ref) => {
   );
 });
 
+/** What the list component exposes through its imperative handle — the one
+ *  method the suggestion plumbing below actually calls. */
+type SuggestionListRef = {
+  onKeyDown: (props: SuggestionKeyDownProps) => boolean | undefined;
+};
+
 export function getSlashCommandSuggestions(
   groups: BlockGroupItem[] = DEFAULT_SLASH_COMMANDS
 ): Omit<SuggestionOptions, 'editor'> {
@@ -274,8 +279,8 @@ export function getSlashCommandSuggestions(
       return true;
     },
     render: () => {
-      let component: ReactRenderer<any>;
-      let popup: Instance<any>[] | null = null;
+      let component: ReactRenderer<SuggestionListRef>;
+      let popup: Instance[] | null = null;
 
       return {
         onStart: (props) => {
@@ -302,7 +307,7 @@ export function getSlashCommandSuggestions(
 
           component?.updateProps(props);
           currentPopup.setProps({
-            getReferenceClientRect: props.clientRect,
+            getReferenceClientRect: props.clientRect as GetReferenceClientRect,
           });
         },
         onKeyDown: (props) => {
@@ -316,7 +321,7 @@ export function getSlashCommandSuggestions(
             return true;
           }
 
-          return component?.ref?.onKeyDown(props);
+          return component?.ref?.onKeyDown(props) ?? false;
         },
         onExit: () => {
           if (!popup || !popup?.[0] || !component) {

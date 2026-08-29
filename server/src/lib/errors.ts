@@ -8,7 +8,7 @@ export function serializeZodError(error: ZodError) {
   });
 }
 
-export function json(data: any, status = 200) {
+export function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json' },

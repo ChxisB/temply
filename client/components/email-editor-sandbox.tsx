@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import type { Editor, FocusPosition } from '@tiptap/core';
+import type { Editor, FocusPosition, JSONContent } from '@tiptap/core';
 import {
   CheckIcon,
   CopyIcon,
@@ -18,7 +18,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { httpDelete, httpPost } from '~/lib/http';
+import { errorMessage, httpDelete, httpPost } from '~/lib/http';
 import { cn } from '~/lib/classname';
 import {
   clearDraft,
@@ -160,7 +160,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         toast.success('Template saved successfully.');
         router.refresh();
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Failed to save template.');
       },
     });
@@ -174,7 +174,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         toast.success('Template created successfully.');
         router.push(`/templates/${data.template.id}`);
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Failed to create template.');
       },
     });
@@ -188,7 +188,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         toast.success('Template deleted successfully.');
         router.push('/dashboard/templates');
       },
-      onError: (error: any) => {
+      onError: (error) => {
         toast.error(error.message || 'Failed to delete template.');
       },
     });
@@ -273,9 +273,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       // as the round trip takes, then pops the email in. Wait, then swap once.
       if (variables.enter) showPane(variables.enter);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       setPendingMode(null);
-      toast.error(error?.message || 'Failed to render the preview');
+      toast.error(error.message || 'Failed to render the preview');
     },
   });
 
@@ -512,7 +512,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     setFromName(draftFound.fromName);
     setReplyTo(draftFound.replyTo);
     setTheme(draftFound.theme as RendererThemeOptions);
-    editor?.commands.setContent(draftFound.content as any);
+    editor?.commands.setContent(draftFound.content as JSONContent);
     offerPending.current = false;
     setDraftFound(null);
   };
@@ -666,8 +666,8 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       });
       toast.success('Email sent.');
       setArmedFor(null);
-    } catch (error: any) {
-      toast.error(error?.message || 'Could not send the email.');
+    } catch (error) {
+      toast.error(errorMessage(error) || 'Could not send the email.');
     }
   };
 

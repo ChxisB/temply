@@ -5,6 +5,7 @@ import { FileTextIcon } from 'lucide-react';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
 import { EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
+import type { TemplateListItem } from '~/lib/template-search';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,9 @@ export default async function DashboardPage() {
   // Track the failure rather than folding it into an empty result: "we could
   // not reach the server" and "you have nothing yet" are different messages.
   const templatesFailed = !templatesRes.ok;
-  const { templates = [] } = templatesFailed ? { templates: [] } : await templatesRes.json();
+  const { templates = [] }: { templates: TemplateListItem[] } = templatesFailed
+    ? { templates: [] }
+    : await templatesRes.json();
   const billing = billingRes?.ok ? await billingRes.json() : null;
 
   const recentTemplates = templates.slice(0, 5);
@@ -85,7 +88,7 @@ export default async function DashboardPage() {
           />
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-raised">
-            {recentTemplates.map((template: any) => (
+            {recentTemplates.map((template) => (
               <li key={template.id}>
                 <Link
                   href={`/templates/${template.id}`}

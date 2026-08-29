@@ -112,10 +112,11 @@ export function resolveRobots(data: RobotsFile): string {
 }
 
 function resolveArray<T>(value: T | T[]): T[] {
+  // Array.isArray cannot narrow an unbound T | T[], so spell the result out.
   if (Array.isArray(value)) {
-    return value as any;
+    return value as T[];
   }
-  return [value] as any;
+  return [value as T];
 }
 
 export function resolveSitemap(data: SitemapFile): string {

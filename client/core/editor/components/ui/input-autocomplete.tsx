@@ -45,7 +45,7 @@ export const InputAutocomplete = forwardRef<
   const VariableSuggestionPopoverComponent =
     useVariableOptions(editor)?.variableSuggestionsPopover;
 
-  useOutsideClick(containerRef as any, () => {
+  useOutsideClick(containerRef, () => {
     onOutsideClick?.();
   });
 

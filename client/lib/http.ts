@@ -12,12 +12,29 @@ export class FetchError extends Error {
     this.message = message;
   }
 
-  static isFetchError(error: any): error is FetchError {
+  static isFetchError(error: unknown): error is FetchError {
     return error instanceof FetchError;
   }
 }
 
 type ApiReturn<ResponseType> = ResponseType;
+
+/**
+ * The message of a thrown value when it carries one, '' otherwise — so callers
+ * can `|| fallback` their own wording, exactly like `error?.message ||` did.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+  return '';
+}
 
 /**
  * Wrapper around fetch to make it easy to handle errors
@@ -61,7 +78,7 @@ export async function httpCall<ResponseType = AppResponse>(
     }
 
     return data as ResponseType;
-  } catch (error: any) {
+  } catch (error) {
     throw error;
   }
 }

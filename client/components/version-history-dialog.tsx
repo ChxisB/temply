@@ -53,7 +53,7 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
       setPreviewVersion(null);
       router.refresh();
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to restore version'),
+    onError: (error) => toast.error(error.message || 'Failed to restore version'),
   });
 
   const { mutateAsync: fetchVersionDetail } = useMutation({
@@ -66,7 +66,7 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
     onSuccess: (data) => {
       setPreviewVersion(data.version);
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to load version detail'),
+    onError: (error) => toast.error(error.message || 'Failed to load version detail'),
   });
 
   if (!templateId) return null;

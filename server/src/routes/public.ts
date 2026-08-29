@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import type { JSONContent } from '@tiptap/core';
 import { eq, and, isNull } from 'drizzle-orm';
 import { mails, apiKeysTable } from '@temply/shared/schema';
 import { hashApiKey } from '../lib/codes';
@@ -103,11 +104,13 @@ export const publicRoutes = new Elysia()
         payload: ctx.body?.data,
       };
 
-      const html = await render(content as any, renderOptions);
+      // The parse above only proves it is JSON; the editor wrote it, so the
+      // document shape is a cast, not a check — same trust as before.
+      const html = await render(content as JSONContent, renderOptions);
       // The same email with the markup stripped. A caller building a multipart
       // message needs it, and generating it here keeps the two in step —
       // writing the text version by hand is how they drift.
-      const text = await render(content as any, { ...renderOptions, plainText: true });
+      const text = await render(content as JSONContent, { ...renderOptions, plainText: true });
 
       return json({ html, text, shortCode: template.short_code, updatedAt: template.updated_at });
     },

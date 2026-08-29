@@ -3,7 +3,7 @@ import { Command } from '@tiptap/core';
 export function updateAttribute(
   type: string,
   attr: string,
-  value: any
+  value: unknown
 ): Command {
   return ({ commands }) =>
     commands.command(({ tr, state, dispatch }) => {
@@ -33,7 +33,7 @@ export function updateAttribute(
 
 export function updateAttributes(
   type: string,
-  attrs: Record<string, any>
+  attrs: Record<string, unknown>
 ): Command {
   return ({ commands }) =>
     commands.command(({ tr, state, dispatch }) => {
