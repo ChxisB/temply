@@ -8,6 +8,7 @@ import { httpDelete, httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import { isLimitReached } from '@temply/shared/plans';
 import { Button } from '~/components/ui/button';
+import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import {
   Dialog,
@@ -219,18 +220,17 @@ export default function ApiKeysPage() {
                   </td>
                   <td className="px-3.5 py-2.5 text-right">
                     {!key.revoked_at && (
-                      <Button
-                        variant="danger-quiet"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('Revoke this key? Anything using it will stop working.')) {
-                            revokeKey(key.id);
-                          }
-                        }}
+                      <ConfirmDialog
+                        title="Revoke this key?"
+                        description="Anything using it will stop working."
+                        confirmLabel="Revoke"
+                        onConfirm={() => revokeKey(key.id)}
                       >
-                        <Trash2Icon />
-                        Revoke
-                      </Button>
+                        <Button variant="danger-quiet" size="sm">
+                          <Trash2Icon />
+                          Revoke
+                        </Button>
+                      </ConfirmDialog>
                     )}
                   </td>
                 </tr>

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
 import { BRAND_PRESETS } from '@temply/shared/brand-presets';
 import { Button } from '~/components/ui/button';
+import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -205,22 +206,19 @@ export default function BrandsPage() {
                       <Button variant="ghost" size="icon-sm" title="Edit" aria-label="Edit" onClick={() => openEdit(brand)}>
                         <PencilIcon />
                       </Button>
-                      <Button
-                        variant="danger-quiet"
-                        size="icon-sm"
-                        title="Delete"
-                        aria-label="Delete"
-                        onClick={() => {
-                          const msg = isDefault
-                            ? 'Delete this brand? It’s your default — the default will move to another brand or a preset.'
-                            : 'Delete this brand? Templates using it keep their own copy of the look.';
-                          if (confirm(msg)) {
-                            deleteBrand(brand.id);
-                          }
-                        }}
+                      <ConfirmDialog
+                        title="Delete this brand?"
+                        description={
+                          isDefault
+                            ? 'It’s your default — the default will move to another brand or a preset.'
+                            : 'Templates using it keep their own copy of the look.'
+                        }
+                        onConfirm={() => deleteBrand(brand.id)}
                       >
-                        <Trash2Icon />
-                      </Button>
+                        <Button variant="danger-quiet" size="icon-sm" title="Delete" aria-label="Delete">
+                          <Trash2Icon />
+                        </Button>
+                      </ConfirmDialog>
                     </div>
                     {!isDefault ? (
                       <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>

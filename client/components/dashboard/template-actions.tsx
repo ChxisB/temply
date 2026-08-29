@@ -5,6 +5,7 @@ import { CopyIcon, Trash2Icon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
+import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { httpDelete, httpPost } from '~/lib/http';
 
 type TemplateActionsProps = {
@@ -55,19 +56,20 @@ export function TemplateActions({ templateId, canDuplicate = true }: TemplateAct
           <CopyIcon />
         </Button>
       ) : null}
-      <Button
-        variant="danger-quiet"
-        size="icon-sm"
-        onClick={() => {
-          if (confirm('Delete this template? This cannot be undone.')) {
-            deleteTemplate();
-          }
-        }}
-        disabled={isDeleting}
-        aria-label="Delete template"
+      <ConfirmDialog
+        title="Delete this template?"
+        description="This cannot be undone."
+        onConfirm={() => deleteTemplate()}
       >
-        <Trash2Icon />
-      </Button>
+        <Button
+          variant="danger-quiet"
+          size="icon-sm"
+          disabled={isDeleting}
+          aria-label="Delete template"
+        >
+          <Trash2Icon />
+        </Button>
+      </ConfirmDialog>
     </div>
   );
 }
