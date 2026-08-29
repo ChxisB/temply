@@ -287,6 +287,38 @@ describe('version history', () => {
     expect(all).toHaveLength(2);
   });
 
+  it('snapshots the theme and restores it with the content', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const blue = '{"container":{"backgroundColor":"#0000ff"}}';
+    const red = '{"container":{"backgroundColor":"#ff0000"}}';
+    const template = await createTemplate(OWNER, 'Branded v1');
+    await db.update(mails).set({ theme: blue }).where(eq(mails.id, template.id));
+
+    // Saving snapshots the blue version, then turns the template red.
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Branded v2', content: '{}', theme: red }, OWNER);
+    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+
+    await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OWNER);
+    const { template: restored } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
+    expect(restored.theme).toBe(blue);
+  });
+
+  it('a pre-theme snapshot leaves the current theme alone on restore', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const red = '{"container":{"backgroundColor":"#ff0000"}}';
+    const template = await createTemplate(OWNER, 'Legacy v1');
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Legacy v2', content: '{}', theme: red }, OWNER);
+    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+
+    // Erase the snapshot's theme, as any version from before the column did.
+    await db.update(templateVersions).set({ theme: null }).where(eq(templateVersions.id, versions[0].id));
+
+    await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OWNER);
+    const { template: restored } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
+    expect(restored.title).toBe('Legacy v1');
+    expect(restored.theme).toBe(red);
+  });
+
   it('404s when restoring a version owned by another user', async () => {
     await givePlan(db, OWNER, 'pro');
     const template = await createTemplate(OWNER, 'Version one');

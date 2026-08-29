@@ -36,6 +36,9 @@ export const templateVersions = sqliteTable('template_versions', {
   title: text('title').notNull(),
   preview_text: text('preview_text'),
   content: text('content').notNull(),
+  /** Serialised RendererThemeOptions at snapshot time. Null on versions from
+   *  before this column existed — "unknown", not "no theme". */
+  theme: text('theme'),
   version_number: integer('version_number').notNull(),
   created_at: text('created_at').default(now),
 });

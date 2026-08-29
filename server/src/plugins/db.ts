@@ -53,6 +53,7 @@ export function initTables(sqlite: Database) {
   )`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
+  addColumnIfMissing(sqlite, 'template_versions', 'theme', 'TEXT');
 
   // One-time migration: the top plan was renamed from `scale` to `enterprise`.
   sqlite.run(`UPDATE subscriptions SET plan = 'enterprise' WHERE plan = 'scale'`);

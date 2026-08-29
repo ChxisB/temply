@@ -93,7 +93,7 @@ export const templatesRoutes = new Elysia()
       if (current) {
         const [maxVersion] = await ctx.db.select({ max: sql<number>`COALESCE(MAX(${templateVersions.version_number}), 0)` }).from(templateVersions).where(eq(templateVersions.template_id, id));
         const vn = (maxVersion?.max ?? 0) + 1;
-        await ctx.db.insert(templateVersions).values({ id: crypto.randomUUID(), template_id: id, user_id: ctx.userId, title: current.title, preview_text: current.preview_text, content: current.content, version_number: vn });
+        await ctx.db.insert(templateVersions).values({ id: crypto.randomUUID(), template_id: id, user_id: ctx.userId, title: current.title, preview_text: current.preview_text, content: current.content, theme: current.theme, version_number: vn });
         await ctx.db.delete(templateVersions).where(sql`${templateVersions.id} NOT IN (SELECT id FROM (SELECT ${templateVersions.id} FROM ${templateVersions} WHERE ${templateVersions.template_id} = ${id} ORDER BY ${templateVersions.created_at} DESC LIMIT 10)) AND ${templateVersions.template_id} = ${id}`);
       }
     }
@@ -152,9 +152,18 @@ export const templatesRoutes = new Elysia()
     if (current) {
       const [maxVersion] = await ctx.db.select({ max: sql<number>`COALESCE(MAX(${templateVersions.version_number}), 0)` }).from(templateVersions).where(eq(templateVersions.template_id, ctx.params.id));
       const vn = (maxVersion?.max ?? 0) + 1;
-      await ctx.db.insert(templateVersions).values({ id: crypto.randomUUID(), template_id: ctx.params.id, user_id: ctx.userId, title: current.title, preview_text: current.preview_text, content: current.content, version_number: vn });
+      await ctx.db.insert(templateVersions).values({ id: crypto.randomUUID(), template_id: ctx.params.id, user_id: ctx.userId, title: current.title, preview_text: current.preview_text, content: current.content, theme: current.theme, version_number: vn });
       await ctx.db.delete(templateVersions).where(sql`${templateVersions.id} NOT IN (SELECT id FROM (SELECT ${templateVersions.id} FROM ${templateVersions} WHERE ${templateVersions.template_id} = ${ctx.params.id} ORDER BY ${templateVersions.created_at} DESC LIMIT 10)) AND ${templateVersions.template_id} = ${ctx.params.id}`);
     }
-    await ctx.db.update(mails).set({ title: version.title, preview_text: version.preview_text, content: version.content, updated_at: new Date().toISOString() }).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
+    // A null version theme means "snapshotted before themes were captured" —
+    // unknown, not absent — so it must not wipe the template's current theme.
+    const restorePatch: Record<string, unknown> = {
+      title: version.title,
+      preview_text: version.preview_text,
+      content: version.content,
+      updated_at: new Date().toISOString(),
+    };
+    if (version.theme !== null) restorePatch.theme = version.theme;
+    await ctx.db.update(mails).set(restorePatch).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
     return json({ status: 'ok' });
   });
