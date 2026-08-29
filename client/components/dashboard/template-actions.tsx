@@ -21,9 +21,11 @@ export function TemplateActions({ templateId, canDuplicate = true }: TemplateAct
     mutationFn: async () => {
       return httpPost<{ template: { id: string } }>(`/api/v1/templates/${templateId}/duplicate`, {});
     },
-    onSuccess: (data) => {
+    // Stay on the grid: duplicating is often batch housekeeping, and the new
+    // card appearing beside the original is confirmation enough.
+    onSuccess: () => {
       toast.success('Template duplicated');
-      router.push(`/templates/${data.template.id}`);
+      router.refresh();
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to duplicate template');
