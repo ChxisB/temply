@@ -77,6 +77,10 @@ export function TemplateThumbnail({ templateId, updatedAt }: TemplateThumbnailPr
           aria-hidden="true"
           title=""
           loading="lazy"
+          // Emails run taller than the crop; without this the frame draws a
+          // scrollbar down the card's edge. Deprecated in HTML but the only
+          // way in — CSS can't reach inside a sandboxed document.
+          scrolling="no"
           className="border-0"
           style={{
             width: EMAIL_WIDTH,
