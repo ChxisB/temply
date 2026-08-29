@@ -43,6 +43,14 @@ describe('POST /api/v1/templates', () => {
     expect(template.short_code).toMatch(/^tpl_[0-9A-Za-z]{8}$/);
   });
 
+  it('stamps created_at and updated_at on insert', async () => {
+    // Guards the schema-level defaults: Drizzle sends explicit NULLs for
+    // omitted columns, so the DDL defaults alone never fire.
+    const template = await createTemplate(OWNER, 'Dated template');
+    expect(template.created_at).toMatch(/^\d{4}-\d{2}-\d{2}/);
+    expect(template.updated_at).toMatch(/^\d{4}-\d{2}-\d{2}/);
+  });
+
   it('rejects a title shorter than 3 characters', async () => {
     const res = await post(app, '/api/v1/templates', { title: 'ab', content: '{}' }, OWNER);
     expect(res.status).toBe(400);
@@ -159,6 +167,17 @@ describe('POST /api/v1/templates/:id', () => {
     const { template: updated } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
     expect(updated.title).toBe('After');
     expect(updated.content).toBe('{"v":2}');
+  });
+
+  it('bumps updated_at on save', async () => {
+    const template = await createTemplate(OWNER, 'Before');
+    // Pin a past value so the bump is observable regardless of clock granularity.
+    await db.update(mails).set({ updated_at: '2020-01-01 00:00:00' }).where(eq(mails.id, template.id));
+
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'After', content: '{}' }, OWNER);
+
+    const [row] = await db.select().from(mails).where(eq(mails.id, template.id));
+    expect(row.updated_at! > '2020-01-01 00:00:00').toBe(true);
   });
 
   it('does not snapshot a version for a free user', async () => {

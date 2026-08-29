@@ -99,7 +99,13 @@ export const templatesRoutes = new Elysia()
     }
     // `theme` is omitted rather than null when the client is not editing it,
     // so an absent field must not wipe a theme the template already has.
-    const patch: Record<string, unknown> = { title, preview_text: previewText ?? null, content };
+    // SQLite has no ON UPDATE — the bump has to be written here.
+    const patch: Record<string, unknown> = {
+      title,
+      preview_text: previewText ?? null,
+      content,
+      updated_at: new Date().toISOString(),
+    };
     if (theme !== undefined) patch.theme = theme;
     await ctx.db.update(mails).set(patch).where(and(eq(mails.id, id), eq(mails.user_id, ctx.userId)));
     return json({ status: 'ok' });
@@ -149,6 +155,6 @@ export const templatesRoutes = new Elysia()
       await ctx.db.insert(templateVersions).values({ id: crypto.randomUUID(), template_id: ctx.params.id, user_id: ctx.userId, title: current.title, preview_text: current.preview_text, content: current.content, version_number: vn });
       await ctx.db.delete(templateVersions).where(sql`${templateVersions.id} NOT IN (SELECT id FROM (SELECT ${templateVersions.id} FROM ${templateVersions} WHERE ${templateVersions.template_id} = ${ctx.params.id} ORDER BY ${templateVersions.created_at} DESC LIMIT 10)) AND ${templateVersions.template_id} = ${ctx.params.id}`);
     }
-    await ctx.db.update(mails).set({ title: version.title, preview_text: version.preview_text, content: version.content }).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
+    await ctx.db.update(mails).set({ title: version.title, preview_text: version.preview_text, content: version.content, updated_at: new Date().toISOString() }).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
     return json({ status: 'ok' });
   });

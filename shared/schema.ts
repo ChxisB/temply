@@ -1,4 +1,9 @@
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+
+/** Drizzle sends an explicit NULL for omitted columns, so a default declared
+ *  only in the DDL never fires — it has to live here to reach any insert. */
+const now = sql`(datetime('now'))`;
 
 export const mails = sqliteTable('mails', {
   id: text('id').primaryKey(),
@@ -9,8 +14,8 @@ export const mails = sqliteTable('mails', {
   /** Serialised RendererThemeOptions. Null means the shipped defaults. */
   theme: text('theme'),
   short_code: text('short_code').unique(),
-  created_at: text('created_at'),
-  updated_at: text('updated_at'),
+  created_at: text('created_at').default(now),
+  updated_at: text('updated_at').default(now),
 });
 
 export const apiKeysTable = sqliteTable('api_keys', {
@@ -19,7 +24,7 @@ export const apiKeysTable = sqliteTable('api_keys', {
   name: text('name').notNull(),
   key_prefix: text('key_prefix').notNull(),
   key_hash: text('key_hash').notNull(),
-  created_at: text('created_at'),
+  created_at: text('created_at').default(now),
   last_used_at: text('last_used_at'),
   revoked_at: text('revoked_at'),
 });
@@ -32,7 +37,7 @@ export const templateVersions = sqliteTable('template_versions', {
   preview_text: text('preview_text'),
   content: text('content').notNull(),
   version_number: integer('version_number').notNull(),
-  created_at: text('created_at'),
+  created_at: text('created_at').default(now),
 });
 
 export const subscriptions = sqliteTable('subscriptions', {
@@ -43,8 +48,8 @@ export const subscriptions = sqliteTable('subscriptions', {
   plan: text('plan').notNull().default('free'),
   status: text('status').notNull().default('active'),
   current_period_end: text('current_period_end'),
-  created_at: text('created_at'),
-  updated_at: text('updated_at'),
+  created_at: text('created_at').default(now),
+  updated_at: text('updated_at').default(now),
 });
 
 export type Mail = typeof mails.$inferSelect;
@@ -80,8 +85,8 @@ export const brands = sqliteTable('brands', {
   /** Serialised RendererThemeOptions. */
   theme: text('theme').notNull(),
   is_default: integer('is_default').notNull().default(0),
-  created_at: text('created_at'),
-  updated_at: text('updated_at'),
+  created_at: text('created_at').default(now),
+  updated_at: text('updated_at').default(now),
 });
 
 export type Brand = typeof brands.$inferSelect;
@@ -104,7 +109,7 @@ export const contactMessages = sqliteTable('contact_messages', {
   name: text('name').notNull(),
   email: text('email').notNull(),
   message: text('message').notNull(),
-  created_at: text('created_at'),
+  created_at: text('created_at').default(now),
 });
 
 export type ContactMessage = typeof contactMessages.$inferSelect;

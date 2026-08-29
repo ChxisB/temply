@@ -56,6 +56,22 @@ export function initTables(sqlite: Database) {
 
   // One-time migration: the top plan was renamed from `scale` to `enterprise`.
   sqlite.run(`UPDATE subscriptions SET plan = 'enterprise' WHERE plan = 'scale'`);
+
+  // Heal timestamps: Drizzle used to send explicit NULLs past the DDL
+  // defaults, so every historic row is missing its dates. Idempotent — only
+  // NULLs are touched, and only once.
+  for (const [table, cols] of [
+    ['mails', ['created_at', 'updated_at']],
+    ['api_keys', ['created_at']],
+    ['template_versions', ['created_at']],
+    ['subscriptions', ['created_at', 'updated_at']],
+    ['brands', ['created_at', 'updated_at']],
+    ['contact_messages', ['created_at']],
+  ] as const) {
+    for (const col of cols) {
+      sqlite.run(`UPDATE ${table} SET ${col} = datetime('now') WHERE ${col} IS NULL`);
+    }
+  }
 }
 
 /** SQLite has no `ADD COLUMN IF NOT EXISTS`, and existing installs already have
