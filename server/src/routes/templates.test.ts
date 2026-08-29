@@ -242,6 +242,18 @@ describe('POST /api/v1/templates/:id/duplicate', () => {
     expect(copy.short_code).not.toBe(template.short_code);
   });
 
+  it('copies the theme along with the content', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const template = await createTemplate(OWNER, 'Branded');
+    const theme = '{"container":{"backgroundColor":"#123456"}}';
+    await db.update(mails).set({ theme }).where(eq(mails.id, template.id));
+
+    const res = await post(app, `/api/v1/templates/${template.id}/duplicate`, {}, OWNER);
+    const { template: copy } = await res.json();
+
+    expect(copy.theme).toBe(theme);
+  });
+
   it('404s when the template belongs to someone else', async () => {
     const template = await createTemplate(OWNER);
     const res = await post(app, `/api/v1/templates/${template.id}/duplicate`, {}, OTHER);

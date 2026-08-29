@@ -126,7 +126,7 @@ export const templatesRoutes = new Elysia()
     if (!template) return notFound('Template not found');
     const newId = crypto.randomUUID();
     const shortCode = generateShortCode();
-    await ctx.db.insert(mails).values({ id: newId, user_id: ctx.userId, title: `[DUPLICATE] ${template.title}`, preview_text: template.preview_text, content: template.content, short_code: shortCode });
+    await ctx.db.insert(mails).values({ id: newId, user_id: ctx.userId, title: `[DUPLICATE] ${template.title}`, preview_text: template.preview_text, content: template.content, theme: template.theme, short_code: shortCode });
     const [duplicated] = await ctx.db.select().from(mails).where(eq(mails.id, newId)).limit(1);
     return json({ template: duplicated });
   })
