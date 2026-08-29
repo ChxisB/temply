@@ -74,11 +74,14 @@ export function TemplateThemePanel({
       return;
     }
 
-    // Fresh canvas → start from the user's default brand.
-    if (isFreshTheme(theme) && data?.defaultBrandId) {
-      const id = data.defaultBrandId;
+    // Fresh canvas → start from the user's default brand. On the anonymous
+    // playground the brands request 401s, but the presets ship with the app,
+    // so the signed-out default is the same Classic a new account gets —
+    // not the renderer's raw black-and-sharp theme labelled "Custom".
+    if (isFreshTheme(theme)) {
+      const id = data?.defaultBrandId ?? 'classic';
       const preset = BRAND_PRESETS.find((p) => p.id === id);
-      const brand = data.brands.find((b) => b.id === id);
+      const brand = data?.brands.find((b) => b.id === id);
       const brandTheme = preset?.theme ?? (brand ? safeParse(brand.theme, theme) : null);
       if (brandTheme) {
         setSelectedBrandId(id);
