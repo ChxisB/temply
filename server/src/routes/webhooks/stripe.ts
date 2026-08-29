@@ -34,12 +34,15 @@ export const webhookRoutes = new Elysia()
           const status = stripeSub.status === 'active' ? 'active' : stripeSub.status === 'past_due' ? 'past_due' : stripeSub.status === 'canceled' ? 'canceled' : 'inactive';
           const plan = 'pro';
           // Newer Stripe API versions moved current_period_end off the top-level
-          // subscription, so the SDK types no longer declare it — but the pinned
-          // API version still sends it. Narrow instead of asserting.
+          // subscription onto each item, so the SDK types no longer declare it —
+          // the pinned API version still sends the old spot, but read both so an
+          // API upgrade shifts the source instead of silently writing null.
           const periodEnd =
             'current_period_end' in stripeSub && typeof stripeSub.current_period_end === 'number'
               ? stripeSub.current_period_end
-              : undefined;
+              : typeof stripeSub.items?.data?.[0]?.current_period_end === 'number'
+                ? stripeSub.items.data[0].current_period_end
+                : undefined;
           await ctx.db.update(subscriptions).set({ plan: status === 'active' ? plan : 'free', status, current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, customerId));
         }
         break;
