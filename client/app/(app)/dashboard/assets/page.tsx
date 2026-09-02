@@ -76,7 +76,12 @@ export default function AssetsPage() {
         dragging && 'border-accent bg-accent-wash/40',
       )}
       onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
+      onDragLeave={(event) => {
+        // A child element's own drag-enter fires dragleave on this element
+        // first; only clear the state once the pointer has actually left
+        // the drop zone, or the border flickers while dragging over a card.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+      }}
       onDrop={(event) => {
         event.preventDefault();
         setDragging(false);
@@ -113,13 +118,15 @@ export default function AssetsPage() {
         </p>
       ) : null}
 
-      <input
-        className={inputClass}
-        placeholder="Search by file name"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        aria-label="Search images"
-      />
+      {(list?.assets.length ?? 0) > 0 ? (
+        <input
+          className={inputClass}
+          placeholder="Search by file name"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          aria-label="Search images"
+        />
+      ) : null}
 
       {query.isLoading ? (
         <div className="flex items-center justify-center py-16">
