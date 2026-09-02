@@ -28,7 +28,7 @@ import {
   writeDraft,
   type Draft,
 } from '~/lib/drafts';
-import { createImageKitUploader, UPLOAD_MIME_TYPES } from '~/lib/imagekit-upload';
+import { createEditorUploader, UPLOAD_MIME_TYPES } from '~/lib/assets';
 import type { Mail } from '~/db/schema';
 import { Button } from './ui/button';
 import { DeleteEmailDialog } from './delete-email-dialog';
@@ -193,7 +193,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       },
     });
 
-  const imageUploader = useMemo(() => createImageKitUploader(), []);
+  const imageUploader = useMemo(() => createEditorUploader(), []);
 
   // --- Content section: edit / preview -------------------------------------
   const [mode, setMode] = useState<ContentMode>('edit');
