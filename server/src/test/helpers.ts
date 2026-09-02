@@ -80,6 +80,13 @@ function withUser(headers: Record<string, string>, userId?: string | null): Reco
   return userId ? { ...headers, 'x-user-id': userId } : headers;
 }
 
+/** Multipart POST — `fetch` sets the boundary header from the FormData. */
+export function postForm(app: TestApp, path: string, form: FormData, userId?: string | null) {
+  return app.handle(
+    new Request(`http://localhost${path}`, { method: 'POST', headers: withUser({}, userId), body: form }),
+  );
+}
+
 /** Gives `userId` a paid subscription so plan-gated branches can be reached. */
 export async function givePlan(db: TestDb, userId: string, plan: 'free' | 'pro' | 'enterprise', status = 'active') {
   await db.insert(schema.subscriptions).values({
