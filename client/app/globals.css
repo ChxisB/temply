@@ -42,6 +42,10 @@
   --ds-danger-ink: #b4293f;   /* 5.9:1 on surface */
   --ds-danger-wash: #fdeef1;
 
+  --ds-warn: #d97706;         /* fill only — never carries text */
+  --ds-warn-ink: #a64d07;     /* 5.3:1 on surface */
+  --ds-warn-wash: #fdf3e1;
+
   --ds-success-ink: #166b47;  /* 6.1:1 on surface */
   --ds-success-wash: #e8f5ee;
 
@@ -92,6 +96,10 @@
   --ds-danger-ink: #ff7a8a;   /* 7.1:1 on surface */
   --ds-danger-wash: #2a1c20;
 
+  --ds-warn: #d97706;         /* fill only — never carries text */
+  --ds-warn-ink: #f0b13d;     /* 9.5:1 on surface */
+  --ds-warn-wash: #2d2416;
+
   --ds-success-ink: #5fd3a0;  /* 9.6:1 on surface */
   --ds-success-wash: #16241e;
 
@@ -132,6 +140,10 @@
   --color-danger: var(--ds-danger);
   --color-danger-ink: var(--ds-danger-ink);
   --color-danger-wash: var(--ds-danger-wash);
+
+  --color-warn: var(--ds-warn);
+  --color-warn-ink: var(--ds-warn-ink);
+  --color-warn-wash: var(--ds-warn-wash);
 
   --color-success-ink: var(--ds-success-ink);
   --color-success-wash: var(--ds-success-wash);

@@ -13,7 +13,8 @@ import { Badge } from '~/components/ui/surfaces';
  *
  * The container stays quiet — severity lives in the counts and the per-row
  * labels, not in a coloured wash, so three warnings don't shout like a
- * failure.
+ * failure. Red is reserved for what blocks a send; amber for what only
+ * deserves a look.
  *
  * This is app-UI chrome. It colours itself from the --ds-* tokens like the
  * rest of the dashboard and must never read the template's theme.
@@ -53,7 +54,7 @@ export function PreflightPanel({
             <AlertTriangleIcon
               className={cn(
                 'size-4 shrink-0',
-                errors.length > 0 ? 'text-danger-ink' : 'text-accent-ink',
+                errors.length > 0 ? 'text-danger-ink' : 'text-warn-ink',
               )}
             />
             <span className="text-sm font-medium text-ink">Preflight</span>
@@ -63,7 +64,7 @@ export function PreflightPanel({
               </Badge>
             )}
             {warnings.length > 0 && (
-              <Badge tone="neutral">
+              <Badge tone="warn">
                 {warnings.length} warning{warnings.length === 1 ? '' : 's'}
               </Badge>
             )}
@@ -73,53 +74,71 @@ export function PreflightPanel({
               <span className="text-2xs text-muted tabular-nums">~{kb} KB</span>
             )}
             <ChevronDownIcon
-              className={cn('size-4 text-muted transition-transform', expanded && 'rotate-180')}
+              className={cn(
+                'size-4 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none',
+                expanded && 'rotate-180',
+              )}
             />
           </span>
         </button>
 
-        {expanded && (
-          <div className="border-t border-line">
-            <ul className="divide-y divide-line">
-              {ordered.map((issue) => (
-                <li key={issue.id} className="flex items-baseline gap-3 px-3.5 py-2">
-                  <span
-                    className={cn(
-                      'w-14 shrink-0 text-2xs font-medium tracking-wide uppercase',
-                      issue.severity === 'error' ? 'text-danger-ink' : 'text-muted',
-                    )}
-                  >
-                    {issue.severity === 'error' ? 'Error' : 'Warning'}
-                  </span>
-                  <span className="text-sm text-ink">
-                    {issue.message}
-                    {issue.detail ? <span className="text-muted"> — “{issue.detail}”</span> : null}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        {/* The 0fr→1fr grid row is the one way to animate to a height the
+            content decides; `overflow-hidden` clips the list while it grows. */}
+        <div
+          className={cn(
+            'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
+            expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+          )}
+        >
+          <div className="overflow-hidden" aria-hidden={!expanded}>
+            <div className="border-t border-line">
+              <ul className="divide-y divide-line">
+                {ordered.map((issue) => (
+                  <li key={issue.id} className="flex items-baseline gap-3 px-3.5 py-2">
+                    <span
+                      className={cn(
+                        'w-14 shrink-0 text-2xs font-medium tracking-wide uppercase',
+                        issue.severity === 'error' ? 'text-danger-ink' : 'text-warn-ink',
+                      )}
+                    >
+                      {issue.severity === 'error' ? 'Error' : 'Warning'}
+                    </span>
+                    <span className="text-sm text-ink">
+                      {issue.message}
+                      {issue.detail ? (
+                        <span className="text-muted"> — “{issue.detail}”</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
 
-            {bytes != null && kb != null && (
-              <div className="border-t border-line px-3.5 py-2.5">
-                <div className="flex items-baseline justify-between gap-3 text-2xs text-muted">
-                  <span>Email size</span>
-                  <span className="tabular-nums">
-                    ~{kb} KB of {limitKb} KB before Gmail clips
-                  </span>
+              {bytes != null && kb != null && (
+                <div className="border-t border-line px-3.5 py-2.5">
+                  <div className="flex items-baseline justify-between gap-3 text-2xs text-muted">
+                    <span>Email size</span>
+                    <span className="tabular-nums">
+                      ~{kb} KB of {limitKb} KB before Gmail clips
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-sunken">
+                    <div
+                      className={cn(
+                        'h-full rounded-full',
+                        bytes >= GMAIL_CLIP_BYTES
+                          ? 'bg-danger'
+                          : bytes >= SIZE_WARN_BYTES
+                            ? 'bg-warn'
+                            : 'bg-accent',
+                      )}
+                      style={{ width: `${Math.min(100, (bytes / GMAIL_CLIP_BYTES) * 100)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-sunken">
-                  <div
-                    className={cn(
-                      'h-full rounded-full',
-                      bytes >= SIZE_WARN_BYTES ? 'bg-danger' : 'bg-accent',
-                    )}
-                    style={{ width: `${Math.min(100, (bytes / GMAIL_CLIP_BYTES) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

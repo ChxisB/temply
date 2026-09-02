@@ -104,12 +104,13 @@ export function Badge({
   className,
   ...props
 }: React.HTMLAttributes<HTMLSpanElement> & {
-  tone?: 'neutral' | 'accent' | 'success' | 'danger';
+  tone?: 'neutral' | 'accent' | 'success' | 'warn' | 'danger';
 }) {
   const tones = {
     neutral: 'bg-hover text-muted',
     accent: 'bg-accent-wash text-accent-ink',
     success: 'bg-success-wash text-success-ink',
+    warn: 'bg-warn-wash text-warn-ink',
     danger: 'bg-danger-wash text-danger-ink',
   } as const;
 
