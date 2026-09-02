@@ -13,14 +13,16 @@ export interface PlanLimits {
   maxVersions: number;
   maxApiCalls: number;
   maxBrands: number;
+  /** Total bytes of uploaded images a user may keep. */
+  maxStorageBytes: number;
 }
 
 /** `Infinity` means unlimited. It does not survive JSON, so anything sending
  *  limits over the wire must map it — see `serialiseLimits`. */
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  free: { maxTemplates: 2, maxApiKeys: 1, maxVersions: 0, maxApiCalls: 10_000, maxBrands: 1 },
-  pro: { maxTemplates: 10, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 50_000, maxBrands: 5 },
-  enterprise: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: Infinity, maxBrands: Infinity },
+  free: { maxTemplates: 2, maxApiKeys: 1, maxVersions: 0, maxApiCalls: 10_000, maxBrands: 1, maxStorageBytes: 50 * 1024 * 1024 },
+  pro: { maxTemplates: 10, maxApiKeys: 5, maxVersions: 10, maxApiCalls: 50_000, maxBrands: 5, maxStorageBytes: 1024 * 1024 * 1024 },
+  enterprise: { maxTemplates: Infinity, maxApiKeys: Infinity, maxVersions: 25, maxApiCalls: Infinity, maxBrands: Infinity, maxStorageBytes: Infinity },
 };
 
 /** JSON turns Infinity into null, so send null over the wire and read it back
@@ -30,6 +32,7 @@ export type WireLimits = {
   maxApiKeys: number | null;
   maxVersions: number | null;
   maxApiCalls: number | null;
+  maxStorageBytes: number | null;
 };
 
 export function serialiseLimits(limits: PlanLimits): WireLimits {
@@ -39,6 +42,7 @@ export function serialiseLimits(limits: PlanLimits): WireLimits {
     maxApiKeys: wire(limits.maxApiKeys),
     maxVersions: wire(limits.maxVersions),
     maxApiCalls: wire(limits.maxApiCalls),
+    maxStorageBytes: wire(limits.maxStorageBytes),
   };
 }
 
