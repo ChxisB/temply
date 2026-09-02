@@ -6,6 +6,8 @@ import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { formatBytes } from '@temply/shared/bytes';
 import { AssetGrid, type PendingUpload } from '~/components/assets/asset-grid';
+import { AssetPreviewDialog } from '~/components/assets/asset-preview-dialog';
+import { AssetViewSwitch, useAssetView } from '~/components/assets/asset-view-switch';
 import { useAssets } from '~/components/assets/use-assets';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
@@ -23,6 +25,8 @@ export default function AssetsPage() {
   const [dragging, setDragging] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ asset: Asset; templates: number } | null>(null);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
+  const [preview, setPreview] = useState<Asset | null>(null);
+  const [view, setView] = useAssetView();
   const fileInput = useRef<HTMLInputElement>(null);
 
   const list = query.data;
@@ -62,6 +66,7 @@ export default function AssetsPage() {
   };
 
   const askDelete = async (asset: Asset) => {
+    setPreview(null);
     try {
       const { templates } = await assetUsage(asset.id);
       setPendingDelete({ asset, templates: templates.length });
@@ -132,13 +137,16 @@ export default function AssetsPage() {
       ) : null}
 
       {(list?.assets.length ?? 0) > 0 ? (
-        <input
-          className={inputClass}
-          placeholder="Search by file name"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          aria-label="Search images"
-        />
+        <div className="flex items-center justify-between gap-3">
+          <input
+            className={inputClass}
+            placeholder="Search by file name"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            aria-label="Search images"
+          />
+          <AssetViewSwitch view={view} onViewChange={setView} />
+        </div>
       ) : null}
 
       {query.isLoading ? (
@@ -158,8 +166,21 @@ export default function AssetsPage() {
           action={search ? undefined : <Button variant="primary" onClick={() => fileInput.current?.click()}>Upload</Button>}
         />
       ) : (
-        <AssetGrid mode="manage" assets={assets} pending={pendingUploads} onDelete={askDelete} />
+        <AssetGrid
+          mode="manage"
+          view={view}
+          assets={assets}
+          pending={pendingUploads}
+          onDelete={askDelete}
+          onPreview={setPreview}
+        />
       )}
+
+      <AssetPreviewDialog
+        asset={preview}
+        onOpenChange={(open) => { if (!open) setPreview(null); }}
+        onDelete={askDelete}
+      />
 
       <ConfirmDialog
         open={pendingDelete !== null}

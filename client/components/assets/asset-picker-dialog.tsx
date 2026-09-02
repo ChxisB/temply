@@ -96,7 +96,7 @@ export function AssetPickerDialog({
               action={search ? undefined : <Button variant="primary" onClick={() => fileInput.current?.click()}>Upload</Button>}
             />
           ) : (
-            <AssetGrid mode="pick" assets={assets} pending={pendingUpload ? [pendingUpload] : []} onPick={onPick} />
+            <AssetGrid mode="pick" size="md" assets={assets} pending={pendingUpload ? [pendingUpload] : []} onPick={onPick} />
           )}
         </div>
       </DialogContent>
