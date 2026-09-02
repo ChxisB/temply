@@ -100,6 +100,7 @@ const plans = [
       { text: '1 API key', included: true },
       { text: '10,000 API calls/month', included: true },
       { text: 'Version history', included: false },
+      { text: '50 MB of image storage', included: true },
     ],
   },
   {
@@ -112,6 +113,7 @@ const plans = [
       { text: '5 API keys', included: true },
       { text: '50,000 API calls/month', included: true },
       { text: '10 versions per template', included: true },
+      { text: '1 GB of image storage', included: true },
     ],
   },
   {
@@ -124,6 +126,7 @@ const plans = [
       { text: 'Unlimited API keys', included: true },
       { text: 'Custom API volume', included: true },
       { text: '25 versions per template', included: true },
+      { text: 'Unlimited image storage', included: true },
     ],
   },
 ];
