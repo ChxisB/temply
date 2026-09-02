@@ -27,16 +27,16 @@ export const assetsRoutes = new Elysia()
     const file = ctx.body.file;
     // Cheapest checks first, so a refused upload never reaches ImageKit.
     if (!ASSET_MIME_TYPES.has(file.type)) {
-      return json({ status: 400, message: 'Only JPEG, PNG, GIF and WebP images can be uploaded.', errors: ['unsupported type'] }, 400);
+      return json({ status: 400, message: 'Only JPEG, PNG, GIF and WebP images can be uploaded.', errors: ['Only JPEG, PNG, GIF and WebP images can be uploaded.'] }, 400);
     }
     if (file.size > MAX_ASSET_BYTES) {
-      return json({ status: 400, message: 'Images must be under 5 MB.', errors: ['too large'] }, 400);
+      return json({ status: 400, message: 'Images must be under 5 MB.', errors: ['Images must be under 5 MB.'] }, 400);
     }
     const limit = await checkStorageLimit(ctx.db, ctx.userId, file.size);
     if (!limit.allowed) return paymentRequired(limit.message!);
 
     const ik = getImageKit();
-    if (!ik) return json({ status: 503, message: 'Image uploads are not configured', errors: ['IMAGEKIT env missing'] }, 503);
+    if (!ik) return json({ status: 503, message: 'Image uploads are not configured', errors: ['Image uploads are not configured'] }, 503);
 
     let uploaded;
     try {
@@ -47,7 +47,7 @@ export const assetsRoutes = new Elysia()
         useUniqueFileName: true,
       });
     } catch {
-      return json({ status: 502, message: 'The image host did not accept the upload. Please try again.', errors: ['imagekit upload failed'] }, 502);
+      return json({ status: 502, message: 'The image host did not accept the upload. Please try again.', errors: ['The image host did not accept the upload. Please try again.'] }, 502);
     }
 
     const asset = {
@@ -109,7 +109,7 @@ export const assetsRoutes = new Elysia()
         // Already gone on their side is the outcome we wanted; anything else
         // keeps the row so the user can retry instead of leaking storage.
         if (imagekitStatus(error) !== 404) {
-          return json({ status: 502, message: 'The image host could not delete the file. Please try again.', errors: ['imagekit delete failed'] }, 502);
+          return json({ status: 502, message: 'The image host could not delete the file. Please try again.', errors: ['The image host could not delete the file. Please try again.'] }, 502);
         }
       }
     }
