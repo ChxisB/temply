@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { formatBytes } from '@temply/shared/bytes';
-import { AssetGrid } from '~/components/assets/asset-grid';
+import { AssetGrid, type PendingUpload } from '~/components/assets/asset-grid';
 import { useAssets } from '~/components/assets/use-assets';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
@@ -22,6 +22,7 @@ export default function AssetsPage() {
   const [search, setSearch] = useState('');
   const [dragging, setDragging] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ asset: Asset; templates: number } | null>(null);
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const list = query.data;
@@ -35,14 +36,26 @@ export default function AssetsPage() {
   const usage = limit ? `${formatBytes(used)} of ${formatBytes(limit)} used` : `${formatBytes(used)} used`;
 
   const uploadFiles = async (files: FileList | File[] | null) => {
-    for (const file of Array.from(files ?? [])) {
+    // Every file gets its placeholder card up front, so a multi-file drop
+    // shows the whole queue rather than one card at a time.
+    const queue = Array.from(files ?? []).map((file) => ({
+      file,
+      pending: { id: crypto.randomUUID(), name: file.name, bytes: file.size },
+    }));
+    setPendingUploads((current) => [...current, ...queue.map((entry) => entry.pending)]);
+    const settle = (ids: string[]) =>
+      setPendingUploads((current) => current.filter((entry) => !ids.includes(entry.id)));
+
+    for (const [index, { file, pending }] of queue.entries()) {
       try {
         await upload.mutateAsync(file);
         toast.success('Image uploaded');
+        settle([pending.id]);
       } catch (error) {
         toast.error(errorMessage(error) || `Could not upload ${file.name}.`);
         // A quota refusal will refuse the rest too; stop instead of toasting
-        // the same sentence for every remaining file.
+        // the same sentence for every remaining file, and clear their cards.
+        settle(queue.slice(index).map((entry) => entry.pending.id));
         break;
       }
     }
@@ -137,7 +150,7 @@ export default function AssetsPage() {
           description="We could not load your images. Anything you uploaded is still there."
           onRetry={() => query.refetch()}
         />
-      ) : assets.length === 0 ? (
+      ) : assets.length === 0 && pendingUploads.length === 0 ? (
         <EmptyState
           icon={ImageIcon}
           title={search ? 'No images match' : 'No images yet'}
@@ -145,7 +158,7 @@ export default function AssetsPage() {
           action={search ? undefined : <Button variant="primary" onClick={() => fileInput.current?.click()}>Upload</Button>}
         />
       ) : (
-        <AssetGrid mode="manage" assets={assets} onDelete={askDelete} />
+        <AssetGrid mode="manage" assets={assets} pending={pendingUploads} onDelete={askDelete} />
       )}
 
       <ConfirmDialog

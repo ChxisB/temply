@@ -1,22 +1,45 @@
 'use client';
 
-import { CopyIcon, Trash2Icon } from 'lucide-react';
+import { CopyIcon, Loader2Icon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '~/lib/classname';
 import { EMAIL_TRANSFORM, THUMB_TRANSFORM, withTransform, type Asset } from '~/lib/assets';
 import { formatBytes } from '@temply/shared/bytes';
 
-type Props =
-  | { mode: 'pick'; assets: Asset[]; onPick: (asset: Asset) => void; onDelete?: never }
-  | { mode: 'manage'; assets: Asset[]; onDelete: (asset: Asset) => void; onPick?: never };
+/** A file whose upload is in flight — drawn as a card so the user sees where
+ *  the asset will land, not just a spinner somewhere else on the page. */
+export type PendingUpload = { id: string; name: string; bytes: number };
+
+type Props = {
+  assets: Asset[];
+  pending?: PendingUpload[];
+} & (
+  | { mode: 'pick'; onPick: (asset: Asset) => void; onDelete?: never }
+  | { mode: 'manage'; onDelete: (asset: Asset) => void; onPick?: never }
+);
 
 /** One grid for the library page and the editor picker. In `pick` mode every
  *  card is a button; in `manage` mode the card carries copy and delete. */
 export function AssetGrid(props: Props) {
-  const { assets, mode } = props;
+  const { assets, mode, pending = [] } = props;
 
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {pending.map((file) => (
+        <li
+          key={file.id}
+          aria-busy="true"
+          className="fade-in-mount rounded-lg border border-dashed border-line-strong bg-raised motion-reduce:transition-none"
+        >
+          <div className="flex aspect-[4/3] items-center justify-center rounded-t-lg bg-sunken">
+            <Loader2Icon className="size-5 animate-spin text-faint" />
+          </div>
+          <div className="min-w-0 px-2.5 py-2">
+            <p className="truncate text-sm text-ink" title={file.name}>{file.name}</p>
+            <p className="text-2xs text-muted tabular-nums">Uploading · {formatBytes(file.bytes)}</p>
+          </div>
+        </li>
+      ))}
       {assets.map((asset) => {
         const meta = [formatBytes(asset.bytes), asset.width && asset.height ? `${asset.width} × ${asset.height}` : null]
           .filter(Boolean)

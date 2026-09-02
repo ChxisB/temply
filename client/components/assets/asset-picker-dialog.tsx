@@ -8,7 +8,7 @@ import { UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { EmptyState, ErrorState } from '~/components/ui/surfaces';
-import { AssetGrid } from './asset-grid';
+import { AssetGrid, type PendingUpload } from './asset-grid';
 import { useAssets } from './use-assets';
 
 const inputClass =
@@ -25,6 +25,7 @@ export function AssetPickerDialog({
 }) {
   const { query, upload } = useAssets({ enabled: open });
   const [search, setSearch] = useState('');
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const assets = (query.data?.assets ?? []).filter((asset) =>
@@ -36,12 +37,15 @@ export function AssetPickerDialog({
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
+    setPendingUpload({ id: crypto.randomUUID(), name: file.name, bytes: file.size });
     try {
       const asset = await upload.mutateAsync(file);
       toast.success('Image uploaded');
       onPick(asset);
     } catch (error) {
       toast.error(errorMessage(error) || 'Image upload failed. Please try again.');
+    } finally {
+      setPendingUpload(null);
     }
   };
 
@@ -84,7 +88,7 @@ export function AssetPickerDialog({
             </div>
           ) : query.isError ? (
             <ErrorState description="We could not load your images. They are still there." onRetry={() => query.refetch()} />
-          ) : assets.length === 0 ? (
+          ) : assets.length === 0 && !pendingUpload ? (
             <EmptyState
               icon={ImageIcon}
               title={search ? 'No images match' : 'No images yet'}
@@ -92,7 +96,7 @@ export function AssetPickerDialog({
               action={search ? undefined : <Button variant="primary" onClick={() => fileInput.current?.click()}>Upload</Button>}
             />
           ) : (
-            <AssetGrid mode="pick" assets={assets} onPick={onPick} />
+            <AssetGrid mode="pick" assets={assets} pending={pendingUpload ? [pendingUpload] : []} onPick={onPick} />
           )}
         </div>
       </DialogContent>
