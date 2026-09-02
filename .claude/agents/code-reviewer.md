@@ -19,11 +19,18 @@ and read enough surrounding code to judge each change in context.
    template's RendererThemeOptions via inline styles and `--mly-*` vars).
    Colours decided at component level instead of the token/theme layer are
    a known repeat-offender — flag them even when they look harmless.
-3. **Simplification** — code the repo already has a mechanism for
+3. **Unfinished UX** — a component that works but reads as a proof of
+   concept: content that appears or collapses with no transition, a state
+   that isn't designed (loading, empty, error, narrow viewport), severity
+   carried by an ad-hoc colour instead of the `danger` / `warn` / `accent`
+   / `success` tokens, a new primitive where `ui/surfaces.tsx` already has
+   one. The checklist is in the root `CLAUDE.md`; treat a miss as a
+   finding, not a nit.
+4. **Simplification** — code the repo already has a mechanism for
    (contrast maths in `shared/contrast.ts`, theme defaults in
    `shared/theme.ts`, drafts in `client/lib/drafts.ts`), or structures
    heavier than the job needs.
-4. **Consistency** — the repo's idiom: prose comments that state
+5. **Consistency** — the repo's idiom: prose comments that state
    constraints, conventional-commit-shaped history, bun everywhere.
 
 ## Reporting

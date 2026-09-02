@@ -25,6 +25,13 @@ Hard-won constraints to respect:
   gates exist because component-level colours shipped broken three times.
 - Comments state constraints the code can't show; match the repo's prose
   comment style. No change-log comments.
+- A UI component is finished UX, not a widget that works. Nothing pops in
+  or out unanimated (height via the `grid-rows-[0fr]`→`[1fr]` pattern in
+  `template-theme-panel.tsx`, always with `motion-reduce:transition-none`),
+  every state is designed (loading / empty / error / narrow), severity uses
+  the `danger` / `warn` / `accent` / `success` tokens, and existing
+  primitives in `ui/surfaces.tsx` come before new ones. The full checklist
+  is in the root `CLAUDE.md`.
 
 ## Gates — all of them, every time
 
