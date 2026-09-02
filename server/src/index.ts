@@ -7,7 +7,6 @@ import { apiKeysRoutes } from './routes/api-keys';
 import { brandsRoutes } from './routes/brands';
 import { billingRoutes } from './routes/billing';
 import { quotaRoutes } from './routes/quota';
-import { imagekitRoutes } from './routes/imagekit';
 import { emailsRoutes } from './routes/emails';
 import { publicRoutes } from './routes/public';
 import { contactRoutes } from './routes/contact';
@@ -29,7 +28,6 @@ const app = new Elysia()
   .use(brandsRoutes)
   .use(billingRoutes)
   .use(quotaRoutes)
-  .use(imagekitRoutes)
   .use(emailsRoutes)
   .use(publicRoutes)
   .use(contactRoutes)

@@ -1,8 +1,9 @@
 import Stripe from 'stripe';
 import { eq, sql } from 'drizzle-orm';
-import { subscriptions, mails, apiKeysTable, brands } from '@temply/shared/schema';
+import { subscriptions, mails, apiKeysTable, brands, assets } from '@temply/shared/schema';
 import type { Db } from '../plugins/db';
 import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
+import { formatBytes } from '@temply/shared/bytes';
 
 
 export function getStripe(): Stripe {
@@ -68,6 +69,30 @@ export async function checkBrandLimit(db: Db, userId: string): Promise<{ allowed
   const [row] = await db.select({ count: sql<number>`count(*)` }).from(brands).where(eq(brands.user_id, userId));
   if ((row?.count ?? 0) >= limit) {
     return { allowed: false, message: `You can save ${limit} brand${limit === 1 ? '' : 's'} on your current plan. Upgrade for more.` };
+  }
+  return { allowed: true };
+}
+
+export async function getStorageUsed(db: Db, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<number>`coalesce(sum(${assets.bytes}), 0)` })
+    .from(assets)
+    .where(eq(assets.user_id, userId));
+  return Number(row?.total ?? 0);
+}
+
+/** Checked before the bytes reach ImageKit, so a refused upload costs nothing
+ *  and the DB never has to be reconciled against storage. */
+export async function checkStorageLimit(db: Db, userId: string, incomingBytes: number): Promise<{ allowed: boolean; message?: string }> {
+  const { plan } = await getPlan(db, userId);
+  const limit = planLimits[plan].maxStorageBytes;
+  if (!Number.isFinite(limit)) return { allowed: true };
+  const used = await getStorageUsed(db, userId);
+  if (used + incomingBytes > limit) {
+    return {
+      allowed: false,
+      message: `Storage is full — ${formatBytes(used)} of ${formatBytes(limit)} used. Delete images in your library or upgrade.`,
+    };
   }
   return { allowed: true };
 }

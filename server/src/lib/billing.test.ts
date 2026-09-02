@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { apiKeysTable, brands, mails } from '@temply/shared/schema';
+import { apiKeysTable, assets, brands, mails } from '@temply/shared/schema';
 import { createTestDb, givePlan, type TestDb } from '../test/helpers';
 import {
   checkApiKeyLimit,
   checkBrandLimit,
+  checkStorageLimit,
   checkTemplateLimit,
   getPlan,
+  getStorageUsed,
   getUsage,
   planLimits,
   shouldSnapshot,
@@ -152,5 +154,37 @@ describe('shouldSnapshot', () => {
   it('is on for paid users', async () => {
     await givePlan(db, 'user_1', 'pro');
     expect(await shouldSnapshot(db, 'user_1')).toBe(true);
+  });
+});
+
+describe('checkStorageLimit', () => {
+  const seed = (userId: string, bytes: number) =>
+    db.insert(assets).values({
+      id: crypto.randomUUID(), user_id: userId, imagekit_file_id: 'f', url: 'https://ik.imagekit.io/t/x.png',
+      name: 'x.png', mime: 'image/png', bytes,
+    });
+
+  it('allows an upload that fits under the free 50 MB', async () => {
+    await seed('u_free', 49 * 1024 * 1024);
+    const result = await checkStorageLimit(db, 'u_free', 1024 * 1024);
+    expect(result.allowed).toBe(true);
+  });
+
+  it('blocks the upload that would cross the line, naming the numbers', async () => {
+    await seed('u_free', 49 * 1024 * 1024);
+    const result = await checkStorageLimit(db, 'u_free', 2 * 1024 * 1024);
+    expect(result.allowed).toBe(false);
+    expect(result.message).toBe('Storage is full — 49 MB of 50 MB used. Delete images in your library or upgrade.');
+  });
+
+  it('never blocks enterprise', async () => {
+    await givePlan(db, 'u_ent', 'enterprise');
+    await seed('u_ent', 5 * 1024 * 1024 * 1024);
+    expect((await checkStorageLimit(db, 'u_ent', 1)).allowed).toBe(true);
+  });
+
+  it("sums only the caller's rows", async () => {
+    await seed('u_other', 50 * 1024 * 1024);
+    expect(await getStorageUsed(db, 'u_free')).toBe(0);
   });
 });

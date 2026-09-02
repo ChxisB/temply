@@ -11,7 +11,8 @@
     "./brand-presets": "./brand-presets.ts",
     "./brand-knobs": "./brand-knobs.ts",
     "./template-data": "./template-data.ts",
-    "./preflight": "./preflight.ts"
+    "./preflight": "./preflight.ts",
+    "./bytes": "./bytes.ts"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",
