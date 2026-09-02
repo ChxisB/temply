@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { assets, mails, templateVersions } from '@temply/shared/schema';
+import { resetImageKitForTests } from '../lib/imagekit';
 import type { TestDb } from '../test/helpers';
 
 process.env.IMAGEKIT_PUBLIC_KEY = 'public_test';
@@ -57,9 +58,16 @@ beforeEach(() => {
   ik.deleteStatus = 204;
 });
 
+/** Real PNG magic bytes, zero-padded to the requested size: the server now
+ *  sniffs the format from the bytes, so a payload has to look like an actual
+ *  image to reach the "uploaded" tests below. */
+const PNG_MAGIC = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
 function formWith(bytes: number, type = 'image/png', name = 'hero.png') {
+  const data = new Uint8Array(bytes);
+  data.set(PNG_MAGIC.subarray(0, Math.min(PNG_MAGIC.length, bytes)));
   const form = new FormData();
-  form.append('file', new File([new Uint8Array(bytes)], name, { type }));
+  form.append('file', new File([data], name, { type }));
   return form;
 }
 
@@ -86,10 +94,31 @@ describe('POST /api/v1/assets', () => {
   });
 
   it('400 on a MIME type email clients cannot show', async () => {
-    const res = await upload(OWNER, 10, 'image/svg+xml', 'logo.svg');
+    // Real SVG bytes, not just a declared header: sniffing decides the
+    // format from the content, so a spoofed Content-Type on real image
+    // bytes would not be enough to fail this — the bytes themselves must
+    // be unsniffable.
+    const form = new FormData();
+    form.append('file', new File([new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>')], 'logo.svg', { type: 'image/svg+xml' }));
+    const res = await postForm(app, '/api/v1/assets', form, OWNER);
     expect(res.status).toBe(400);
     expect((await res.json()).message).toBe('Only JPEG, PNG, GIF and WebP images can be uploaded.');
     expect(ik.uploads).toHaveLength(0);
+  });
+
+  it('400 when the declared type lies about the bytes', async () => {
+    const form = new FormData();
+    form.append('file', new File([new Uint8Array([0x3c, 0x73, 0x76, 0x67])], 'hero.png', { type: 'image/png' }));
+    const res = await postForm(app, '/api/v1/assets', form, OWNER);
+    expect(res.status).toBe(400);
+    expect((await res.json()).message).toBe('Only JPEG, PNG, GIF and WebP images can be uploaded.');
+    expect(ik.uploads).toHaveLength(0);
+  });
+
+  it('uploads a non-ASCII filename and normalises the extension to the sniffed type', async () => {
+    const res = await upload(OWNER, 1024, 'image/png', 'héro 图.PNG');
+    expect(res.status).toBe(200);
+    expect(ik.uploads[0].fileName).toBe('héro 图.png');
   });
 
   it('400 over 5 MB, before touching ImageKit', async () => {
@@ -191,5 +220,32 @@ describe('DELETE /api/v1/assets/:id', () => {
     const { asset } = await (await upload(OTHER)).json();
     expect((await del(app, `/api/v1/assets/${asset.id}`, OWNER)).status).toBe(404);
     expect(ik.deleted).toHaveLength(0);
+  });
+});
+
+describe('POST /api/v1/assets without ImageKit configured', () => {
+  it('503 on upload, but the library still lists', async () => {
+    // getImageKit() caches its client, so an earlier test's successful
+    // upload would otherwise leave a client behind even with the env vars
+    // gone; reset it so this test observes the unconfigured path for real.
+    resetImageKitForTests();
+    const saved = {
+      pub: process.env.IMAGEKIT_PUBLIC_KEY,
+      priv: process.env.IMAGEKIT_PRIVATE_KEY,
+      url: process.env.IMAGEKIT_URL_ENDPOINT,
+    };
+    delete process.env.IMAGEKIT_PUBLIC_KEY;
+    delete process.env.IMAGEKIT_PRIVATE_KEY;
+    delete process.env.IMAGEKIT_URL_ENDPOINT;
+    try {
+      const res = await upload(OWNER);
+      expect(res.status).toBe(503);
+      expect((await res.json()).message).toBe('Image uploads are not configured');
+      expect((await get(app, '/api/v1/assets', OWNER)).status).toBe(200);
+    } finally {
+      process.env.IMAGEKIT_PUBLIC_KEY = saved.pub;
+      process.env.IMAGEKIT_PRIVATE_KEY = saved.priv;
+      process.env.IMAGEKIT_URL_ENDPOINT = saved.url;
+    }
   });
 });

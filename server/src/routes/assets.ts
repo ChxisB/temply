@@ -13,10 +13,45 @@ export const MAX_ASSET_BYTES = 5 * 1024 * 1024;
  *  render in a real email. */
 export const ASSET_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
+const EXT_BY_MIME: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+};
+
 /** The ImageKit SDK rejects with the HTTP status tucked under $ResponseMetadata. */
 function imagekitStatus(error: unknown): number | null {
   const meta = (error as { $ResponseMetadata?: { statusCode?: number } })?.$ResponseMetadata;
   return typeof meta?.statusCode === 'number' ? meta.statusCode : null;
+}
+
+/** Reads the file's own magic bytes rather than the part's declared
+ *  Content-Type, which the client writes and cannot be trusted. Returns
+ *  null when nothing recognised matches. */
+export function sniffImageType(buffer: Buffer): string | null {
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47 &&
+    buffer[4] === 0x0d && buffer[5] === 0x0a && buffer[6] === 0x1a && buffer[7] === 0x0a
+  ) {
+    return 'image/png';
+  }
+  if (buffer.length >= 6) {
+    const header = buffer.toString('ascii', 0, 6);
+    if (header === 'GIF87a' || header === 'GIF89a') return 'image/gif';
+  }
+  if (
+    buffer.length >= 12 &&
+    buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    buffer.toString('ascii', 8, 12) === 'WEBP'
+  ) {
+    return 'image/webp';
+  }
+  return null;
 }
 
 export const assetsRoutes = new Elysia()
@@ -25,12 +60,19 @@ export const assetsRoutes = new Elysia()
   .post('/api/v1/assets', async (ctx) => {
     if (!ctx.userId) return unauthorized();
     const file = ctx.body.file;
-    // Cheapest checks first, so a refused upload never reaches ImageKit.
-    if (!ASSET_MIME_TYPES.has(file.type)) {
-      return json({ status: 400, message: 'Only JPEG, PNG, GIF and WebP images can be uploaded.', errors: ['Only JPEG, PNG, GIF and WebP images can be uploaded.'] }, 400);
-    }
+    // Cheapest check first: an oversized file is refused before its bytes
+    // are ever read into memory.
     if (file.size > MAX_ASSET_BYTES) {
       return json({ status: 400, message: 'Images must be under 5 MB.', errors: ['Images must be under 5 MB.'] }, 400);
+    }
+    // The part's Content-Type and the filename are both written by the
+    // client, so the accepted format is decided from the bytes, not either
+    // of those — sniffing also means the row's mime and the derived
+    // extension always describe what was actually uploaded.
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const mime = sniffImageType(bytes);
+    if (!mime || !ASSET_MIME_TYPES.has(mime)) {
+      return json({ status: 400, message: 'Only JPEG, PNG, GIF and WebP images can be uploaded.', errors: ['Only JPEG, PNG, GIF and WebP images can be uploaded.'] }, 400);
     }
     const limit = await checkStorageLimit(ctx.db, ctx.userId, file.size);
     if (!limit.allowed) return paymentRequired(limit.message!);
@@ -38,11 +80,15 @@ export const assetsRoutes = new Elysia()
     const ik = getImageKit();
     if (!ik) return json({ status: 503, message: 'Image uploads are not configured', errors: ['Image uploads are not configured'] }, 503);
 
+    const ext = EXT_BY_MIME[mime];
+    const stem = (file.name || '').replace(/\.[^.]+$/, '') || 'image';
+    const fileName = `${stem}.${ext}`;
+
     let uploaded;
     try {
       uploaded = await ik.upload({
-        file: Buffer.from(await file.arrayBuffer()),
-        fileName: file.name || 'image',
+        file: bytes,
+        fileName,
         folder: assetFolder(ctx.userId),
         useUniqueFileName: true,
       });
@@ -56,11 +102,13 @@ export const assetsRoutes = new Elysia()
       imagekit_file_id: uploaded.fileId,
       url: uploaded.url,
       name: uploaded.name,
-      mime: file.type,
+      mime,
       bytes: uploaded.size,
       width: uploaded.width ?? null,
       height: uploaded.height ?? null,
     };
+    // If this insert fails the ImageKit file is orphaned; reconciliation is
+    // a documented non-goal for now.
     await ctx.db.insert(assets).values(asset);
     const [row] = await ctx.db.select().from(assets).where(eq(assets.id, asset.id)).limit(1);
     return json({ asset: row });

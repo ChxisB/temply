@@ -14,6 +14,13 @@ export function getImageKit(): ImageKit | null {
   return client;
 }
 
+/** Test-only: clears the cached client so a test can flip the env vars and
+ *  observe `getImageKit()` return null again, instead of the previous
+ *  test's cached instance. */
+export function resetImageKitForTests(): void {
+  client = null;
+}
+
 /** Organisational only — the private key is the access boundary, the folder
  *  just keeps one user's files together in the ImageKit console. */
 export function assetFolder(userId: string): string {

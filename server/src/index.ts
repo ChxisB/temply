@@ -37,7 +37,9 @@ const app = new Elysia()
   .use(authRoutes)
   // Bind to loopback only: this service trusts a proxy-forwarded user id and
   // must never be reachable directly from the network.
-  .listen({ port: 3001, hostname: '127.0.0.1' });
+  // The largest legitimate body is a 5 MB image plus multipart framing;
+  // anything bigger is refused by Bun before a byte is buffered.
+  .listen({ port: 3001, hostname: '127.0.0.1', maxRequestBodySize: 8 * 1024 * 1024 });
 
 console.log('🦊 Elysia server running on http://127.0.0.1:3001');
 export type App = typeof app;

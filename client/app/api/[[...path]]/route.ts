@@ -23,6 +23,12 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
     'x-internal-token': process.env.INTERNAL_API_SECRET || '',
   };
 
+  // The API refuses oversized bodies too, but refusing here keeps the bytes
+  // out of the Next process entirely.
+  if (request.method !== 'GET' && request.method !== 'HEAD' && Number(request.headers.get('Content-Length') || 0) > 8 * 1024 * 1024) {
+    return NextResponse.json({ status: 413, message: 'Images must be under 5 MB.', errors: ['Images must be under 5 MB.'] }, { status: 413 });
+  }
+
   // Read bytes, not text: a multipart image upload passes through here and
   // decoding it as UTF-8 would corrupt every byte above 0x7f.
   const body = request.method !== 'GET' && request.method !== 'HEAD' ? await request.arrayBuffer() : undefined;
