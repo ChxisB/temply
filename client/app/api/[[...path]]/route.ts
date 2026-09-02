@@ -23,7 +23,9 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
     'x-internal-token': process.env.INTERNAL_API_SECRET || '',
   };
 
-  const body = request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined;
+  // Read bytes, not text: a multipart image upload passes through here and
+  // decoding it as UTF-8 would corrupt every byte above 0x7f.
+  const body = request.method !== 'GET' && request.method !== 'HEAD' ? await request.arrayBuffer() : undefined;
 
   const res = await fetch(targetUrl, {
     method: request.method,
