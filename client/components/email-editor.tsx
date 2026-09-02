@@ -16,10 +16,20 @@ type EmailEditorProps = {
   autofocus?: FocusPosition;
   onImageUpload?: (file: Blob) => Promise<string>;
   allowedMimeTypes?: string[];
+  onPickImage?: () => Promise<string | null>;
+  isLibraryImage?: (src: string) => boolean;
 };
 
 export function EmailEditor(props: EmailEditorProps) {
-  const { defaultContent, setEditor, autofocus, onImageUpload, allowedMimeTypes } = props;
+  const {
+    defaultContent,
+    setEditor,
+    autofocus,
+    onImageUpload,
+    allowedMimeTypes,
+    onPickImage,
+    isLibraryImage,
+  } = props;
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,6 +45,8 @@ export function EmailEditor(props: EmailEditorProps) {
         <Editor
           onImageUpload={onImageUpload}
           allowedMimeTypes={allowedMimeTypes}
+          onPickImage={onPickImage}
+          isLibraryImage={isLibraryImage}
           config={{
             hasMenuBar: false,
             wrapClassName: cn('editor-wrap', isLoading && 'hidden'),

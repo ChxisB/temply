@@ -16,12 +16,21 @@ type ExtensionsProps = Partial<MailyContextType> & {
 };
 
 export function extensions(props: ExtensionsProps) {
-  const { blocks, extensions = [], onImageUpload, allowedMimeTypes } = props;
+  const {
+    blocks,
+    extensions = [],
+    onImageUpload,
+    allowedMimeTypes,
+    onPickImage,
+    isLibraryImage,
+  } = props;
 
   const defaultExtensions = [
     TemplyKit,
     ImageUploadExtension.configure({
       onImageUpload,
+      onPickImage,
+      isLibraryImage,
       ...(allowedMimeTypes ? { allowedMimeTypes } : {}),
     }),
     SlashCommandExtension.configure({

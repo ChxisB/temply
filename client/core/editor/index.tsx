@@ -75,6 +75,8 @@ export function Editor(props: EditorProps) {
     placeholderUrl = DEFAULT_PLACEHOLDER_URL,
     onImageUpload,
     allowedMimeTypes,
+    onPickImage,
+    isLibraryImage,
     scrollThreshold = 40,
     scrollMargin = 40,
   } = props;
@@ -127,6 +129,8 @@ export function Editor(props: EditorProps) {
       blocks,
       onImageUpload,
       allowedMimeTypes,
+      onPickImage,
+      isLibraryImage,
     }),
     content: formattedContent,
     autofocus,
