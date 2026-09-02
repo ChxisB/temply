@@ -5,6 +5,7 @@ import {
   BookOpenIcon,
   FileTextIcon,
   HomeIcon,
+  ImageIcon,
   LayoutDashboardIcon,
   PaletteIcon,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/dashboard', label: 'Overview', icon: LayoutDashboardIcon, exact: true },
       { href: '/dashboard/templates', label: 'Templates', icon: FileTextIcon },
       { href: '/dashboard/brands', label: 'Brands', icon: PaletteIcon },
+      { href: '/dashboard/assets', label: 'Assets', icon: ImageIcon },
     ],
   },
   {
