@@ -1,3 +1,4 @@
+import { useImageUploadOptions } from '@/editor/extensions/image-upload/image-upload';
 import { AllowedLogoSize, allowedLogoSize } from '@/editor/nodes/logo/logo';
 import { getNewHeight, getNewWidth } from '@/editor/utils/aspect-ratio';
 import { borderRadius } from '@/editor/utils/border-radius';
@@ -27,6 +28,7 @@ export function ImageBubbleMenu(props: EditorBubbleMenuProps) {
   }
 
   const state = useImageState(editor);
+  const { isLibraryImage } = useImageUploadOptions(editor);
 
   const bubbleMenuProps: EditorBubbleMenuProps = {
     ...props,
@@ -123,6 +125,14 @@ export function ImageBubbleMenu(props: EditorBubbleMenuProps) {
             isVariable={state.isSrcVariable}
             showImageStatus
           />
+
+          {/* Where the bytes live is the one thing the URL field does not
+              say: our library, or a host the user controls. */}
+          {isLibraryImage && state.imageSrc && !state.isSrcVariable && (
+            <span className="mly:flex mly:items-center mly:px-1.5 mly:text-xs mly:leading-none mly:text-gray-400">
+              {isLibraryImage(state.imageSrc) ? 'Library' : 'External'}
+            </span>
+          )}
 
           <AltTextInput
             value={state.imageAlt}
