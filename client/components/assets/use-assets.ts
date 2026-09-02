@@ -7,9 +7,9 @@ export const ASSETS_KEY = ['assets'] as const;
 
 /** One cache for the library page and the editor picker, so an upload made
  *  in one is already there when the other opens. */
-export function useAssets() {
+export function useAssets(options?: { enabled?: boolean }) {
   const queryClient = useQueryClient();
-  const query = useQuery({ queryKey: ASSETS_KEY, queryFn: listAssets });
+  const query = useQuery({ queryKey: ASSETS_KEY, queryFn: listAssets, enabled: options?.enabled ?? true });
 
   const upload = useMutation({
     mutationFn: (file: File) => uploadAsset(file),

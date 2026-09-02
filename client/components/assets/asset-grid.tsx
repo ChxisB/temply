@@ -3,7 +3,7 @@
 import { CopyIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '~/lib/classname';
-import { THUMB_TRANSFORM, withTransform, type Asset } from '~/lib/assets';
+import { EMAIL_TRANSFORM, THUMB_TRANSFORM, withTransform, type Asset } from '~/lib/assets';
 import { formatBytes } from '@temply/shared/bytes';
 
 type Props =
@@ -42,13 +42,16 @@ export function AssetGrid(props: Props) {
         return (
           <li
             key={asset.id}
-            className="group fade-in-mount rounded-lg border border-line bg-raised shadow-sm motion-reduce:transition-none"
+            className={cn(
+              'group fade-in-mount rounded-lg border border-line bg-raised shadow-sm transition-colors motion-reduce:transition-none',
+              mode === 'pick' && 'hover:border-accent focus-within:border-accent',
+            )}
           >
             {mode === 'pick' ? (
               <button
                 type="button"
                 onClick={() => props.onPick(asset)}
-                className="block w-full rounded-lg text-left transition-colors hover:border-accent focus-visible:outline-none"
+                className="block w-full rounded-lg text-left"
               >
                 {thumb}
                 {caption}
@@ -68,8 +71,13 @@ export function AssetGrid(props: Props) {
                     aria-label={`Copy URL of ${asset.name}`}
                     title="Copy URL"
                     onClick={async () => {
-                      await navigator.clipboard.writeText(asset.url);
-                      toast.success('URL copied');
+                      try {
+                        // A pasted URL should weigh the same as a picked one.
+                        await navigator.clipboard.writeText(withTransform(asset.url, EMAIL_TRANSFORM));
+                        toast.success('URL copied');
+                      } catch {
+                        toast.error('Could not copy the URL.');
+                      }
                     }}
                     className="flex size-7 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink"
                   >

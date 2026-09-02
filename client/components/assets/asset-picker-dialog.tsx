@@ -23,7 +23,7 @@ export function AssetPickerDialog({
   onOpenChange: (open: boolean) => void;
   onPick: (asset: Asset) => void;
 }) {
-  const { query, upload } = useAssets();
+  const { query, upload } = useAssets({ enabled: open });
   const [search, setSearch] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
