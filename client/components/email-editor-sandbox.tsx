@@ -15,7 +15,7 @@ import {
   SendIcon,
   SlidersHorizontalIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { errorMessage, httpDelete, httpPost } from '~/lib/http';
@@ -28,9 +28,10 @@ import {
   writeDraft,
   type Draft,
 } from '~/lib/drafts';
-import { createEditorUploader, UPLOAD_MIME_TYPES } from '~/lib/assets';
+import { createEditorUploader, EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import type { Mail } from '~/db/schema';
 import { Button } from './ui/button';
+import { AssetPickerDialog } from './assets/asset-picker-dialog';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
 import { ContentModeSwitch, type ContentMode } from './content-mode-switch';
@@ -125,11 +126,13 @@ type SaveTemplateResponse = {
 type EmailEditorSandboxProps = {
   template?: Mail;
   showSaveButton?: boolean;
+  /** False on the signed-out playground: no upload, no library, URL only. */
+  imageUploads?: boolean;
   autofocus?: FocusPosition;
 };
 
 export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
-  const { template, showSaveButton = true, autofocus } = props;
+  const { template, showSaveButton = true, imageUploads = true, autofocus } = props;
 
   const router = useRouter();
 
@@ -194,6 +197,24 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     });
 
   const imageUploader = useMemo(() => createEditorUploader(), []);
+
+  // The picker resolves a promise the editor core awaits; the resolver lives
+  // in a ref so the dialog's close/cancel path can settle it with null.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickResolver = useRef<((url: string | null) => void) | null>(null);
+  const pickFromLibrary = useCallback(
+    () =>
+      new Promise<string | null>((resolve) => {
+        pickResolver.current = resolve;
+        setPickerOpen(true);
+      }),
+    [],
+  );
+  const settlePick = (url: string | null) => {
+    pickResolver.current?.(url);
+    pickResolver.current = null;
+    setPickerOpen(false);
+  };
 
   // --- Content section: edit / preview -------------------------------------
   const [mode, setMode] = useState<ContentMode>('edit');
@@ -1011,7 +1032,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
               allowedMimeTypes={UPLOAD_MIME_TYPES}
               autofocus={autofocus}
               defaultContent={editorContent}
-              onImageUpload={imageUploader}
+              onImageUpload={imageUploads ? imageUploader : undefined}
+              onPickImage={imageUploads ? pickFromLibrary : undefined}
+              isLibraryImage={isLibraryUrl}
               setEditor={setEditor}
             />
           </div>
@@ -1038,6 +1061,14 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           <ContentSource className={paneClass} minHeight={paneHeight} source={textSource} wrap />
         )}
       </section>
+
+      {imageUploads && (
+        <AssetPickerDialog
+          open={pickerOpen}
+          onOpenChange={(open) => { if (!open) settlePick(null); }}
+          onPick={(asset) => settlePick(withTransform(asset.url, EMAIL_TRANSFORM))}
+        />
+      )}
     </div>
   );
 }

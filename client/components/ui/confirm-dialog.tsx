@@ -22,19 +22,31 @@ export function ConfirmDialog({
   confirmLabel = 'Delete',
   onConfirm,
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   title: string;
   description: string;
   confirmLabel?: string;
   onConfirm: () => void;
-  /** The trigger, rendered as-is (asChild) — keep it a single Button. */
-  children: React.ReactNode;
+  /** The trigger, rendered as-is (asChild) — keep it a single Button. Omit
+   *  when the dialog is opened programmatically through `open`. */
+  children?: React.ReactNode;
+  /** Controlled mode, for confirmations whose copy is only known after an
+   *  async lookup (e.g. "used in 2 templates"). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
       <DialogContent className="w-full max-w-xs p-4">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

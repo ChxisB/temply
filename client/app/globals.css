@@ -170,6 +170,15 @@
   --shadow-canvas: var(--ds-shadow-canvas);
 }
 
+/* `animate-in fade-in` isn't wired up (tw-animate-css is installed but never
+   imported), so a mounted card fades in via @starting-style instead. */
+@utility fade-in-mount {
+  transition: opacity 200ms ease-out;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
 /* Dense chrome. Generosity is spent on the canvas and the marketing surface,
    not on the tool: fewer scrolls beats more whitespace when you work here daily. */
 @theme {
