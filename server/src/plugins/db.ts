@@ -51,6 +51,14 @@ export function initTables(sqlite: Database) {
     id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL,
     message TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now'))
   )`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS assets (
+    id TEXT PRIMARY KEY, user_id TEXT NOT NULL,
+    imagekit_file_id TEXT NOT NULL, url TEXT NOT NULL,
+    name TEXT NOT NULL, mime TEXT NOT NULL, bytes INTEGER NOT NULL,
+    width INTEGER, height INTEGER,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`);
+  sqlite.run(`CREATE INDEX IF NOT EXISTS assets_user_id ON assets(user_id)`);
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
   addColumnIfMissing(sqlite, 'template_versions', 'theme', 'TEXT');

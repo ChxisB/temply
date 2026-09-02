@@ -116,3 +116,22 @@ export const contactMessages = sqliteTable('contact_messages', {
 });
 
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+/** One row per image a user uploaded. `url` is the bare ImageKit URL — the
+ *  email-safe transform is added by the client at insert time, so the same
+ *  asset can serve a 240px thumbnail and a 1200px email image. */
+export const assets = sqliteTable('assets', {
+  id: text('id').primaryKey(),
+  user_id: text('user_id').notNull(),
+  imagekit_file_id: text('imagekit_file_id').notNull(),
+  url: text('url').notNull(),
+  name: text('name').notNull(),
+  mime: text('mime').notNull(),
+  bytes: integer('bytes').notNull(),
+  width: integer('width'),
+  height: integer('height'),
+  created_at: text('created_at').default(now),
+});
+
+export type Asset = typeof assets.$inferSelect;
+export type NewAsset = typeof assets.$inferInsert;
