@@ -36,7 +36,7 @@ import { ShortcutTable } from '~/components/docs/shortcut-table';
 
 /** A section heading. `scroll-mt-20` clears the sticky h-12 header when the
  *  table of contents jumps here. */
-function H2({ id, children }: { id: string; children: ReactNode }) {
+export function H2({ id, children }: { id: string; children: ReactNode }) {
   return (
     <h2
       id={id}
@@ -47,7 +47,7 @@ function H2({ id, children }: { id: string; children: ReactNode }) {
   );
 }
 
-function H3({ id, children }: { id: string; children: ReactNode }) {
+export function H3({ id, children }: { id: string; children: ReactNode }) {
   return (
     <h3
       id={id}
@@ -77,14 +77,14 @@ function BlockGroup({ id, title, blocks }: { id: string; title: string; blocks: 
 
 /** Body copy. `max-w-xl` is the measure the landing page reads at — the block
  *  rows below run wider on purpose, because each is two short sentences. */
-function P({ children }: { children: ReactNode }) {
+export function P({ children }: { children: ReactNode }) {
   return (
     <p className="mt-4 max-w-xl text-lg leading-relaxed text-pretty text-muted">{children}</p>
   );
 }
 
 /** Inline code and key names. */
-function Code({ children }: { children: ReactNode }) {
+export function Code({ children }: { children: ReactNode }) {
   return (
     <code className="rounded-xs border border-line bg-raised px-1.5 py-0.5 font-mono text-sm text-ink">
       {children}

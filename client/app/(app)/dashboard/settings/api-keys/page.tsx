@@ -260,7 +260,10 @@ export default function ApiKeysPage() {
             Send it as a bearer token when you call the public API. A live key renders the
             published version of a template — edits wait in the draft until you publish. A
             test key renders the draft instead, is free on every plan, and stops at 1,000
-            calls a month.
+            calls a month.{' '}
+            <Link href="/docs#api" className="text-accent-ink underline-offset-4 hover:underline">
+              Full API reference
+            </Link>
           </p>
           <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
             <code>{`# The template's details

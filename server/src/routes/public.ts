@@ -7,6 +7,7 @@ import { checkApiQuota, recordApiCall } from '../lib/api-quota';
 import { render } from '../render/render';
 import { json, notFound, unauthorized } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
+import { PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE } from '@temply/shared/api';
 import { dbPlugin, type Db } from '../plugins/db';
 
 type Row = typeof mails.$inferSelect;
@@ -77,7 +78,7 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
 export const publicRoutes = new Elysia()
   .use(authPlugin)
   .use(dbPlugin)
-  .get('/api/public/v1/templates/:shortCode', async (ctx) => {
+  .get(PUBLIC_TEMPLATE_ROUTE, async (ctx) => {
     const resolved = await resolve(ctx);
     if ('error' in resolved) return resolved.error;
     const { template, served, key } = resolved;
@@ -103,7 +104,7 @@ export const publicRoutes = new Elysia()
    * conditions had nowhere to be evaluated outside the editor's preview.
    */
   .post(
-    '/api/public/v1/templates/:shortCode/render',
+    PUBLIC_RENDER_ROUTE,
     async (ctx) => {
       const resolved = await resolve(ctx);
       if ('error' in resolved) return resolved.error;
