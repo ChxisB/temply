@@ -64,8 +64,23 @@
   --ds-shadow-sm: 0 1px 2px rgb(18 20 26 / 0.06), 0 1px 3px rgb(18 20 26 / 0.08);
   --ds-shadow-md: 0 4px 12px rgb(18 20 26 / 0.08), 0 2px 4px rgb(18 20 26 / 0.05);
   --ds-shadow-lg: 0 12px 32px rgb(18 20 26 / 0.12), 0 4px 8px rgb(18 20 26 / 0.06);
+  --ds-shadow-xl: 0 24px 48px rgb(18 20 26 / 0.16), 0 8px 16px rgb(18 20 26 / 0.08);
 
   --ds-shadow-canvas: 0 1px 2px rgb(18 20 26 / 0.04), 0 8px 24px rgb(18 20 26 / 0.06);
+
+  /* Motion. Three durations and three curves are the whole vocabulary — fast
+     for a colour flipping under the pointer, base for anything that shows,
+     hides, lifts or reveals, slow for a long travel like the drawer; out to
+     settle an entrance or a move, in to leave, spring where a surface should
+     pop (dialogs, anchored panels). Theme-independent, so declared once.
+     Components reach them as duration-fast/base/slow and ease-out/in/spring;
+     the keyframes below read the variables directly. */
+  --ds-motion-fast: 150ms;
+  --ds-motion-base: 200ms;
+  --ds-motion-slow: 300ms;
+  --ds-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ds-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ds-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
 }
 
@@ -109,6 +124,7 @@
   --ds-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
   --ds-shadow-md: 0 4px 12px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.4);
   --ds-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6), 0 4px 8px rgb(0 0 0 / 0.45);
+  --ds-shadow-xl: 0 24px 48px rgb(0 0 0 / 0.7), 0 8px 16px rgb(0 0 0 / 0.5);
 
   --ds-shadow-canvas: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 32px rgb(0 0 0 / 0.45);
   color-scheme: dark;
@@ -158,10 +174,23 @@
   --color-rail-active-bg: var(--ds-rail-active-bg);
   --color-rail-active-ink: var(--ds-rail-active-ink);
 
+  /* The shadow ladder, by what sits at each rung: xs a secondary button,
+     sm a card at rest, md a lifted card or an anchored panel (popover,
+     tooltip), lg a menu, xl a surface over a scrim (dialog, drawer). */
   --shadow-xs: var(--ds-shadow-xs);
   --shadow-sm: var(--ds-shadow-sm);
   --shadow-md: var(--ds-shadow-md);
   --shadow-lg: var(--ds-shadow-lg);
+  --shadow-xl: var(--ds-shadow-xl);
+
+  /* Tailwind's own ease-out / ease-in are replaced, not extended, so every
+     existing `ease-out` class already moves on the token; a bare
+     `transition-*` with no duration or curve lands on fast + out. */
+  --ease-out: var(--ds-ease-out);
+  --ease-in: var(--ds-ease-in);
+  --ease-spring: var(--ds-ease-spring);
+  --default-transition-duration: var(--ds-motion-fast);
+  --default-transition-timing-function: var(--ds-ease-out);
 
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
@@ -173,10 +202,22 @@
 /* `animate-in fade-in` isn't wired up (tw-animate-css is installed but never
    imported), so a mounted card fades in via @starting-style instead. */
 @utility fade-in-mount {
-  transition: opacity 200ms ease-out;
+  transition: opacity var(--ds-motion-base) var(--ds-ease-out);
   @starting-style {
     opacity: 0;
   }
+}
+
+/* The three durations as utilities, so a class list reads
+   `transition-transform duration-base ease-out` and never carries a number. */
+@utility duration-fast {
+  transition-duration: var(--ds-motion-fast);
+}
+@utility duration-base {
+  transition-duration: var(--ds-motion-base);
+}
+@utility duration-slow {
+  transition-duration: var(--ds-motion-slow);
 }
 
 /* Tiles and rows (ui/item.tsx) share one motion vocabulary: a tile lifts a
@@ -185,8 +226,8 @@
    fight over the `transition` shorthand. */
 @utility item-motion {
   transition-property: opacity, transform, box-shadow, border-color, background-color;
-  transition-duration: 200ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  transition-duration: var(--ds-motion-base);
+  transition-timing-function: var(--ds-ease-out);
   @starting-style {
     opacity: 0;
   }
@@ -266,8 +307,8 @@
   textarea,
   select {
     transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease;
+      border-color var(--ds-motion-fast) var(--ds-ease-out),
+      box-shadow var(--ds-motion-fast) var(--ds-ease-out);
   }
   input:not([type='range']):focus-visible,
   textarea:focus-visible,
@@ -331,10 +372,10 @@
 
 /* The dimmed backdrop just fades. */
 .overlay-fade[data-state='open'] {
-  animation: overlay-in 180ms ease-out;
+  animation: overlay-in var(--ds-motion-base) var(--ds-ease-out);
 }
 .overlay-fade[data-state='closed'] {
-  animation: overlay-out 140ms ease-in;
+  animation: overlay-out var(--ds-motion-fast) var(--ds-ease-in);
 }
 
 /* The dialog surface pops. It positions itself via the keyframe, so it must
@@ -345,10 +386,10 @@
   transform: translate(-50%, -50%);
 }
 .dialog-pop[data-state='open'] {
-  animation: dialog-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: dialog-pop var(--ds-motion-base) var(--ds-ease-spring);
 }
 .dialog-pop[data-state='closed'] {
-  animation: dialog-pop-out 140ms ease-in;
+  animation: dialog-pop-out var(--ds-motion-fast) var(--ds-ease-in);
 }
 
 /* The mobile nav drawer slides in from the left edge; its backdrop uses the
@@ -363,18 +404,18 @@
   to { transform: translateX(-100%); }
 }
 .drawer-left[data-state='open'] {
-  animation: drawer-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: drawer-in var(--ds-motion-slow) var(--ds-ease-out);
 }
 .drawer-left[data-state='closed'] {
-  animation: drawer-out 200ms ease-in;
+  animation: drawer-out var(--ds-motion-base) var(--ds-ease-in);
 }
 
 /* Panels anchored to a trigger pop in from the side they open toward. */
 .overlay-panel[data-state='open'] {
-  animation: panel-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: panel-in var(--ds-motion-base) var(--ds-ease-spring);
 }
 .overlay-panel[data-state='closed'] {
-  animation: panel-out 130ms ease-in;
+  animation: panel-out var(--ds-motion-fast) var(--ds-ease-in);
 }
 .overlay-panel[data-side='top'] { transform-origin: bottom; }
 .overlay-panel[data-side='bottom'] { transform-origin: top; }
@@ -395,7 +436,7 @@
   }
 }
 .content-pane-in {
-  animation: content-pane-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: content-pane-in var(--ds-motion-base) var(--ds-ease-out);
 }
 
 /* Page loading — the Temply mark with its three bars breathing in turn, top
@@ -412,7 +453,7 @@
   50% { opacity: 0.4; transform: translateY(-3px); }
 }
 .page-loading {
-  animation: page-loading-in 200ms ease-out both;
+  animation: page-loading-in var(--ds-motion-base) var(--ds-ease-out) both;
 }
 .page-loading-bar {
   transform-box: fill-box;
@@ -457,7 +498,7 @@
 [data-reveal] {
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 600ms ease-out, transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 600ms ease-out, transform 600ms var(--ds-ease-out);
 }
 [data-reveal][data-revealed='true'] {
   opacity: 1;
@@ -471,7 +512,7 @@
 [data-reveal] .reveal-visual {
   opacity: 0;
   transform: translateX(var(--reveal-from, -28px)) scale(0.97);
-  transition: opacity 700ms ease-out, transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 700ms ease-out, transform 700ms var(--ds-ease-out);
 }
 [data-reveal][data-revealed='true'] .reveal-visual {
   opacity: 1;
@@ -480,7 +521,7 @@
 [data-reveal] .reveal-copy {
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 600ms ease-out 140ms, transform 600ms cubic-bezier(0.22, 1, 0.36, 1) 140ms;
+  transition: opacity 600ms ease-out 140ms, transform 600ms var(--ds-ease-out) 140ms;
 }
 [data-reveal][data-revealed='true'] .reveal-copy {
   opacity: 1;
@@ -546,7 +587,7 @@
 
 .hero-enter {
   opacity: 0;
-  animation: hero-enter 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: hero-enter 640ms var(--ds-ease-out) both;
   animation-delay: var(--enter-delay, 0ms);
 }
 

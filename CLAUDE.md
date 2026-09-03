@@ -7,9 +7,10 @@ Clerk; tiptap editor core in `client/core/editor`; editing surface in
 theme types, contrast maths and the preflight checks used by both.
 
 Gates, all of them, before calling anything done: `bun run typecheck` and
-`bun test` from the root; `bun run check:contrast`, `check:editor-contrast`
-and `check:email-dark` from `client/`. Then verify in the browser — there is
-no DOM component test infra, so the browser is the test for UI.
+`bun test` from the root; `bun run check:contrast`, `check:editor-contrast`,
+`check:email-dark` and `check:motion` from `client/`. Then verify in the
+browser — there is no DOM component test infra, so the browser is the test
+for UI.
 
 ## Two theme systems that never touch
 
@@ -27,9 +28,14 @@ merely works is a proof of concept. Before a UI change is done:
 
 - **Nothing pops.** Anything that appears, disappears or changes size
   transitions — height via the `grid-rows-[0fr]`→`[1fr]` pattern in
-  `template-theme-panel.tsx`, entrances via opacity/transform, 150–300ms
-  `ease-out`, always with `motion-reduce:transition-none`. A chevron that
-  rotates but a body that snaps is still a snap.
+  `template-theme-panel.tsx`, entrances via opacity/transform, always with
+  `motion-reduce:transition-none`. Timing comes from the tokens in
+  `globals.css`: `duration-fast` for a colour under the pointer, `-base` for
+  show/hide/lift, `-slow` for a long travel; `ease-out` to settle, `ease-in`
+  to leave, `ease-spring` to pop. Never a number or a `cubic-bezier` in a
+  class list — `check:motion` fails on it. Shadows run `xs`–`xl` by what
+  sits at each rung (see the ladder comment in `globals.css`). A chevron
+  that rotates but a body that snaps is still a snap.
 - **Every state is designed**, not just the happy path: loading, empty,
   error (distinct from empty — see `ErrorState` in `ui/surfaces.tsx`),
   disabled, and the narrow viewport.

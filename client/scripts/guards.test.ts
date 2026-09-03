@@ -38,4 +38,10 @@ describe('design guards run as part of the suite', () => {
     expect(output, output).not.toContain('FAIL');
     expect(code).toBe(0);
   });
+
+  it('app UI moves and casts shadows on tokens only', async () => {
+    const { code, output } = await runGuard('check-motion.ts');
+    expect(output, output).not.toContain('FAIL');
+    expect(code).toBe(0);
+  });
 });

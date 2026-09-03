@@ -75,7 +75,7 @@ export function PreflightPanel({
             )}
             <ChevronDownIcon
               className={cn(
-                'size-4 text-muted transition-transform duration-200 ease-out motion-reduce:transition-none',
+                'size-4 text-muted transition-transform duration-base ease-out motion-reduce:transition-none',
                 expanded && 'rotate-180',
               )}
             />
@@ -86,7 +86,7 @@ export function PreflightPanel({
             content decides; `overflow-hidden` clips the list while it grows. */}
         <div
           className={cn(
-            'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
+            'grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none',
             expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
           )}
         >

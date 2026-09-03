@@ -168,7 +168,7 @@ export function TemplateThemePanel({
           >
             <ChevronDownIcon
               className={cn(
-                'transition-transform duration-200 ease-out motion-reduce:transition-none',
+                'transition-transform duration-base ease-out motion-reduce:transition-none',
                 showAdvanced && 'rotate-180'
               )}
             />
@@ -178,7 +178,7 @@ export function TemplateThemePanel({
               content decides; `overflow-hidden` clips the panel while it grows. */}
           <div
             className={cn(
-              'grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none',
+              'grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none',
               showAdvanced ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             )}
           >

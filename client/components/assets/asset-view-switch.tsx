@@ -58,7 +58,7 @@ export function AssetViewSwitch({
     >
       <span
         aria-hidden
-        className="absolute top-0.5 left-0.5 size-6 rounded-sm bg-accent-wash transition-transform duration-300 ease-out motion-reduce:transition-none"
+        className="absolute top-0.5 left-0.5 size-6 rounded-sm bg-accent-wash transition-transform duration-slow ease-out motion-reduce:transition-none"
         style={{ transform: `translateX(${Math.max(index, 0) * SEGMENT_STEP}px)` }}
       />
       {VIEWS.map((entry) => (

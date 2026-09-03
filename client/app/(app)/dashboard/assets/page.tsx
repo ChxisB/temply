@@ -109,7 +109,7 @@ export default function AssetsPage() {
       <div
         aria-hidden={!dragging}
         className={cn(
-          'pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-surface/80 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none',
+          'pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-surface/80 backdrop-blur-sm transition-opacity duration-base motion-reduce:transition-none',
           dragging ? 'opacity-100' : 'opacity-0',
         )}
       >

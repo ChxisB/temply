@@ -123,7 +123,7 @@ export function Tile({
           <div className="min-w-0 flex-1">
             <p
               className={cn(
-                'truncate text-sm font-medium text-ink transition-colors duration-150 motion-reduce:transition-none',
+                'truncate text-sm font-medium text-ink transition-colors duration-fast motion-reduce:transition-none',
                 interactive && 'group-hover:text-accent-ink',
               )}
             >
@@ -197,7 +197,7 @@ export function Row({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              'truncate text-sm font-medium text-ink transition-colors duration-150 motion-reduce:transition-none',
+              'truncate text-sm font-medium text-ink transition-colors duration-fast motion-reduce:transition-none',
               interactive && 'group-hover:text-accent-ink',
             )}
           >

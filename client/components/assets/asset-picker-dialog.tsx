@@ -71,7 +71,7 @@ export function AssetPickerDialog({
         <div
           aria-hidden={!dragging}
           className={cn(
-            'pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-raised/85 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none',
+            'pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-raised/85 backdrop-blur-sm transition-opacity duration-base motion-reduce:transition-none',
             dragging ? 'opacity-100' : 'opacity-0',
           )}
         >

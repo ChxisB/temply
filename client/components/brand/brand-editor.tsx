@@ -44,11 +44,11 @@ export function BrandEditor({ theme, onChange }: { theme: RendererThemeOptions; 
       <BrandKnobsControl value={knobs} onChange={(k) => onChange(applyKnobs(theme, k))} />
       <div>
         <button type="button" onClick={() => setAdvanced((v) => !v)} aria-expanded={advanced} className="flex items-center gap-1 text-xs text-muted hover:text-ink [&_svg]:size-3.5">
-          <ChevronDownIcon className={`transition-transform duration-200 ease-out motion-reduce:transition-none ${advanced ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon className={`transition-transform duration-base ease-out motion-reduce:transition-none ${advanced ? 'rotate-180' : ''}`} />
           {advanced ? 'Hide advanced' : 'Advanced'}
         </button>
         {/* Same 0fr→1fr grid row the template panel uses to animate open. */}
-        <div className={`grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${advanced ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className={`grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none ${advanced ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
             <div className="mt-3"><RawThemeFields theme={theme} onChange={onChange} /></div>
           </div>

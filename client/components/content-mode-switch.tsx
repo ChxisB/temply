@@ -53,7 +53,7 @@ export function ContentModeSwitch({
       <div
         aria-hidden={!showing}
         className={cn(
-          'flex items-center gap-1 transition-opacity duration-200 ease-out motion-reduce:transition-none',
+          'flex items-center gap-1 transition-opacity duration-base ease-out motion-reduce:transition-none',
           showing ? 'opacity-100' : 'pointer-events-none opacity-0'
         )}
       >
@@ -69,7 +69,7 @@ export function ContentModeSwitch({
       >
         <span
           aria-hidden
-          className="absolute top-0.5 left-0.5 size-6 rounded-sm bg-accent-wash transition-transform duration-300 ease-out motion-reduce:transition-none"
+          className="absolute top-0.5 left-0.5 size-6 rounded-sm bg-accent-wash transition-transform duration-slow ease-out motion-reduce:transition-none"
           style={{ transform: `translateX(${Math.max(index, 0) * SEGMENT_STEP}px)` }}
         />
         {MODES.map((entry) => (
