@@ -13,7 +13,7 @@ import { useFileDrop } from '~/components/assets/use-file-drop';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
-import { assetUsage, UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
+import { assetUsage, toastUploaded, UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { errorMessage } from '~/lib/http';
 
@@ -55,8 +55,7 @@ export default function AssetsPage() {
 
     for (const [index, { file, pending }] of queue.entries()) {
       try {
-        await uploadOne(file);
-        toast.success('Image uploaded');
+        toastUploaded(await uploadOne(file));
         settle([pending.id]);
       } catch (error) {
         toast.error(errorMessage(error) || `Could not upload ${file.name}.`);

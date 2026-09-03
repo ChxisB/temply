@@ -21,7 +21,10 @@ mock.module('imagekit', () => ({
     async upload(options: Record<string, unknown>) {
       ik.uploads.push(options);
       if (ik.failUpload) throw Object.assign(new Error('boom'), { $ResponseMetadata: { statusCode: 500 } });
-      const name = String(options.fileName);
+      // ImageKit's useUniqueFileName appends a random suffix; the row must
+      // keep the name the user gave, not this one.
+      const given = String(options.fileName);
+      const name = given.replace(/(\.[^.]+)$/, `_Ab3dEf9x1Q$1`);
       return {
         fileId: `file_${ik.uploads.length}`,
         url: `https://ik.imagekit.io/test/temply/u/${name}`,
@@ -82,8 +85,10 @@ describe('POST /api/v1/assets', () => {
   it('uploads into the user folder and records the row', async () => {
     const res = await upload(OWNER, 2048);
     expect(res.status).toBe(200);
-    const { asset } = await res.json();
-    expect(asset.url).toBe('https://ik.imagekit.io/test/temply/u/hero.png');
+    const { asset, duplicateName } = await res.json();
+    expect(asset.url).toBe('https://ik.imagekit.io/test/temply/u/hero_Ab3dEf9x1Q.png');
+    expect(asset.name).toBe('hero.png');
+    expect(duplicateName).toBe(false);
     expect(asset.bytes).toBe(2048);
     expect(asset.width).toBe(640);
     expect(ik.uploads[0].folder).toBe(`/temply/${OWNER}`);
@@ -91,6 +96,19 @@ describe('POST /api/v1/assets', () => {
     const rows = await db.select().from(assets).where(eq(assets.user_id, OWNER));
     expect(rows).toHaveLength(1);
     expect(rows[0].imagekit_file_id).toBe('file_1');
+  });
+
+  it('flags a second upload with the same name, but keeps it', async () => {
+    await upload(OWNER, 100, 'image/png', 'hero.png');
+    const res = await upload(OWNER, 200, 'image/png', 'hero.png');
+    expect(res.status).toBe(200);
+    const { asset, duplicateName } = await res.json();
+    expect(duplicateName).toBe(true);
+    expect(asset.name).toBe('hero.png');
+    expect(await db.select().from(assets).where(eq(assets.user_id, OWNER))).toHaveLength(2);
+    // Another user's hero.png is not a duplicate of mine.
+    const theirs = await (await upload(OTHER, 100, 'image/png', 'hero.png')).json();
+    expect(theirs.duplicateName).toBe(false);
   });
 
   it('400 on a MIME type email clients cannot show', async () => {

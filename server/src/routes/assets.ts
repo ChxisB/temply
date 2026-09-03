@@ -83,6 +83,13 @@ export const assetsRoutes = new Elysia()
     const ext = EXT_BY_MIME[mime];
     const stem = (file.name || '').replace(/\.[^.]+$/, '') || 'image';
     const fileName = `${stem}.${ext}`;
+    // Two files may share a name — they are different images with different
+    // ids — but the user deserves to hear it, so the response says so.
+    const [existing] = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(assets)
+      .where(and(eq(assets.user_id, ctx.userId), eq(assets.name, fileName)));
+    const duplicateName = Number(existing?.count ?? 0) > 0;
 
     let uploaded;
     try {
@@ -101,7 +108,9 @@ export const assetsRoutes = new Elysia()
       user_id: ctx.userId,
       imagekit_file_id: uploaded.fileId,
       url: uploaded.url,
-      name: uploaded.name,
+      // The name the user gave, not the one ImageKit uniquified: the random
+      // suffix is theirs to keep collisions apart and means nothing here.
+      name: fileName,
       mime,
       bytes: uploaded.size,
       width: uploaded.width ?? null,
@@ -111,7 +120,7 @@ export const assetsRoutes = new Elysia()
     // a documented non-goal for now.
     await ctx.db.insert(assets).values(asset);
     const [row] = await ctx.db.select().from(assets).where(eq(assets.id, asset.id)).limit(1);
-    return json({ asset: row });
+    return json({ asset: row, duplicateName });
   }, { body: t.Object({ file: t.File() }) })
 
   .get('/api/v1/assets', async (ctx) => {

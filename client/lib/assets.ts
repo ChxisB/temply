@@ -37,11 +37,27 @@ export function isLibraryUrl(src: string): boolean {
   return /^https:\/\/ik\.imagekit\.io\//.test(src);
 }
 
-export async function uploadAsset(file: File): Promise<Asset> {
+export type UploadResult = {
+  asset: Asset;
+  /** Another asset of the user's already carries this name. Not a refusal —
+   *  they are different images — but worth a word. */
+  duplicateName: boolean;
+};
+
+export async function uploadAsset(file: File): Promise<UploadResult> {
   const form = new FormData();
   form.append('file', file);
-  const { asset } = await httpPost<{ asset: Asset }>('/api/v1/assets', form as unknown as Record<string, unknown>);
-  return asset;
+  return httpPost<UploadResult>('/api/v1/assets', form as unknown as Record<string, unknown>);
+}
+
+/** The one sentence every upload path shows: a warning when the name is
+ *  already taken, so the user learns it once and in the same words. */
+export function toastUploaded({ asset, duplicateName }: UploadResult) {
+  if (duplicateName) {
+    toast.warning(`Uploaded — you already have another image named "${asset.name}".`);
+  } else {
+    toast.success('Image uploaded');
+  }
 }
 
 export function listAssets(): Promise<AssetList> {
@@ -67,9 +83,9 @@ export function createEditorUploader(): (file: Blob) => Promise<string> {
       throw new Error('Image exceeds 5 MB');
     }
     try {
-      const asset = await uploadAsset(named);
-      toast.success('Image uploaded');
-      return withTransform(asset.url, EMAIL_TRANSFORM);
+      const result = await uploadAsset(named);
+      toastUploaded(result);
+      return withTransform(result.asset.url, EMAIL_TRANSFORM);
     } catch (error) {
       toast.error(errorMessage(error) || 'Image upload failed. Please try again.');
       throw error;

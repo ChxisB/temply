@@ -4,7 +4,7 @@ import { ImageIcon, ImagePlusIcon, Loader2Icon, UploadIcon } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { errorMessage } from '~/lib/http';
-import { UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
+import { toastUploaded, UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { EmptyState, ErrorState } from '~/components/ui/surfaces';
@@ -48,9 +48,9 @@ export function AssetPickerDialog({
     if (!file) return;
     setPendingUpload({ id: crypto.randomUUID(), name: file.name, bytes: file.size });
     try {
-      const asset = await uploadOne(file);
-      toast.success('Image uploaded');
-      onPickRef.current(asset);
+      const result = await uploadOne(file);
+      toastUploaded(result);
+      onPickRef.current(result.asset);
     } catch (error) {
       toast.error(errorMessage(error) || 'Image upload failed. Please try again.');
     } finally {

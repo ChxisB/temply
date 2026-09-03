@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteAsset, listAssets, uploadAsset, type Asset, type AssetList } from '~/lib/assets';
+import { deleteAsset, listAssets, uploadAsset, type Asset, type AssetList, type UploadResult } from '~/lib/assets';
 
 export const ASSETS_KEY = ['assets'] as const;
 
@@ -12,7 +12,7 @@ export function useAssets(options?: { enabled?: boolean }) {
   const query = useQuery({ queryKey: ASSETS_KEY, queryFn: listAssets, enabled: options?.enabled ?? true });
 
   const upload = useMutation({
-    mutationFn: (file: File) => uploadAsset(file),
+    mutationFn: (file: File): Promise<UploadResult> => uploadAsset(file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ASSETS_KEY }),
   });
 
