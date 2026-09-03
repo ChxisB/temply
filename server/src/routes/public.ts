@@ -46,6 +46,12 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .where(and(eq(mails.short_code, ctx.params.shortCode), eq(mails.user_id, key.user_id)))
     .limit(1);
   if (!template) return { error: notFound('Template not found') };
+  // The API serves the published copy only. A draft that has never been
+  // published is the author's, not the integrator's — and a template whose
+  // draft is mid-edit keeps serving what was last published.
+  if (template.published_at === null || template.published_content === null) {
+    return { error: notFound('This template has not been published yet') };
+  }
 
   await ctx.db
     .update(apiKeysTable)
@@ -64,12 +70,16 @@ export const publicRoutes = new Elysia()
     if ('error' in resolved) return resolved.error;
     const { template } = resolved;
 
+    // updatedAt is the publish time: it is the field an integrator caches
+    // on, so it has to move when the served content moves, not when the
+    // author types.
     return json({
       id: template.id,
       shortCode: template.short_code,
       title: template.title,
-      previewText: template.preview_text,
-      updatedAt: template.updated_at,
+      previewText: template.published_preview_text,
+      publishedAt: template.published_at,
+      updatedAt: template.published_at,
     });
   })
 
@@ -88,7 +98,7 @@ export const publicRoutes = new Elysia()
 
       let content: unknown;
       try {
-        content = JSON.parse(template.content);
+        content = JSON.parse(template.published_content!);
       } catch {
         return json(
           { status: 500, message: 'Template content is corrupt', errors: ['Unparseable content'] },
@@ -97,8 +107,8 @@ export const publicRoutes = new Elysia()
       }
 
       const renderOptions = {
-        theme: template.theme ? JSON.parse(template.theme) : undefined,
-        preview: template.preview_text ?? undefined,
+        theme: template.published_theme ? JSON.parse(template.published_theme) : undefined,
+        preview: template.published_preview_text ?? undefined,
         // Omitted entirely when the caller sends none, which keeps variables as
         // `{{placeholders}}` and every conditional block visible.
         payload: ctx.body?.data,
@@ -112,7 +122,7 @@ export const publicRoutes = new Elysia()
       // writing the text version by hand is how they drift.
       const text = await render(content as JSONContent, { ...renderOptions, plainText: true });
 
-      return json({ html, text, shortCode: template.short_code, updatedAt: template.updated_at });
+      return json({ html, text, shortCode: template.short_code, updatedAt: template.published_at });
     },
     { body: t.Optional(t.Object({ data: t.Optional(t.Any()) })) },
   );

@@ -29,8 +29,9 @@ async function seedKey(userId: string, { revoked = false } = {}) {
   return { id, fullKey };
 }
 
-async function seedTemplate(userId: string, content = '{"type":"doc"}') {
+async function seedTemplate(userId: string, content = '{"type":"doc"}', { published = true } = {}) {
   const shortCode = generateShortCode();
+  const stamp = '2026-01-01T00:00:00.000Z';
   await db.insert(mails).values({
     id: crypto.randomUUID(),
     user_id: userId,
@@ -38,6 +39,11 @@ async function seedTemplate(userId: string, content = '{"type":"doc"}') {
     preview_text: 'Hello there',
     content,
     short_code: shortCode,
+    updated_at: stamp,
+    // The API serves the published copy; a never-published row has none.
+    ...(published
+      ? { published_content: content, published_preview_text: 'Hello there', published_at: stamp }
+      : {}),
   });
   return shortCode;
 }
@@ -151,6 +157,28 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
     expect(res.status).toBe(404);
   });
 
+  it('404s for a template that has never been published', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, '{"type":"doc"}', { published: false });
+
+    const res = await fetchTemplate(shortCode, fullKey);
+    expect(res.status).toBe(404);
+    expect((await res.json()).message).toContain('not been published');
+  });
+
+  it('reports the publish time as updatedAt, not the draft’s', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER);
+    await db.update(mails).set({ updated_at: '2026-06-01T00:00:00.000Z', preview_text: 'Draft words' }).where(eq(mails.short_code, shortCode));
+
+    const body = await (await fetchTemplate(shortCode, fullKey)).json();
+    expect(body.updatedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(body.publishedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(body.previewText).toBe('Hello there');
+  });
+
   it('stamps last_used_at on a successful call', async () => {
     await givePlan(db, OWNER, 'pro');
     const { id, fullKey } = await seedKey(OWNER);
@@ -191,6 +219,26 @@ describe('POST /api/public/v1/templates/:shortCode/render', () => {
     const body = await res.json();
     expect(body.shortCode).toBe(shortCode);
     expect(body.html).toContain('<html');
+  });
+
+  it('404s before the template is published', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, CONDITIONAL_DOC, { published: false });
+
+    const res = await renderTemplate(shortCode, fullKey);
+    expect(res.status).toBe(404);
+  });
+
+  it('renders the published copy while the draft has moved on', async () => {
+    await givePlan(db, OWNER, 'pro');
+    const { fullKey } = await seedKey(OWNER);
+    const shortCode = await seedTemplate(OWNER, '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Published words"}]}]}');
+    await db.update(mails).set({ content: '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Draft words"}]}]}' }).where(eq(mails.short_code, shortCode));
+
+    const body = await (await renderTemplate(shortCode, fullKey)).json();
+    expect(body.html).toContain('Published words');
+    expect(body.html).not.toContain('Draft words');
   });
 
   it('returns a text alternative beside the HTML', async () => {

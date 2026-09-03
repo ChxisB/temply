@@ -29,6 +29,13 @@ export function notFound(message = 'Not found') {
   });
 }
 
+export function badRequest(message: string) {
+  return new Response(JSON.stringify({ status: 400, message, errors: [message] }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export function paymentRequired(message: string) {
   return new Response(JSON.stringify({ status: 402, message, errors: [message] }), {
     status: 402,

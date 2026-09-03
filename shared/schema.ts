@@ -16,6 +16,18 @@ export const mails = sqliteTable('mails', {
   short_code: text('short_code').unique(),
   created_at: text('created_at').default(now),
   updated_at: text('updated_at').default(now),
+  /**
+   * The copy the public API renders. `content`, `theme` and `preview_text`
+   * above are the draft the editor works on; nothing reaches an integrator
+   * until the author publishes, which copies the draft here. A null
+   * published_at means never published — the API answers 404 until then.
+   * "Unpublished changes" is `updated_at !== published_at`: publishing
+   * writes the same stamp to both, a draft save bumps only updated_at.
+   */
+  published_content: text('published_content'),
+  published_theme: text('published_theme'),
+  published_preview_text: text('published_preview_text'),
+  published_at: text('published_at'),
 });
 
 export const apiKeysTable = sqliteTable('api_keys', {

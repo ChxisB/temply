@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { mails, templateVersions } from '@temply/shared/schema';
 import { createTestApp, createTestDb, del, get, givePlan, post, type TestDb } from '../test/helpers';
 import { templatesRoutes } from './templates';
@@ -180,24 +180,25 @@ describe('POST /api/v1/templates/:id', () => {
     expect(row.updated_at! > '2020-01-01 00:00:00').toBe(true);
   });
 
-  it('does not snapshot a version for a free user', async () => {
+  it('never snapshots a version — saving is the draft, history is what was published', async () => {
+    await givePlan(db, OWNER, 'pro');
     const template = await createTemplate(OWNER, 'Before');
-    await post(app, `/api/v1/templates/${template.id}`, { title: 'After', content: '{}' }, OWNER);
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'After', content: '{"v":2}' }, OWNER);
 
     const versions = await db.select().from(templateVersions).where(eq(templateVersions.template_id, template.id));
     expect(versions).toHaveLength(0);
   });
 
-  it('snapshots the pre-edit content for a paid user', async () => {
-    await givePlan(db, OWNER, 'pro');
+  it('leaves the published copy alone and flags unpublished changes', async () => {
     const template = await createTemplate(OWNER, 'Before');
+    expect(template.has_unpublished_changes).toBe(false);
 
     await post(app, `/api/v1/templates/${template.id}`, { title: 'After', content: '{"v":2}' }, OWNER);
 
-    const versions = await db.select().from(templateVersions).where(eq(templateVersions.template_id, template.id));
-    expect(versions).toHaveLength(1);
-    expect(versions[0].title).toBe('Before');
-    expect(versions[0].version_number).toBe(1);
+    const { template: row } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
+    expect(row.content).toBe('{"v":2}');
+    expect(row.published_content).toBe('{"type":"doc"}');
+    expect(row.has_unpublished_changes).toBe(true);
   });
 
   it('will not let one user overwrite another user’s template', async () => {
@@ -269,61 +270,149 @@ describe('POST /api/v1/templates/:id/duplicate', () => {
   });
 });
 
-describe('version history', () => {
-  it('restores an earlier version and snapshots the version it replaced', async () => {
+describe('POST /api/v1/templates/:id/publish', () => {
+  it('copies the draft over the published copy and clears the flag', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Welcome', previewText: 'Hi', content: '{"v":2}', theme: '{"x":1}' }, OWNER);
+
+    const res = await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
+    expect(res.status).toBe(200);
+    const { template: published } = await res.json();
+    expect(published.published_content).toBe('{"v":2}');
+    expect(published.published_theme).toBe('{"x":1}');
+    expect(published.published_preview_text).toBe('Hi');
+    expect(published.published_at).toBe(published.updated_at);
+    expect(published.has_unpublished_changes).toBe(false);
+  });
+
+  it('does not snapshot a version for a free user', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
+
+    const versions = await db.select().from(templateVersions).where(eq(templateVersions.template_id, template.id));
+    expect(versions).toHaveLength(0);
+  });
+
+  it('snapshots the published copy for a paid user', async () => {
     await givePlan(db, OWNER, 'pro');
-    const template = await createTemplate(OWNER, 'Version one');
-    await post(app, `/api/v1/templates/${template.id}`, { title: 'Version two', content: '{"v":2}' }, OWNER);
+    const template = await createTemplate(OWNER, 'Welcome');
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Welcome v2', content: '{"v":2}' }, OWNER);
 
-    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
+
+    const versions = await db.select().from(templateVersions).where(eq(templateVersions.template_id, template.id));
     expect(versions).toHaveLength(1);
+    expect(versions[0].title).toBe('Welcome v2');
+    expect(versions[0].content).toBe('{"v":2}');
+    expect(versions[0].version_number).toBe(1);
+  });
 
-    await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OWNER);
+  it('404s for another user’s template', async () => {
+    const template = await createTemplate(OWNER, 'Mine');
+    const res = await post(app, `/api/v1/templates/${template.id}/publish`, {}, OTHER);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /api/v1/templates/:id/discard', () => {
+  it('puts the published copy back into the draft and clears the flag', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Welcome', content: '{"v":2}' }, OWNER);
+
+    const res = await post(app, `/api/v1/templates/${template.id}/discard`, {}, OWNER);
+    expect(res.status).toBe(200);
+    const { template: row } = await res.json();
+    expect(row.content).toBe('{"type":"doc"}');
+    expect(row.has_unpublished_changes).toBe(false);
+  });
+
+  it('400s when the template was never published', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    await db.update(mails).set({ published_at: null, published_content: null }).where(eq(mails.id, template.id));
+
+    const res = await post(app, `/api/v1/templates/${template.id}/discard`, {}, OWNER);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('a legacy row from before publishing existed', () => {
+  it('is published as it stood, so the API keeps serving it', async () => {
+    // A row the way the old code wrote it: a single copy, nothing published.
+    const id = crypto.randomUUID();
+    await db.insert(mails).values({ id, user_id: OWNER, title: 'Old', content: '{"old":true}', short_code: 'tpl_legacy00', updated_at: '2024-01-01 00:00:00' });
+
+    // The same statement initTables runs at startup.
+    await db.run(sql`UPDATE mails SET published_content = content, published_theme = theme, published_preview_text = preview_text, published_at = updated_at WHERE published_at IS NULL`);
+
+    const [row] = await db.select().from(mails).where(eq(mails.id, id));
+    expect(row.published_content).toBe('{"old":true}');
+    expect(row.published_at).toBe('2024-01-01 00:00:00');
+    const { template } = await (await get(app, `/api/v1/templates/${id}`, OWNER)).json();
+    expect(template.has_unpublished_changes).toBe(false);
+  });
+});
+
+describe('version history', () => {
+  /** Publish twice so there is a version to go back to. */
+  async function publishedTwice(first: string, second: string, theme?: string) {
+    await givePlan(db, OWNER, 'pro');
+    const template = await createTemplate(OWNER, first);
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
+    await post(app, `/api/v1/templates/${template.id}`, { title: second, content: '{"v":2}', theme }, OWNER);
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
+    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+    return { template, versions };
+  }
+
+  it('restores an earlier version into the draft without snapshotting or publishing', async () => {
+    const { template, versions } = await publishedTwice('Version one', 'Version two');
+    expect(versions).toHaveLength(2);
+    const older = versions.find((v: { title: string }) => v.title === 'Version one');
+
+    await post(app, `/api/v1/templates/${template.id}/versions/${older.id}/restore`, {}, OWNER);
 
     const { template: restored } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
     expect(restored.title).toBe('Version one');
+    expect(restored.published_content).toBe('{"v":2}');
+    expect(restored.has_unpublished_changes).toBe(true);
 
     const all = await db.select().from(templateVersions).where(eq(templateVersions.template_id, template.id));
     expect(all).toHaveLength(2);
   });
 
   it('snapshots the theme and restores it with the content', async () => {
-    await givePlan(db, OWNER, 'pro');
     const blue = '{"container":{"backgroundColor":"#0000ff"}}';
     const red = '{"container":{"backgroundColor":"#ff0000"}}';
+    await givePlan(db, OWNER, 'pro');
     const template = await createTemplate(OWNER, 'Branded v1');
-    await db.update(mails).set({ theme: blue }).where(eq(mails.id, template.id));
-
-    // Saving snapshots the blue version, then turns the template red.
+    await post(app, `/api/v1/templates/${template.id}`, { title: 'Branded v1', content: '{}', theme: blue }, OWNER);
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
     await post(app, `/api/v1/templates/${template.id}`, { title: 'Branded v2', content: '{}', theme: red }, OWNER);
+    await post(app, `/api/v1/templates/${template.id}/publish`, {}, OWNER);
     const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+    const blueVersion = versions.find((v: { title: string }) => v.title === 'Branded v1');
 
-    await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OWNER);
+    await post(app, `/api/v1/templates/${template.id}/versions/${blueVersion.id}/restore`, {}, OWNER);
     const { template: restored } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
     expect(restored.theme).toBe(blue);
   });
 
   it('a pre-theme snapshot leaves the current theme alone on restore', async () => {
-    await givePlan(db, OWNER, 'pro');
     const red = '{"container":{"backgroundColor":"#ff0000"}}';
-    const template = await createTemplate(OWNER, 'Legacy v1');
-    await post(app, `/api/v1/templates/${template.id}`, { title: 'Legacy v2', content: '{}', theme: red }, OWNER);
-    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+    const { template, versions } = await publishedTwice('Legacy v1', 'Legacy v2', red);
+    const older = versions.find((v: { title: string }) => v.title === 'Legacy v1');
 
     // Erase the snapshot's theme, as any version from before the column did.
-    await db.update(templateVersions).set({ theme: null }).where(eq(templateVersions.id, versions[0].id));
+    await db.update(templateVersions).set({ theme: null }).where(eq(templateVersions.id, older.id));
 
-    await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OWNER);
+    await post(app, `/api/v1/templates/${template.id}/versions/${older.id}/restore`, {}, OWNER);
     const { template: restored } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
     expect(restored.title).toBe('Legacy v1');
     expect(restored.theme).toBe(red);
   });
 
   it('404s when restoring a version owned by another user', async () => {
-    await givePlan(db, OWNER, 'pro');
-    const template = await createTemplate(OWNER, 'Version one');
-    await post(app, `/api/v1/templates/${template.id}`, { title: 'Version two', content: '{}' }, OWNER);
-    const { versions } = await (await get(app, `/api/v1/templates/${template.id}/versions`, OWNER)).json();
+    const { template, versions } = await publishedTwice('Version one', 'Version two');
 
     const res = await post(app, `/api/v1/templates/${template.id}/versions/${versions[0].id}/restore`, {}, OTHER);
     expect(res.status).toBe(404);

@@ -38,6 +38,8 @@ export default async function TemplatesPage() {
       preview_text: template.preview_text ?? null,
       short_code: template.short_code ?? null,
       updated_at: template.updated_at ?? null,
+      published_at: template.published_at ?? null,
+      has_unpublished_changes: template.has_unpublished_changes ?? false,
     }),
   );
 

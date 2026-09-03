@@ -1,6 +1,8 @@
 'use client';
 
-import { HistoryIcon, Loader2Icon, RotateCcwIcon } from 'lucide-react';
+import { HistoryIcon, Loader2Icon, RotateCcwIcon, Undo2Icon } from 'lucide-react';
+import type { Mail } from '~/db/schema';
+import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { List, Row } from '~/components/ui/item';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,9 +33,17 @@ type VersionDetail = Version & {
 
 type VersionHistoryDialogProps = {
   templateId?: string;
+  /** True while the draft differs from the published copy. */
+  hasUnpublishedChanges?: boolean;
+  /** The draft was replaced by the published copy; the editor should show it. */
+  onDiscarded?: (template: Mail) => void;
 };
 
-export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) {
+export function VersionHistoryDialog({
+  templateId,
+  hasUnpublishedChanges = false,
+  onDiscarded,
+}: VersionHistoryDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -55,6 +65,17 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
       router.refresh();
     },
     onError: (error) => toast.error(error.message || 'Failed to restore version'),
+  });
+
+  const { mutateAsync: discardDraft, isPending: isDiscarding } = useMutation({
+    mutationFn: () => httpPost<{ template: Mail }>(`/api/v1/templates/${templateId}/discard`, {}),
+    onSuccess: (data) => {
+      toast.success('Draft discarded');
+      setOpen(false);
+      onDiscarded?.(data.template);
+      router.refresh();
+    },
+    onError: (error) => toast.error(error.message || 'Could not discard the draft'),
   });
 
   const { mutateAsync: fetchVersionDetail } = useMutation({
@@ -84,11 +105,33 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
       </DialogTrigger>
       <DialogContent className="w-full min-w-0 max-w-lg overflow-hidden p-4">
         <DialogHeader>
-          <DialogTitle>Version History</DialogTitle>
+          <DialogTitle>Version history</DialogTitle>
           <DialogDescription>
-            View and restore previous versions. Only the last 10 versions are kept.
+            Every publish is a version; restoring one puts it in your draft. Only the last 10 are kept.
           </DialogDescription>
         </DialogHeader>
+
+        {/* The draft is the one "version" that is not in the list, so the way
+            back from it lives here too: drop it and stand on the published
+            copy. Hidden when there is nothing to drop. */}
+        {hasUnpublishedChanges && !previewVersion ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warn-wash bg-warn-wash/50 px-3 py-2">
+            <p className="text-sm text-ink">
+              Your draft has changes that are not published.
+            </p>
+            <ConfirmDialog
+              title="Discard the draft?"
+              description="Everything since the last publish goes, and the editor shows the published version."
+              confirmLabel="Discard"
+              onConfirm={() => discardDraft()}
+            >
+              <Button variant="danger-quiet" size="sm" disabled={isDiscarding}>
+                {isDiscarding ? <Loader2Icon className="animate-spin" /> : <Undo2Icon />}
+                Discard changes
+              </Button>
+            </ConfirmDialog>
+          </div>
+        ) : null}
 
         {previewVersion ? (
           <div className="space-y-3">
@@ -125,7 +168,7 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
           </div>
         ) : versions.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted">
-            No versions saved yet. Each save creates a new version.
+            No versions yet. Each publish creates one.
           </div>
         ) : (
           <List>

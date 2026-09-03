@@ -7,7 +7,7 @@ import { TemplateThumbnail } from '~/components/dashboard/template-thumbnail';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Tile } from '~/components/ui/item';
-import { EmptyState } from '~/components/ui/surfaces';
+import { Badge, EmptyState } from '~/components/ui/surfaces';
 import { filterTemplates, type TemplateListItem } from '~/lib/template-search';
 
 type TemplateListProps = {
@@ -77,13 +77,15 @@ export function TemplateList({ templates, canDuplicate }: TemplateListProps) {
               title={template.title}
               subtitle={template.preview_text || 'No preview text'}
               meta={
-                template.updated_at
-                  ? new Date(template.updated_at).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })
-                  : null
+                template.has_unpublished_changes ? (
+                  <Badge tone="warn">Draft</Badge>
+                ) : template.published_at ? (
+                  `Published ${new Date(template.published_at).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}`
+                ) : null
               }
               actions={<TemplateActions templateId={template.id} canDuplicate={canDuplicate} />}
             />

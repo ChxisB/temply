@@ -247,7 +247,8 @@ export default function ApiKeysPage() {
         <Card>
           <h2 className="text-sm font-semibold text-ink">Using a key</h2>
           <p className="mt-1 text-sm text-muted">
-            Send it as a bearer token when you call the public API.
+            Send it as a bearer token when you call the public API. The API renders the
+            published version of a template — edits wait in the draft until you publish.
           </p>
           <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
             <code>{`# The template's details

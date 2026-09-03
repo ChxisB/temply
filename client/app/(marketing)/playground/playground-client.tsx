@@ -13,7 +13,7 @@ export default function PlaygroundClient() {
             Craft and preview your email templates
           </p>
         </div>
-        <EmailEditorSandbox showSaveButton={false} imageUploads={false} autofocus={false} />
+        <EmailEditorSandbox imageUploads={false} autofocus={false} />
       </div>
     </main>
   );

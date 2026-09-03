@@ -9,6 +9,9 @@ export type TemplateListItem = {
   preview_text: string | null;
   short_code: string | null;
   updated_at: string | null;
+  published_at: string | null;
+  /** The draft differs from the published copy. */
+  has_unpublished_changes: boolean;
 };
 
 /**

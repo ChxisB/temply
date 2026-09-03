@@ -135,7 +135,8 @@ export function Introduction() {
         The <strong className="font-medium text-ink">API</strong> is how the
         finished email reaches your app. You request a template by id with an
         API key, send the data you want dropped into it, and get back rendered
-        HTML ready to hand to your mail provider.
+        HTML ready to hand to your mail provider. The API serves what you last
+        published — edits stay in your draft until you press Publish.
       </P>
     </section>
   );
@@ -453,7 +454,8 @@ export function CreatingATemplate() {
         Or let your app fetch it. Every template has an id shown at the top of
         the editor, in the form <Code>tpl_XXXXXXXX</Code>. Create a key under
         Settings → API keys, then post to the render endpoint with the data for
-        this particular send:
+        this particular send. You get the published version: keep editing and
+        nothing changes for your app until you publish again.
       </P>
       {/* The snippet is the one shipped in the editor's own help popover, so
           the docs and the product cannot drift apart. overflow-x-auto keeps a

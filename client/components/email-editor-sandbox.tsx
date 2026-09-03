@@ -10,8 +10,8 @@ import {
   Loader2Icon,
   MailIcon,
   MoonIcon,
+  GlobeIcon,
   RotateCcwIcon,
-  SaveIcon,
   SendIcon,
   SlidersHorizontalIcon,
 } from 'lucide-react';
@@ -19,6 +19,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { errorMessage, httpDelete, httpPost } from '~/lib/http';
+import { createAutosave, type AutosaveStatus } from '~/lib/autosave';
+import { hasUnpublishedChanges } from '@temply/shared/publish';
 import { cn } from '~/lib/classname';
 import {
   clearDraft,
@@ -31,6 +33,7 @@ import {
 import { createEditorUploader, EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import type { Mail } from '~/db/schema';
 import { Button } from './ui/button';
+import { Badge } from './ui/surfaces';
 import { AssetPickerDialog } from './assets/asset-picker-dialog';
 import { DeleteEmailDialog } from './delete-email-dialog';
 import { EmailEditor } from './email-editor';
@@ -68,6 +71,39 @@ const labelClass = 'block text-sm font-medium text-ink';
 
 /** "12 minutes ago" tells you whether the draft is worth having; a timestamp
  *  would make you do the subtraction. */
+/**
+ * The autosave's one word. Idle and dirty say nothing — the pause is short
+ * and a flicker of "unsaved" on every keystroke is noise; the word appears
+ * once a save is under way and stays as "Saved". A failure is the only state
+ * that asks for anything, and it asks with a button.
+ */
+function SaveStatus({ status, onRetry }: { status: AutosaveStatus; onRetry: () => void }) {
+  const visible = status === 'saving' || status === 'saved' || status === 'error';
+  return (
+    <span
+      aria-live="polite"
+      className={cn(
+        'flex items-center gap-1 text-xs transition-opacity duration-base ease-out motion-reduce:transition-none',
+        visible ? 'opacity-100' : 'opacity-0',
+        status === 'error' ? 'text-danger-ink' : 'text-muted',
+      )}
+    >
+      {status === 'error' ? (
+        <>
+          Not saved
+          <Button variant="link" size="sm" className="h-auto px-1 text-xs" onClick={onRetry}>
+            Retry
+          </Button>
+        </>
+      ) : status === 'saving' ? (
+        'Saving…'
+      ) : (
+        'Saved'
+      )}
+    </span>
+  );
+}
+
 function formatDraftAge(savedAt: number): string {
   const minutes = Math.round((Date.now() - savedAt) / 60_000);
   if (minutes < 1) return 'a moment ago';
@@ -110,27 +146,26 @@ function CopyHtmlButton({ html }: { html: string }) {
   );
 }
 
-type UpdateTemplateData = {
-  title: string;
-  previewText: string;
-  content: string;
-  theme: string;
-};
-
 type SaveTemplateResponse = {
   template: Mail;
 };
 
+/** What the draft autosave posts, with the fingerprint it was taken from so
+ *  a settled save can become the new baseline. */
+type DraftSnapshot = {
+  body: { title: string; previewText: string; content: string; theme: string };
+  fingerprint: string;
+};
+
 type EmailEditorSandboxProps = {
   template?: Mail;
-  showSaveButton?: boolean;
   /** False on the signed-out playground: no upload, no library, URL only. */
   imageUploads?: boolean;
   autofocus?: FocusPosition;
 };
 
 export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
-  const { template, showSaveButton = true, imageUploads = true, autofocus } = props;
+  const { template, imageUploads = true, autofocus } = props;
 
   const router = useRouter();
 
@@ -152,33 +187,69 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     return structuredClone(DEFAULT_RENDERER_THEME);
   });
 
-  const { mutateAsync: updateTemplate, isPending: isUpdateTemplatePending } =
-    useMutation({
-      mutationFn: (data: UpdateTemplateData) => {
-        return httpPost(`/api/v1/templates/${template?.id}`, data) as Promise<SaveTemplateResponse>;
-      },
-      onSuccess: () => {
-        toast.success('Template saved successfully.');
-        router.refresh();
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Failed to save template.');
-      },
-    });
+  // --- Draft and published copy ---------------------------------------------
+  // A saved template has two copies on the server: the draft this editor
+  // works on, autosaved as it changes, and the copy the API renders, which
+  // only Publish touches. The playground has neither and keeps its work in
+  // localStorage further down.
+  const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle');
+  const [publishedAt, setPublishedAt] = useState<string | null>(template?.published_at ?? null);
+  const [unpublished, setUnpublished] = useState<boolean>(() =>
+    template ? hasUnpublishedChanges(template) : false,
+  );
+  /** The newest snapshot handed to the autosave — what a closing tab beacons. */
+  const latestSnapshot = useRef<DraftSnapshot | null>(null);
+  // The publish time is shown in the reader's locale and zone, which the
+  // server cannot know; rendering it only after mount keeps hydration clean.
+  const [publishedLabel, setPublishedLabel] = useState<string | null>(null);
+  useEffect(() => {
+    setPublishedLabel(
+      publishedAt
+        ? `Published ${new Date(publishedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`
+        : 'Not published yet',
+    );
+  }, [publishedAt]);
+  /** The state as last saved. Null until the editor exists to be read. */
+  const savedFingerprint = useRef<string | null>(null);
 
-  const { mutateAsync: createTemplate, isPending: isCreateTemplatePending } =
-    useMutation({
-      mutationFn: (data: UpdateTemplateData) => {
-        return httpPost('/api/v1/templates', data) as Promise<SaveTemplateResponse>;
+  const autosave = useMemo(() => {
+    if (!template?.id) return null;
+    const id = template.id;
+    return createAutosave<DraftSnapshot>({
+      delayMs: 500,
+      save: async (snapshot) => {
+        await httpPost(`/api/v1/templates/${id}`, snapshot.body);
+        // The row now holds this snapshot, so it is the baseline the next
+        // edit is measured against — and reverting to it needs no save.
+        savedFingerprint.current = snapshot.fingerprint;
       },
-      onSuccess: (data: SaveTemplateResponse) => {
-        toast.success('Template created successfully.');
-        router.push(`/templates/${data.template.id}`);
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Failed to create template.');
-      },
+      onStatus: setSaveStatus,
     });
+  }, [template?.id]);
+
+  // Leaving the page (a Link, a route change) flushes whatever is waiting;
+  // the request outlives the component.
+  useEffect(() => {
+    if (!autosave) return;
+    return () => {
+      autosave.dispose();
+      void autosave.flush();
+    };
+  }, [autosave]);
+
+  const { mutateAsync: publishTemplate, isPending: isPublishing } = useMutation({
+    mutationFn: () =>
+      httpPost(`/api/v1/templates/${template?.id}/publish`, {}) as Promise<SaveTemplateResponse>,
+    onSuccess: (data) => {
+      toast.success('Published');
+      setPublishedAt(data.template.published_at ?? null);
+      setUnpublished(false);
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Could not publish.');
+    },
+  });
 
   const { mutateAsync: deleteTemplate, isPending: isDeletePending } =
     useMutation({
@@ -365,11 +436,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // Two-step send: armedFor holds the serialized error set the first click
   // acknowledged. The second click only goes through while the errors still
   // match, so a confirmation never carries over to a different mistake.
+  // Publish arms separately — acknowledging a finding for a test send says
+  // nothing about being ready to put it live.
   const [armedFor, setArmedFor] = useState<string | null>(null);
+  const [publishArmedFor, setPublishArmedFor] = useState<string | null>(null);
   const preflightSerialized = useRef('');
 
   const hasPreflightErrors = preflight.issues.some((issue) => issue.severity === 'error');
   const sendArmed = armedFor !== null && hasPreflightErrors;
+  const publishArmed = publishArmedFor !== null && hasPreflightErrors;
 
   const errorKey = (issues: PreflightIssue[]) =>
     JSON.stringify(issues.filter((issue) => issue.severity === 'error'));
@@ -428,6 +503,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     setArmedFor((current) =>
       current !== null && current !== errorKey(next.issues) ? null : current,
     );
+    setPublishArmedFor((current) =>
+      current !== null && current !== errorKey(next.issues) ? null : current,
+    );
   };
 
   /** The as-sent render the size check measures. Fires a render only when the
@@ -477,8 +555,10 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // that row, so autosaving into it would ship a half-finished email to
   // whoever asked for one next.
   // The playground has no row, so its work is keyed under a fixed id instead
-  // of being unprotected.
-  const draftId = template?.id ?? PLAYGROUND_DRAFT_ID;
+  // of being unprotected. A saved template never touches localStorage: its
+  // draft lives on the server, so it follows the author to the next machine.
+  const usesLocalDraft = !template?.id;
+  const draftId = PLAYGROUND_DRAFT_ID;
   const [draftFound, setDraftFound] = useState<Draft | null>(null);
   const hasUnsavedWork = useRef(false);
   /**
@@ -490,8 +570,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
    */
   const offerPending = useRef(false);
   const lastWritten = useRef('');
-  /** The state as last saved. Null until the editor exists to be read. */
-  const savedFingerprint = useRef<string | null>(null);
+  /** Bumped when the screen is reset to the row (a discard), so the baseline
+   *  is re-read once the new state has rendered. */
+  const [baselineKey, setBaselineKey] = useState(0);
 
   /**
    * Only what Save persists counts as work worth warning about. From name and
@@ -502,16 +583,18 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const persistedFingerprint = () =>
     JSON.stringify([subject, previewText, editor?.getJSON() ?? null, theme]);
 
-  // The baseline: whatever the row held when this editor opened.
+  // The baseline: whatever the row held when this editor opened, or was put
+  // back to.
   useEffect(() => {
     if (!editor) return;
     savedFingerprint.current = persistedFingerprint();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, draftId]);
+  }, [editor, draftId, baselineKey]);
 
   // Offer a draft that holds work the saved row does not; clear one that was
   // already published, so it cannot resurface months later.
   useEffect(() => {
+    if (!usesLocalDraft) return;
     const draft = readDraft(draftId);
     if (!draft) return;
     // With no row to compare against, any draft counts as newer.
@@ -522,7 +605,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       clearDraft(draftId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId]);
+  }, [draftId, usesLocalDraft]);
 
   const restoreDraft = () => {
     if (!draftFound) return;
@@ -551,37 +634,57 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     return defaultEmailJSON;
   });
 
-  const handleSave = async () => {
-    const content = JSON.stringify(editor?.getJSON());
-    const serialisedTheme = JSON.stringify(theme);
-    if (template?.id) {
-      await updateTemplate({ title: subject, previewText, content, theme: serialisedTheme });
-    } else {
-      await createTemplate({ title: subject, previewText, content, theme: serialisedTheme });
+  /** The published copy is on screen again: reset state, then re-baseline. */
+  const handleDiscarded = (row: Mail) => {
+    setPreviewText(row.preview_text ?? '');
+    try {
+      setTheme(row.theme ? (JSON.parse(row.theme) as RendererThemeOptions) : structuredClone(DEFAULT_RENDERER_THEME));
+    } catch {
+      setTheme(structuredClone(DEFAULT_RENDERER_THEME));
     }
-    // A row is now the newest copy of this work, so the draft has nothing
-    // left to protect. On the create branch this must happen before the
-    // redirect, or the playground draft would greet the next visitor with
-    // work that is already saved.
-    clearDraft(draftId);
-    setDraftFound(null);
-    offerPending.current = false;
-    hasUnsavedWork.current = false;
+    try {
+      editor?.commands.setContent(JSON.parse(row.content) as JSONContent);
+    } catch {
+      // A corrupt published copy is the server's problem to report; the
+      // screen keeps what it has.
+    }
+    setUnpublished(false);
+    setPublishedAt(row.published_at ?? null);
     lastWritten.current = '';
-    // The row now holds what is on screen, so that becomes the baseline the
-    // next edit is measured against.
-    savedFingerprint.current = persistedFingerprint();
+    setBaselineKey((k) => k + 1);
   };
 
-  // Autosave: debounced, local only, and silent. It writes when something
-  // actually changed, so an idle tab does nothing, and it never snapshots a
-  // version — the cap is ten, and autosaves would flush every real save point
-  // out of history within minutes.
+  // Autosave: debounced and silent. It fires when something actually
+  // changed, so an idle tab does nothing. A template's draft goes to the
+  // server; the playground's goes to localStorage. Neither snapshots a
+  // version — that is what Publish is for.
   useEffect(() => {
     if (!editor) return;
 
     const capture = () => {
       const fingerprint = persistedFingerprint();
+
+      if (!usesLocalDraft && autosave) {
+        if (fingerprint === savedFingerprint.current) {
+          lastWritten.current = '';
+          return;
+        }
+        if (fingerprint === lastWritten.current) return;
+        lastWritten.current = fingerprint;
+        const snapshot: DraftSnapshot = {
+          body: {
+            title: subject,
+            previewText,
+            content: JSON.stringify(editor.getJSON()),
+            theme: JSON.stringify(theme),
+          },
+          fingerprint,
+        };
+        latestSnapshot.current = snapshot;
+        autosave.change(snapshot);
+        setUnpublished(true);
+        return;
+      }
 
       // While the offer stands, writing would overwrite the very draft on
       // offer and clearing would destroy it — but the pause must not blind
@@ -634,20 +737,59 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       editor.off('update', schedule);
       clearTimeout(timer);
     };
-  }, [subject, previewText, fromName, replyTo, theme, editor, draftId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject, previewText, fromName, replyTo, theme, editor, draftId, usesLocalDraft, autosave]);
 
-  // Closing the tab is the one exit the draft cannot cover on its own, since
-  // there is no return trip. In-app navigation needs no guard: the draft
-  // survives it and the banner offers it back.
+  // Closing the tab is the one exit the autosave cannot await. A template's
+  // pending draft is beaconed — the browser sends it after the page is gone
+  // — and the leave is only questioned when the last save failed, since
+  // then nothing is holding the work. The playground's localStorage draft
+  // survives on its own; its warning covers the work not yet written.
+  const saveStatusRef = useRef(saveStatus);
+  saveStatusRef.current = saveStatus;
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
-      if (!hasUnsavedWork.current) return;
+      if (autosave && template?.id) {
+        const snapshot = latestSnapshot.current;
+        if (autosave.pending() && snapshot) {
+          navigator.sendBeacon(
+            `/api/v1/templates/${template.id}`,
+            new Blob([JSON.stringify(snapshot.body)], { type: 'application/json' }),
+          );
+        }
+        if (saveStatusRef.current !== 'error') return;
+      } else if (!hasUnsavedWork.current) {
+        return;
+      }
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, []);
+  }, [autosave, template?.id]);
+
+  const handlePublish = async () => {
+    if (!autosave) return;
+    // The gate reads the document directly, not the debounced findings — a
+    // URL cleared half a second before the click must still count.
+    const current = computePreflight();
+    publishPreflight(current);
+    const errors = errorKey(current.issues);
+    if (errors !== '[]' && publishArmedFor !== errors) {
+      setPublishArmedFor(errors);
+      setPreflightExpanded(true);
+      ensureSizeMeasured();
+      return;
+    }
+    // What is on screen is what gets published, so the draft goes first.
+    await autosave.flush();
+    if (autosave.pending()) {
+      toast.error('The draft could not be saved, so it was not published.');
+      return;
+    }
+    await publishTemplate();
+    setPublishArmedFor(null);
+  };
 
   const handleSend = async () => {
     if (!to) {
@@ -690,7 +832,6 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     }
   };
 
-  const saveBtnPending = isUpdateTemplatePending || isCreateTemplatePending;
   const [shortCodeCopied, setShortCodeCopied] = useState(false);
 
   // The editor canvas only consumes --mly-* variables for buttons and links;
@@ -770,27 +911,29 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         </div>
       )}
 
-      {/* Toolbar — every control in it needs a save button or a saved
-          template, so on the anonymous playground it would render as an
-          empty box. */}
-      {(showSaveButton || template?.id) && (
+      {/* Toolbar — every control in it acts on a saved template, so on the
+          anonymous playground it would render as an empty box. */}
+      {template?.id && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
         <div className="flex flex-wrap items-center gap-2">
-          {showSaveButton && (
-            <Button variant="primary" disabled={saveBtnPending} onClick={handleSave}>
-              {saveBtnPending ? (
-                <Loader2Icon className="animate-spin" />
-              ) : (
-                <SaveIcon />
-              )}
-              {template?.id ? 'Save' : 'Save New'}
-            </Button>
-          )}
+          <Button
+            variant="primary"
+            disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
+            onClick={handlePublish}
+            title={publishedLabel ?? undefined}
+          >
+            {isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
+            {publishArmed ? 'Publish anyway' : 'Publish'}
+          </Button>
+          {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
+          <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
 
           {/* Preview lives in the Content header now, beside what it shows. */}
-          {/* History and Delete act on a saved template; on the anonymous
-              playground they would only ever render disabled. */}
-          {template?.id && <VersionHistoryDialog templateId={template.id} />}
+          <VersionHistoryDialog
+            templateId={template.id}
+            hasUnpublishedChanges={unpublished}
+            onDiscarded={handleDiscarded}
+          />
         </div>
 
         <div className="flex items-center gap-2">
@@ -802,16 +945,14 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           {/* Internal-debug delivery — only for a saved template. The
               anonymous playground must not advertise a send capability the
               product does not offer. */}
-          {template?.id && (
-            <Button onClick={handleSend}>
-              <SendIcon />
-              {/* "Send anyway" must be readable to mean anything, so the
-                  armed label stays visible even where "Send" would hide. */}
-              <span className={sendArmed ? undefined : 'hidden sm:inline'}>
-                {sendArmed ? 'Send anyway' : 'Send'}
-              </span>
-            </Button>
-          )}
+          <Button onClick={handleSend}>
+            <SendIcon />
+            {/* "Send anyway" must be readable to mean anything, so the
+                armed label stays visible even where "Send" would hide. */}
+            <span className={sendArmed ? undefined : 'hidden sm:inline'}>
+              {sendArmed ? 'Send anyway' : 'Send'}
+            </span>
+          </Button>
         </div>
       </div>
       )}

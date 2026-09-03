@@ -63,6 +63,20 @@ export function initTables(sqlite: Database) {
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
   addColumnIfMissing(sqlite, 'template_versions', 'theme', 'TEXT');
 
+  // Draft / published split. Rows from before it exist only as a single copy
+  // the API was already serving, so that copy becomes the published one and
+  // nothing an integrator fetches changes. Create and duplicate publish in
+  // the same request, so a row with no published_at at startup can only be
+  // one of those legacy rows — the backfill is safe to run every boot.
+  addColumnIfMissing(sqlite, 'mails', 'published_content', 'TEXT');
+  addColumnIfMissing(sqlite, 'mails', 'published_theme', 'TEXT');
+  addColumnIfMissing(sqlite, 'mails', 'published_preview_text', 'TEXT');
+  addColumnIfMissing(sqlite, 'mails', 'published_at', 'TEXT');
+  sqlite.run(`UPDATE mails SET
+    published_content = content, published_theme = theme,
+    published_preview_text = preview_text, published_at = updated_at
+    WHERE published_at IS NULL`);
+
   // One-time migration: the top plan was renamed from `scale` to `enterprise`.
   sqlite.run(`UPDATE subscriptions SET plan = 'enterprise' WHERE plan = 'scale'`);
 

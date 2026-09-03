@@ -5,7 +5,7 @@ import { FileTextIcon } from 'lucide-react';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
 import { Button } from '~/components/ui/button';
 import { List, Row } from '~/components/ui/item';
-import { EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
+import { Badge, EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
 import type { TemplateListItem } from '~/lib/template-search';
 
@@ -95,9 +95,11 @@ export default async function DashboardPage() {
                 title={template.title}
                 subtitle={template.preview_text || 'No preview text'}
                 meta={
-                  template.updated_at ? (
+                  template.has_unpublished_changes ? (
+                    <Badge tone="warn">Draft</Badge>
+                  ) : template.published_at ? (
                     <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
-                      {new Date(template.updated_at).toLocaleDateString(undefined, {
+                      {new Date(template.published_at).toLocaleDateString(undefined, {
                         day: 'numeric',
                         month: 'short',
                       })}

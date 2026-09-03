@@ -12,7 +12,8 @@
     "./brand-knobs": "./brand-knobs.ts",
     "./template-data": "./template-data.ts",
     "./preflight": "./preflight.ts",
-    "./bytes": "./bytes.ts"
+    "./bytes": "./bytes.ts",
+    "./publish": "./publish.ts"
   },
   "dependencies": {
     "@tiptap/core": "^2.11.5",
