@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, isNull } from 'drizzle-orm';
 import { subscriptions, mails, apiKeysTable, brands, assets } from '@temply/shared/schema';
 import type { Db } from '../plugins/db';
 import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
@@ -31,11 +31,12 @@ export async function getUsage(db: Db, userId: string) {
     .from(mails)
     .where(eq(mails.user_id, userId));
 
-  // Test keys sit outside the plan, so only live ones count toward its cap.
+  // The cap is on keys that work. A revoked key stays as a row so its history
+  // reads, but it holds no slot; test keys sit outside the plan entirely.
   const [apiKeyCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(apiKeysTable)
-    .where(and(eq(apiKeysTable.user_id, userId), eq(apiKeysTable.mode, 'live')));
+    .where(and(eq(apiKeysTable.user_id, userId), eq(apiKeysTable.mode, 'live'), isNull(apiKeysTable.revoked_at)));
 
   return { templates: templateCount?.count ?? 0, apiKeys: apiKeyCount?.count ?? 0 };
 }

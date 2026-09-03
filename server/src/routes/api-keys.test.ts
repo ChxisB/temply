@@ -52,6 +52,15 @@ describe('POST /api/v1/api-keys', () => {
     expect(JSON.stringify(stored)).not.toContain(body.key.full_key);
   });
 
+  it('a revoked key gives its slot back', async () => {
+    const { body } = await createKey(OWNER);
+    expect((await createKey(OWNER, 'Second')).status).toBe(402);
+
+    await del(app, `/api/v1/api-keys/${body.key.id}`, OWNER);
+
+    expect((await createKey(OWNER, 'Second')).status).toBe(200);
+  });
+
   it('mints a test key on the free plan, outside the live-key cap', async () => {
     const res = await post(app, '/api/v1/api-keys', { name: 'Staging', mode: 'test' }, OWNER);
     expect(res.status).toBe(200);
