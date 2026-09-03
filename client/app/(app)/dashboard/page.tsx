@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FileTextIcon } from 'lucide-react';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
+import { List, Row } from '~/components/ui/item';
 import { EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
 import type { TemplateListItem } from '~/lib/template-search';
@@ -44,14 +45,14 @@ export default async function DashboardPage() {
           <StatTile
             label="Templates"
             value={templatesFailed ? '—' : templates.length}
-            className="transition-colors hover:border-line-strong"
+            interactive
           />
         </Link>
         <Link href="/dashboard/settings/api-keys">
           <StatTile
             label="API keys"
             value={billing?.usage?.apiKeys ?? '—'}
-            className="transition-colors hover:border-line-strong"
+            interactive
           />
         </Link>
         <Link href="/dashboard/settings/plan">
@@ -59,7 +60,8 @@ export default async function DashboardPage() {
             label="Plan"
             value={<span className="capitalize">{billing?.plan ?? '—'}</span>}
             hint={billing ? undefined : 'Usage could not be loaded'}
-            className="h-full transition-colors hover:border-line-strong"
+            className="h-full"
+            interactive
           />
         </Link>
       </div>
@@ -87,33 +89,26 @@ export default async function DashboardPage() {
             action={<NewTemplateButton />}
           />
         ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-raised">
+          <List>
             {recentTemplates.map((template) => (
-              <li key={template.id}>
-                <Link
-                  href={`/templates/${template.id}`}
-                  className="group flex items-center gap-3 px-3.5 py-2.5 transition-colors hover:bg-hover"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-ink group-hover:text-accent-ink">
-                      {template.title}
-                    </span>
-                    <span className="mt-0.5 block truncate text-xs text-muted">
-                      {template.preview_text || 'No preview text'}
-                    </span>
-                  </span>
-                  {template.updated_at ? (
+              <Row
+                key={template.id}
+                href={`/templates/${template.id}`}
+                title={template.title}
+                subtitle={template.preview_text || 'No preview text'}
+                meta={
+                  template.updated_at ? (
                     <span className="hidden shrink-0 text-xs text-muted tabular-nums sm:block">
                       {new Date(template.updated_at).toLocaleDateString(undefined, {
                         day: 'numeric',
                         month: 'short',
                       })}
                     </span>
-                  ) : null}
-                </Link>
-              </li>
+                  ) : null
+                }
+              />
             ))}
-          </ul>
+          </List>
         )}
       </section>
     </div>

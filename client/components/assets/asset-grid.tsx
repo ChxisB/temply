@@ -2,6 +2,8 @@
 
 import { CopyIcon, Loader2Icon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '~/components/ui/button';
+import { List, Row, Tile } from '~/components/ui/item';
 import { cn } from '~/lib/classname';
 import { EMAIL_TRANSFORM, THUMB_TRANSFORM, withTransform, type Asset } from '~/lib/assets';
 import { formatBytes } from '@temply/shared/bytes';
@@ -51,6 +53,32 @@ export async function copyAssetUrl(asset: Asset) {
   }
 }
 
+/** Copy and delete, the same pair on a card's footer and a row's edge. */
+function ManageActions({ asset, onDelete }: { asset: Asset; onDelete: (asset: Asset) => void }) {
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={`Copy URL of ${asset.name}`}
+        title="Copy URL"
+        onClick={() => void copyAssetUrl(asset)}
+      >
+        <CopyIcon />
+      </Button>
+      <Button
+        variant="danger-quiet"
+        size="icon-sm"
+        aria-label={`Delete ${asset.name}`}
+        title="Delete"
+        onClick={() => onDelete(asset)}
+      >
+        <Trash2Icon />
+      </Button>
+    </>
+  );
+}
+
 /** One grid for the library page and the editor picker. In `pick` mode every
  *  card is a button; in `manage` mode the card carries copy and delete. */
 export function AssetGrid(props: Props) {
@@ -66,91 +94,52 @@ export function AssetGrid(props: Props) {
       )}
     >
       {pending.map((file) => (
-        <li
+        <Tile
           key={file.id}
-          aria-busy="true"
-          className="fade-in-mount rounded-lg border border-dashed border-line-strong bg-raised motion-reduce:transition-none"
-        >
-          <div className="flex aspect-[4/3] items-center justify-center rounded-t-lg bg-sunken">
-            <Loader2Icon className="size-5 animate-spin text-faint" />
-          </div>
-          <div className="min-w-0 px-2.5 py-2">
-            <p className="truncate text-sm text-ink" title={file.name}>{file.name}</p>
-            <p className="text-2xs text-muted tabular-nums">Uploading · {formatBytes(file.bytes)}</p>
-          </div>
-        </li>
+          busy
+          media={
+            <div className="flex aspect-[4/3] items-center justify-center bg-sunken">
+              <Loader2Icon className="size-5 animate-spin text-faint" />
+            </div>
+          }
+          title={file.name}
+          subtitle={`Uploading · ${formatBytes(file.bytes)}`}
+        />
       ))}
       {assets.map((asset) => {
-        const thumb = (
+        const slots = {
           // Odd shapes sit inside a fixed well instead of reflowing the row.
-          <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-t-lg bg-sunken">
-            <img
-              src={withTransform(asset.url, THUMB_TRANSFORM)}
-              alt={asset.name}
-              loading="lazy"
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
-        );
-        const caption = (
-          <div className="min-w-0 px-2.5 py-2">
-            <p className="truncate text-sm text-ink" title={asset.name}>{asset.name}</p>
-            <p className="truncate text-2xs text-muted tabular-nums">{assetMeta(asset)}</p>
-          </div>
-        );
+          media: (
+            <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-sunken">
+              <img
+                src={withTransform(asset.url, THUMB_TRANSFORM)}
+                alt={asset.name}
+                loading="lazy"
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          ),
+          title: <span title={asset.name}>{asset.name}</span>,
+          subtitle: assetMeta(asset),
+        };
 
-        return (
-          <li
-            key={asset.id}
-            className={cn(
-              'group fade-in-mount rounded-lg border border-line bg-raised shadow-sm transition-colors motion-reduce:transition-none',
-              (mode === 'pick' || props.onPreview) && 'hover:border-accent focus-within:border-accent',
-            )}
-          >
-            {mode === 'pick' ? (
-              <button
-                type="button"
-                onClick={() => props.onPick(asset)}
-                className="block w-full rounded-lg text-left"
-              >
-                {thumb}
-                {caption}
-              </button>
-            ) : (
-              <div className="relative">
-                {props.onPreview ? (
-                  <button
-                    type="button"
-                    aria-label={`Preview ${asset.name}`}
-                    onClick={() => props.onPreview?.(asset)}
-                    className="block w-full rounded-lg text-left"
-                  >
-                    {thumb}
-                    {caption}
-                  </button>
-                ) : (
-                  <>
-                    {thumb}
-                    {caption}
-                  </>
-                )}
-                <div
-                  className={cn(
-                    'absolute top-1 right-1 flex gap-0.5 rounded-md bg-raised/90 p-0.5 shadow-sm',
-                    'opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none',
-                  )}
-                >
-                  <CardAction label={`Copy URL of ${asset.name}`} title="Copy URL" onClick={() => void copyAssetUrl(asset)}>
-                    <CopyIcon className="size-3.5" />
-                  </CardAction>
-                  <CardAction label={`Delete ${asset.name}`} title="Delete" danger onClick={() => props.onDelete(asset)}>
-                    <Trash2Icon className="size-3.5" />
-                  </CardAction>
-                </div>
-              </div>
-            )}
-          </li>
-        );
+        if (mode === 'pick') {
+          return <Tile key={asset.id} {...slots} onClick={() => props.onPick(asset)} primaryLabel={`Use ${asset.name}`} />;
+        }
+        const actions = <ManageActions asset={asset} onDelete={props.onDelete} />;
+        if (props.onPreview) {
+          const preview = props.onPreview;
+          return (
+            <Tile
+              key={asset.id}
+              {...slots}
+              onClick={() => preview(asset)}
+              primaryLabel={`Preview ${asset.name}`}
+              actions={actions}
+            />
+          );
+        }
+        return <Tile key={asset.id} {...slots} actions={actions} />;
       })}
     </ul>
   );
@@ -162,106 +151,59 @@ function AssetList(props: Props) {
   const { assets, mode, pending = [] } = props;
 
   return (
-    <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-raised shadow-sm">
+    <List>
       {pending.map((file) => (
-        <li key={file.id} aria-busy="true" className="fade-in-mount flex items-center gap-3 px-3 py-2 motion-reduce:transition-none">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-sunken">
-            <Loader2Icon className="size-4 animate-spin text-faint" />
-          </div>
-          <p className="min-w-0 flex-1 truncate text-sm text-ink" title={file.name}>{file.name}</p>
-          <p className="shrink-0 text-2xs text-muted tabular-nums">Uploading · {formatBytes(file.bytes)}</p>
-        </li>
+        <Row
+          key={file.id}
+          busy
+          leading={
+            <div className="flex size-10 items-center justify-center rounded-sm bg-sunken">
+              <Loader2Icon className="size-4 animate-spin text-faint" />
+            </div>
+          }
+          title={<span title={file.name}>{file.name}</span>}
+          meta={<p className="shrink-0 text-2xs text-muted tabular-nums">Uploading · {formatBytes(file.bytes)}</p>}
+        />
       ))}
       {assets.map((asset) => {
-        const thumb = (
-          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-sunken">
-            <img
-              src={withTransform(asset.url, THUMB_TRANSFORM)}
-              alt=""
-              loading="lazy"
-              className="max-h-full max-w-full object-contain"
+        const slots = {
+          leading: (
+            <div className="flex size-10 items-center justify-center overflow-hidden rounded-sm bg-sunken">
+              <img
+                src={withTransform(asset.url, THUMB_TRANSFORM)}
+                alt=""
+                loading="lazy"
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          ),
+          title: <span title={asset.name}>{asset.name}</span>,
+          meta: (
+            <>
+              <p className="hidden w-32 shrink-0 truncate text-2xs text-muted tabular-nums sm:block">{assetMeta(asset)}</p>
+              <p className="hidden w-24 shrink-0 text-2xs text-muted tabular-nums md:block">{assetDate(asset)}</p>
+            </>
+          ),
+        };
+
+        if (mode === 'pick') {
+          return <Row key={asset.id} {...slots} onClick={() => props.onPick(asset)} primaryLabel={`Use ${asset.name}`} />;
+        }
+        const actions = <ManageActions asset={asset} onDelete={props.onDelete} />;
+        if (props.onPreview) {
+          const preview = props.onPreview;
+          return (
+            <Row
+              key={asset.id}
+              {...slots}
+              onClick={() => preview(asset)}
+              primaryLabel={`Preview ${asset.name}`}
+              actions={actions}
             />
-          </div>
-        );
-        const name = (
-          <p className="min-w-0 flex-1 truncate text-sm text-ink" title={asset.name}>{asset.name}</p>
-        );
-        const numbers = (
-          <>
-            <p className="hidden w-32 shrink-0 truncate text-2xs text-muted tabular-nums sm:block">{assetMeta(asset)}</p>
-            <p className="hidden w-24 shrink-0 text-2xs text-muted tabular-nums md:block">{assetDate(asset)}</p>
-          </>
-        );
-        const rowClass = 'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-hover motion-reduce:transition-none';
-
-        return (
-          <li key={asset.id} className="fade-in-mount motion-reduce:transition-none">
-            {mode === 'pick' ? (
-              <button type="button" onClick={() => props.onPick(asset)} className={rowClass}>
-                {thumb}
-                {name}
-                {numbers}
-              </button>
-            ) : (
-              <div className="flex items-center gap-1 pr-2">
-                {props.onPreview ? (
-                  <button
-                    type="button"
-                    aria-label={`Preview ${asset.name}`}
-                    onClick={() => props.onPreview?.(asset)}
-                    className={cn(rowClass, 'min-w-0 flex-1')}
-                  >
-                    {thumb}
-                    {name}
-                    {numbers}
-                  </button>
-                ) : (
-                  <div className={cn(rowClass, 'min-w-0 flex-1')}>
-                    {thumb}
-                    {name}
-                    {numbers}
-                  </div>
-                )}
-                <CardAction label={`Copy URL of ${asset.name}`} title="Copy URL" onClick={() => void copyAssetUrl(asset)}>
-                  <CopyIcon className="size-3.5" />
-                </CardAction>
-                <CardAction label={`Delete ${asset.name}`} title="Delete" danger onClick={() => props.onDelete(asset)}>
-                  <Trash2Icon className="size-3.5" />
-                </CardAction>
-              </div>
-            )}
-          </li>
-        );
+          );
+        }
+        return <Row key={asset.id} {...slots} actions={actions} />;
       })}
-    </ul>
-  );
-}
-
-function CardAction({
-  label,
-  title,
-  danger,
-  onClick,
-  children,
-}: {
-  label: string;
-  title: string;
-  danger?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={title}
-      onClick={onClick}
-      className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-sm text-muted transition-colors motion-reduce:transition-none',
-        danger ? 'hover:bg-danger-wash hover:text-danger-ink' : 'hover:bg-hover hover:text-ink',
-      )}
-    >
-      {children}
-    </button>
+    </List>
   );
 }

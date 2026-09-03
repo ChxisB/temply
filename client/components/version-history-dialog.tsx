@@ -1,6 +1,7 @@
 'use client';
 
 import { HistoryIcon, Loader2Icon, RotateCcwIcon } from 'lucide-react';
+import { List, Row } from '~/components/ui/item';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { httpGet, httpPost } from '~/lib/http';
@@ -137,41 +138,31 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
             No versions saved yet. Each save creates a new version.
           </div>
         ) : (
-          <div className="space-y-1">
+          <List>
             {versions.map((version) => (
-              <div
+              <Row
                 key={version.id}
-                className="flex items-center justify-between rounded-lg border border-line p-3 transition-colors hover:bg-hover"
-              >
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-ink">
-                    Version {version.version_number}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {version.created_at
-                      ? new Date(version.created_at).toLocaleString()
-                      : 'Unknown date'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => fetchVersionDetail(version.id)}
-                    className="rounded-md px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-hover"
-                  >
-                    Preview
-                  </button>
-                  <button
+                onClick={() => fetchVersionDetail(version.id)}
+                primaryLabel={`Preview version ${version.version_number}`}
+                title={`Version ${version.version_number}`}
+                subtitle={
+                  version.created_at ? new Date(version.created_at).toLocaleString() : 'Unknown date'
+                }
+                actions={
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => restoreVersion(version.id)}
                     disabled={isRestoring}
-                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-wash"
+                    className="text-accent-ink hover:bg-accent-wash hover:text-accent-ink"
                   >
-                    <RotateCcwIcon className="h-3 w-3" />
+                    <RotateCcwIcon />
                     Restore
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                }
+              />
             ))}
-          </div>
+          </List>
         )}
       </DialogContent>
     </Dialog>

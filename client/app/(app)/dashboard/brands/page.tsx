@@ -18,7 +18,8 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { PageLoading } from '~/components/ui/page-loading';
-import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
+import { Tile } from '~/components/ui/item';
+import { Badge, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import { BrandEditor } from '~/components/brand/brand-editor';
 import { BrandPreview } from '~/components/brand/brand-preview';
@@ -181,30 +182,26 @@ export default function BrandsPage() {
             }
           />
         ) : (
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {brands.map((brand) => {
               const brandTheme = safeTheme(brand.theme);
               const isDefault = brand.id === defaultBrandId;
               return (
-                <Card
+                <Tile
                   key={brand.id}
                   onClick={() => openPreview(brand.name, brandTheme)}
-                  className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 space-y-2">
-                      <p className="truncate text-sm font-medium text-ink">{brand.name}</p>
-                      <Swatches theme={brandTheme} />
-                    </div>
-                    {isDefault ? (
-                      <Badge tone="accent" className="shrink-0">Default</Badge>
-                    ) : null}
-                  </div>
-
-                  {/* The card opens a preview; its action controls must not. */}
-                  <div className="mt-auto flex items-center justify-between gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-0.5">
-                      <Button variant="ghost" size="icon-sm" title="Edit" aria-label="Edit" onClick={() => openEdit(brand)}>
+                  primaryLabel={`Preview ${brand.name}`}
+                  title={brand.name}
+                  badge={isDefault ? <Badge tone="accent">Default</Badge> : null}
+                  actions={
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Edit"
+                        aria-label={`Edit ${brand.name}`}
+                        onClick={() => openEdit(brand)}
+                      >
                         <PencilIcon />
                       </Button>
                       <ConfirmDialog
@@ -216,57 +213,61 @@ export default function BrandsPage() {
                         }
                         onConfirm={() => deleteBrand(brand.id)}
                       >
-                        <Button variant="danger-quiet" size="icon-sm" title="Delete" aria-label="Delete">
+                        <Button variant="danger-quiet" size="icon-sm" title="Delete" aria-label={`Delete ${brand.name}`}>
                           <Trash2Icon />
                         </Button>
                       </ConfirmDialog>
-                    </div>
-                    {!isDefault ? (
-                      <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>
-                        Set as default
-                      </Button>
-                    ) : null}
+                      {!isDefault ? (
+                        <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(brand.id)}>
+                          Set as default
+                        </Button>
+                      ) : null}
+                    </>
+                  }
+                >
+                  <div className="mt-2">
+                    <Swatches theme={brandTheme} />
                   </div>
-                </Card>
+                </Tile>
               );
             })}
-          </div>
+          </ul>
         )}
       </section>
 
       {/* Built-in looks — always available in the editor, not deletable. */}
       <section className="space-y-2.5">
         <h2 className="text-sm font-semibold text-ink">Presets</h2>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {BRAND_PRESETS.map((p) => {
             const isDefault = p.id === defaultBrandId;
             return (
-              <Card
+              <Tile
                 key={p.id}
                 onClick={() => openPreview(p.name, p.theme)}
-                className="flex h-full cursor-pointer flex-col gap-3 transition-colors hover:border-line-strong"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 space-y-2">
-                    <p className="truncate text-sm font-medium text-ink">{p.name}</p>
-                    <Swatches theme={p.theme} />
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
+                primaryLabel={`Preview ${p.name}`}
+                title={p.name}
+                badge={
+                  <>
                     <Badge tone="neutral">Preset</Badge>
                     {isDefault ? <Badge tone="accent">Default</Badge> : null}
-                  </div>
-                </div>
-                {!isDefault ? (
-                  <div className="mt-auto flex items-center justify-end pt-1" onClick={(e) => e.stopPropagation()}>
+                  </>
+                }
+                actions={
+                  !isDefault ? (
                     <Button variant="ghost" size="sm" onClick={() => setDefaultBrand(p.id)}>
                       Set as default
                     </Button>
-                  </div>
-                ) : null}
-              </Card>
+                  ) : null
+                }
+              >
+                <div className="mt-2">
+                  <Swatches theme={p.theme} />
+                </div>
+              </Tile>
             );
           })}
-        </div>
+        </ul>
       </section>
 
       <Dialog

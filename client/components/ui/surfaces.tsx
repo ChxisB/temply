@@ -2,19 +2,34 @@ import * as React from 'react';
 import { cn } from '~/lib/classname';
 
 /**
+ * How a surface answers the pointer when the whole of it is a target: it
+ * lifts a hair and its shadow deepens, then settles back on press. One string
+ * so a stat tile, a template card and a brand card all move the same way.
+ * Reduced motion keeps the shadow and border change and drops the lift.
+ */
+export const lift =
+  'item-motion hover:border-line-strong hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm motion-reduce:transition-none motion-reduce:hover:translate-y-0';
+
+/**
  * The panel treatment the dashboard previously repeated as an inline class
  * string in eleven places. One definition means one place to change it.
  */
 export function Card({
   className,
   inset = true,
+  interactive = false,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { inset?: boolean }) {
+}: React.HTMLAttributes<HTMLDivElement> & {
+  inset?: boolean;
+  /** The whole card is a target (it sits inside a link or carries onClick). */
+  interactive?: boolean;
+}) {
   return (
     <div
       className={cn(
         'rounded-lg border border-line bg-raised shadow-sm',
         inset && 'p-4',
+        interactive && lift,
         className,
       )}
       {...props}
@@ -133,14 +148,16 @@ export function StatTile({
   value,
   hint,
   className,
+  interactive,
 }: {
   label: string;
   value: React.ReactNode;
   hint?: string;
   className?: string;
+  interactive?: boolean;
 }) {
   return (
-    <Card className={cn('p-3.5', className)}>
+    <Card className={cn('p-3.5', className)} interactive={interactive}>
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 font-display text-2xl font-semibold tabular-nums text-ink">{value}</p>
       {hint ? <p className="mt-0.5 text-xs text-faint">{hint}</p> : null}
