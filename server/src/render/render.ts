@@ -4,13 +4,25 @@ import type { EngineConfig, RenderOptions } from './engine';
 
 export async function render(
   content: JSONContent,
-  config?: EngineConfig & RenderOptions
+  config?: EngineConfig &
+    RenderOptions & {
+      /**
+       * Composing mode, but with each pill drawn as its fallback rather than
+       * as `{{name}}` — for a thumbnail, where "Hi there" reads as an email
+       * and "Hi {{firstName,fallback=there}}" reads as a template. A pill
+       * with no fallback still shows its placeholder.
+       */
+      showFallbacks?: boolean;
+    }
 ): Promise<string> {
-  const { theme, preview, payload, ...rest } = config || {};
+  const { theme, preview, payload, showFallbacks, ...rest } = config || {};
 
   const engine = new Engine(content);
   engine.setPreviewText(preview);
   engine.setTheme(theme || {});
+  if (showFallbacks) {
+    engine.setVariableFormatter(({ variable, fallback }) => fallback ?? `{{${variable}}}`);
+  }
   // Supplying data — even an empty object — is what switches the engine from
   // "composing" to "rendering for a recipient": variables resolve and
   // conditions are evaluated.

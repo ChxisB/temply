@@ -90,9 +90,10 @@ export const templatesRoutes = new Elysia()
 
   /**
    * The draft rendered as the dashboard thumbnails show it: no payload, so
-   * the engine stays in composing mode — variable pills keep their names and
-   * every conditional block is visible. Recipient-shaped output belongs to the
-   * public render endpoint, not here.
+   * the engine stays in composing mode — every conditional block is visible
+   * — but each pill is drawn as its fallback, since a card is there to show
+   * what the email looks like, not how it is wired. Recipient-shaped output
+   * belongs to the public render endpoint, not here.
    */
   .get('/api/v1/templates/:id/preview', async (ctx) => {
     if (!ctx.userId) return unauthorized();
@@ -118,6 +119,7 @@ export const templatesRoutes = new Elysia()
     const html = await render(content as JSONContent, {
       theme,
       preview: template.preview_text ?? undefined,
+      showFallbacks: true,
     });
 
     // Cacheable forever only when the caller keyed the URL to this exact

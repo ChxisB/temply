@@ -114,6 +114,29 @@ describe('GET /api/v1/templates/:id/preview', () => {
     expect(html).toContain('<html');
   });
 
+  it('draws a pill as its fallback, and a pill with none as its placeholder', async () => {
+    const content = JSON.stringify({
+      type: 'doc',
+      content: [{
+        type: 'paragraph',
+        content: [
+          { type: 'text', text: 'Hi ' },
+          { type: 'variable', attrs: { id: 'firstName', fallback: 'there', required: false } },
+          { type: 'text', text: ' from ' },
+          { type: 'variable', attrs: { id: 'company', required: false } },
+        ],
+      }],
+    });
+    const res = await post(app, '/api/v1/templates', { title: 'Hello', content }, OWNER);
+    const { template } = await res.json();
+
+    const { html } = await (await get(app, `/api/v1/templates/${template.id}/preview`, OWNER)).json();
+    // React leaves `<!-- -->` between adjacent text nodes.
+    const text = html.replace(/<!--.*?-->/g, '');
+    expect(text).toContain('Hi there from {{company}}');
+    expect(text).not.toContain('firstName');
+  });
+
   it('500s when the stored content is corrupt', async () => {
     const template = await createPreviewTemplate();
     await db.update(mails).set({ content: 'not json' }).where(eq(mails.id, template.id));
