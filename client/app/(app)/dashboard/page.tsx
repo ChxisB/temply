@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FileTextIcon } from 'lucide-react';
 import { NewTemplateButton } from '~/components/dashboard/new-template-button';
+import { Button } from '~/components/ui/button';
 import { List, Row } from '~/components/ui/item';
 import { EmptyState, ErrorState, PageHeader, StatTile } from '~/components/ui/surfaces';
 import { serverFetch } from '~/lib/server-fetch';
@@ -70,12 +71,9 @@ export default async function DashboardPage() {
         <div className="flex items-center justify-between">
           <h2 className="font-display text-sm font-semibold text-ink">Recent templates</h2>
           {!templatesFailed && templates.length > 0 ? (
-            <Link
-              href="/dashboard/templates"
-              className="text-sm text-accent-ink underline-offset-4 hover:underline"
-            >
-              View all
-            </Link>
+            <Button variant="link" size="sm" asChild className="px-0">
+              <Link href="/dashboard/templates">View all</Link>
+            </Button>
           ) : null}
         </div>
 

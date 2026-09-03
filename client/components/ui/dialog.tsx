@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
 const Dialog = DialogPrimitive.Root;
@@ -41,9 +42,11 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute top-4 right-4 flex size-7 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink">
-        <X className="size-4" />
-        <span className="sr-only">Close</span>
+      <DialogPrimitive.Close asChild>
+        <Button variant="ghost" size="icon-sm" className="absolute top-4 right-4">
+          <X />
+          <span className="sr-only">Close</span>
+        </Button>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>

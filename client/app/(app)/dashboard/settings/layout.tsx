@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PageHeader } from '~/components/ui/surfaces';
+import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
 /** Every tab is a leaf, so an exact match is the whole rule — Account sits at
@@ -30,7 +31,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex h-9 items-center px-1 text-sm transition-colors',
+                'flex h-9 items-center rounded-sm px-1 text-sm',
+                pressable,
                 isActive
                   ? 'border-b-2 border-accent font-medium text-ink'
                   : 'text-muted hover:text-ink',

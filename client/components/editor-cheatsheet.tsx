@@ -12,6 +12,7 @@ import {
 } from './ui/dialog';
 import { EDITOR_SHORTCUTS, formatKeys } from '~/lib/editor-shortcuts';
 import { useIsApple } from '~/lib/use-platform';
+import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
 /**
@@ -37,21 +38,19 @@ export function EditorCheatsheet({ className }: { className?: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           aria-label="Keyboard shortcuts"
           title={
             isApple === null
               ? 'Keyboard shortcuts'
               : `Keyboard shortcuts (${isApple ? '⌘/' : 'Ctrl+/'})`
           }
-          className={cn(
-            'flex size-7 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink',
-            className
-          )}
+          className={className}
         >
-          <HelpCircleIcon className="size-4" />
-        </button>
+          <HelpCircleIcon />
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl">

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
 type NavItem = {
@@ -78,7 +79,8 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   aria-current={isActive ? 'page' : undefined}
                   {...(item.external ? { target: '_blank', rel: 'noreferrer' } : {})}
                   className={cn(
-                    'flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors',
+                    'flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm',
+                    pressable,
                     isActive
                       ? 'bg-rail-active-bg font-medium text-rail-active-ink'
                       : 'text-rail-muted hover:bg-rail-hover hover:text-rail-ink',

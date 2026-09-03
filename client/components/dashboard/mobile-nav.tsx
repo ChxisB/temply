@@ -3,6 +3,8 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { MenuIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Button, pressable } from '~/components/ui/button';
+import { cn } from '~/lib/classname';
 import { BrandMark } from '~/components/brand-mark';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -25,13 +27,9 @@ export function MobileNav() {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger asChild>
-        <button
-          type="button"
-          aria-label="Open navigation"
-          className="flex size-8 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink md:hidden"
-        >
-          <MenuIcon className="size-4" />
-        </button>
+        <Button variant="ghost" size="icon" aria-label="Open navigation" className="md:hidden">
+          <MenuIcon />
+        </Button>
       </DialogPrimitive.Trigger>
 
       <DialogPrimitive.Portal>
@@ -48,7 +46,10 @@ export function MobileNav() {
             </div>
             <DialogPrimitive.Close
               aria-label="Close navigation"
-              className="flex size-8 items-center justify-center rounded-sm text-rail-muted transition-colors hover:bg-rail-hover hover:text-rail-ink"
+              className={cn(
+                'flex size-8 items-center justify-center rounded-md text-rail-muted hover:bg-rail-hover hover:text-rail-ink',
+                pressable,
+              )}
             >
               <XIcon className="size-4" />
             </DialogPrimitive.Close>

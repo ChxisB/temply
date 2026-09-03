@@ -3,6 +3,7 @@
 import { DialogClose } from '@radix-ui/react-dialog';
 import { useMutation } from '@tanstack/react-query';
 import { Loader2Icon, Trash2Icon } from 'lucide-react';
+import { Button } from '~/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { httpDelete } from '~/lib/http';
 import {
@@ -38,16 +39,11 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
 
   return (
     <Dialog>
-      <DialogTrigger
-        className="inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-danger-ink transition-colors hover:bg-danger-wash disabled:pointer-events-none disabled:opacity-45 [&_svg]:size-4 [&_svg]:shrink-0"
-        disabled={isDeleteTemplatePending || !templateId}
-      >
-        {isDeleteTemplatePending ? (
-          <Loader2Icon className="inline-block size-4 shrink-0 animate-spin lg:mr-1" />
-        ) : (
-          <Trash2Icon className="inline-block size-4 shrink-0 lg:mr-1" />
-        )}
-        <span className="hidden lg:inline-block">Delete</span>
+      <DialogTrigger asChild>
+        <Button variant="danger-quiet" disabled={isDeleteTemplatePending || !templateId}>
+          {isDeleteTemplatePending ? <Loader2Icon className="animate-spin" /> : <Trash2Icon />}
+          <span className="hidden lg:inline-block">Delete</span>
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="w-full max-w-xs p-4">
@@ -60,27 +56,19 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-2">
-          <DialogClose>
-            <button
-              className="flex min-h-[28px] w-full cursor-pointer items-center justify-center rounded-md bg-hover px-2 py-1.5 text-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-              disabled={isDeleteTemplatePending}
-            >
+          <DialogClose asChild>
+            <Button variant="secondary" disabled={isDeleteTemplatePending}>
               Cancel
-            </button>
+            </Button>
           </DialogClose>
-          <button
-            className="flex min-h-[28px] w-full cursor-pointer items-center justify-center rounded-md bg-black px-2 py-1.5 text-sm text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 max-lg:w-7"
-            type="button"
+          <Button
+            variant="danger"
             disabled={isDeleteTemplatePending || !templateId}
             onClick={() => deleteTemplate()}
           >
-            {isDeleteTemplatePending ? (
-              <Loader2Icon className="inline-block size-4 shrink-0 animate-spin lg:mr-1" />
-            ) : (
-              'Delete'
-            )}
-          </button>
+            {isDeleteTemplatePending ? <Loader2Icon className="animate-spin" /> : null}
+            Delete
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

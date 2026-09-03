@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { Button } from '~/components/ui/button';
 import { httpGet } from '~/lib/http';
 
 type Quota = {
@@ -61,12 +62,9 @@ export function QuotaWidget() {
         <span>resets {formatReset(data.resetsOn)}</span>
       </div>
       {data.plan === 'free' ? (
-        <Link
-          href="/dashboard/settings/plan"
-          className="mt-2 flex h-7 w-full items-center justify-center rounded-md bg-accent text-xs font-medium text-white transition-colors hover:bg-accent-hover"
-        >
-          Upgrade
-        </Link>
+        <Button variant="primary" size="sm" asChild className="mt-2 w-full">
+          <Link href="/dashboard/settings/plan">Upgrade</Link>
+        </Button>
       ) : null}
     </div>
   );

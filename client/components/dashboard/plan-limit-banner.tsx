@@ -1,5 +1,6 @@
 import { ArrowUpRightIcon, SparklesIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '~/components/ui/button';
 
 /**
  * Shown when a plan limit is reached, above the list it caps. States the limit
@@ -22,13 +23,12 @@ export function PlanLimitBanner({
           <p className="mt-0.5 text-sm text-muted">{detail}</p>
         </div>
       </div>
-      <Link
-        href="/dashboard/settings/plan"
-        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-      >
-        Upgrade
-        <ArrowUpRightIcon className="size-4" />
-      </Link>
+      <Button variant="primary" asChild>
+        <Link href="/dashboard/settings/plan">
+          Upgrade
+          <ArrowUpRightIcon />
+        </Link>
+      </Button>
     </div>
   );
 }

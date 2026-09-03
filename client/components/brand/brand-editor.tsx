@@ -43,7 +43,7 @@ export function BrandEditor({ theme, onChange }: { theme: RendererThemeOptions; 
       </div>
       <BrandKnobsControl value={knobs} onChange={(k) => onChange(applyKnobs(theme, k))} />
       <div>
-        <button type="button" onClick={() => setAdvanced((v) => !v)} aria-expanded={advanced} className="flex items-center gap-1 text-xs text-muted hover:text-ink [&_svg]:size-3.5">
+        <button type="button" onClick={() => setAdvanced((v) => !v)} aria-expanded={advanced} className="flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-ink [&_svg]:size-3.5">
           <ChevronDownIcon className={`transition-transform duration-base ease-out motion-reduce:transition-none ${advanced ? 'rotate-180' : ''}`} />
           {advanced ? 'Hide advanced' : 'Advanced'}
         </button>

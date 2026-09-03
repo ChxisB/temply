@@ -96,12 +96,9 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
               <h3 className="text-sm font-medium text-ink">
                 Version {previewVersion.version_number}
               </h3>
-              <button
-                onClick={() => setPreviewVersion(null)}
-                className="text-xs text-muted hover:text-ink"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setPreviewVersion(null)}>
                 &larr; Back to list
-              </button>
+              </Button>
             </div>
             <div className="max-h-80 overflow-auto rounded-lg border border-line bg-surface p-3">
               <pre className="whitespace-pre-wrap text-xs text-ink">
@@ -109,24 +106,17 @@ export function VersionHistoryDialog({ templateId }: VersionHistoryDialogProps) 
               </pre>
             </div>
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setPreviewVersion(null)}
-                className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-muted hover:bg-hover"
-              >
+              <Button variant="secondary" onClick={() => setPreviewVersion(null)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={() => restoreVersion(previewVersion.id)}
                 disabled={isRestoring}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
               >
-                {isRestoring ? (
-                  <Loader2Icon className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RotateCcwIcon className="h-4 w-4" />
-                )}
-                Restore This Version
-              </button>
+                {isRestoring ? <Loader2Icon className="animate-spin" /> : <RotateCcwIcon />}
+                Restore this version
+              </Button>
             </div>
           </div>
         ) : isLoading ? (

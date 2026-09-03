@@ -4,6 +4,7 @@ import { AlertTriangleIcon } from 'lucide-react';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { checkPair, type ContrastIssue } from '@temply/shared/contrast';
+import { pressable } from '~/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 
 /**
@@ -76,7 +77,7 @@ export function ThemeIssueHint({ issues }: { issues: ContrastIssue[] }) {
         <button
           type="button"
           aria-label="This colour may be hard to read — details"
-          className="inline-flex size-4 items-center justify-center rounded-full text-danger-ink transition-colors hover:bg-danger-wash"
+          className={`inline-flex size-4 items-center justify-center rounded-full text-danger-ink hover:bg-danger-wash ${pressable}`}
         >
           <AlertTriangleIcon className="size-3" />
         </button>

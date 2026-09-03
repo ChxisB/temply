@@ -3,6 +3,7 @@
 import { useClerk, useUser } from '@clerk/nextjs';
 import { LogOutIcon, SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
+import { pressable } from '~/components/ui/button';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
@@ -38,7 +39,7 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`flex w-full items-center gap-2 rounded-md p-1.5 text-sm transition-colors ${
+          className={`flex w-full items-center gap-2 rounded-md p-1.5 text-sm ${pressable} ${
             surface === 'rail'
               ? 'text-rail-ink hover:bg-rail-hover'
               : 'text-ink hover:bg-hover'

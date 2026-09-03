@@ -93,8 +93,9 @@ function CopyHtmlButton({ html }: { html: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon-sm"
       aria-label={copied ? 'Copied' : 'Copy HTML'}
       title={copied ? 'Copied' : 'Copy HTML'}
       onClick={async () => {
@@ -102,13 +103,10 @@ function CopyHtmlButton({ html }: { html: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className={cn(
-        'flex size-7 items-center justify-center rounded-sm transition-colors',
-        copied ? 'text-accent-ink' : 'text-muted hover:bg-hover hover:text-ink'
-      )}
+      className={cn(copied && 'text-accent-ink hover:text-accent-ink')}
     >
-      {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
-    </button>
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </Button>
   );
 }
 
@@ -827,23 +825,19 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
               {template.short_code}
             </code>
           </div>
-          <button
-            onClick={copyShortCode}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
-          >
+          <Button variant="ghost" size="sm" onClick={copyShortCode}>
             {shortCodeCopied ? (
-              <><CheckIcon className="h-3.5 w-3.5" /> Copied</>
+              <><CheckIcon /> Copied</>
             ) : (
-              <><CopyIcon className="h-3.5 w-3.5" /> Copy</>
+              <><CopyIcon /> Copy</>
             )}
-          </button>
+          </Button>
 
           <Popover>
-            <PopoverTrigger
-              className="ml-auto flex size-7 items-center justify-center rounded-md text-faint transition-colors hover:bg-hover hover:text-ink"
-              aria-label="What is the template ID for?"
-            >
-              <InfoIcon className="size-4" />
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="ml-auto" aria-label="What is the template ID for?">
+                <InfoIcon />
+              </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-72">
               <p className="text-sm font-medium text-ink">Using this template ID</p>
@@ -966,14 +960,9 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
                 {hasPreviewData && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Preview data"
-                        title="Preview data"
-                        className="flex size-7 items-center justify-center rounded-sm text-muted transition-colors hover:bg-hover hover:text-ink"
-                      >
-                        <SlidersHorizontalIcon className="size-3.5" />
-                      </button>
+                      <Button variant="ghost" size="icon-sm" aria-label="Preview data" title="Preview data">
+                        <SlidersHorizontalIcon />
+                      </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-80 p-3">
                       <PreviewDataPanel
@@ -984,21 +973,17 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
                     </PopoverContent>
                   </Popover>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label="Preview as a client that forces dark mode"
                   aria-pressed={forceDark}
                   title="Forced dark"
                   onClick={() => setForceDark((current) => !current)}
-                  className={cn(
-                    'flex size-7 items-center justify-center rounded-sm transition-colors',
-                    forceDark
-                      ? 'bg-accent-wash text-accent-ink'
-                      : 'text-muted hover:bg-hover hover:text-ink'
-                  )}
+                  className={cn(forceDark && 'bg-accent-wash text-accent-ink hover:bg-accent-wash hover:text-accent-ink')}
                 >
-                  <MoonIcon className="size-3.5" />
-                </button>
+                  <MoonIcon />
+                </Button>
               </>
               ) : null
               }

@@ -164,7 +164,7 @@ export function TemplateThemePanel({
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
             aria-expanded={showAdvanced}
-            className="flex items-center gap-1 text-xs font-medium text-faint transition-colors hover:text-muted [&_svg]:size-3.5"
+            className="flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-ink [&_svg]:size-3.5"
           >
             <ChevronDownIcon
               className={cn(
