@@ -223,9 +223,11 @@
 /* Tiles and rows (ui/item.tsx) share one motion vocabulary: a tile lifts a
    hair and its shadow deepens, a row tints, both fade in on mount. The
    property list is spelled out so the mount fade and the hover lift never
-   fight over the `transition` shorthand. */
+   fight over the `transition` shorthand. Tailwind's translate-* and scale-*
+   set the `translate` and `scale` properties, not `transform`, so both are
+   listed — without them the lift jumps while the shadow eases. */
 @utility item-motion {
-  transition-property: opacity, transform, box-shadow, border-color, background-color;
+  transition-property: opacity, transform, translate, scale, box-shadow, border-color, background-color;
   transition-duration: var(--ds-motion-base);
   transition-timing-function: var(--ds-ease-out);
   @starting-style {

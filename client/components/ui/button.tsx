@@ -6,8 +6,10 @@ import { cn } from '~/lib/classname';
 // Buttons opt out of the global outline for the same soft ring text fields
 // use — ring composes with each variant's shadow, a hard outline does not.
 // Exported for button-shaped controls (option chips) built outside Button.
+// `scale` is its own property in Tailwind v4, so it is listed beside
+// transform or the press would snap instead of settling.
 export const pressable =
-  'transition-[background-color,box-shadow,border-color,color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:ring-[3px] focus-visible:ring-accent/25 focus-visible:outline-none motion-reduce:transition-none motion-reduce:active:scale-100';
+  'transition-[background-color,box-shadow,border-color,color,transform,translate,scale] duration-fast ease-out active:scale-[0.98] focus-visible:ring-[3px] focus-visible:ring-accent/25 focus-visible:outline-none motion-reduce:transition-none motion-reduce:active:scale-100';
 
 const buttonVariants = cva(
   `inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0 ${pressable}`,
