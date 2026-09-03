@@ -1,7 +1,7 @@
 'use client';
 
-import { ImageIcon, Loader2Icon, UploadIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ImageIcon, ImagePlusIcon, Loader2Icon, UploadIcon } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { errorMessage } from '~/lib/http';
 import { UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { EmptyState, ErrorState } from '~/components/ui/surfaces';
 import { AssetGrid, type PendingUpload } from './asset-grid';
 import { useAssets } from './use-assets';
+import { useFileDrop } from './use-file-drop';
+import { cn } from '~/lib/classname';
 
 const inputClass =
   'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
@@ -24,6 +26,13 @@ export function AssetPickerDialog({
   onPick: (asset: Asset) => void;
 }) {
   const { query, upload } = useAssets({ enabled: open });
+  // Stable across renders, unlike the mutation object — the document drop
+  // listener must not be re-registered mid-drag.
+  const { mutateAsync: uploadOne } = upload;
+  // The host passes onPick inline; reading it through a ref keeps handleFiles
+  // — and therefore the document listener — stable across parent renders.
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
   const [search, setSearch] = useState('');
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -34,27 +43,45 @@ export function AssetPickerDialog({
 
   // Uploading from inside the picker is "use this now", so the new asset is
   // picked without a second click.
-  const handleFiles = async (files: FileList | null) => {
+  const handleFiles = useCallback(async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
     setPendingUpload({ id: crypto.randomUUID(), name: file.name, bytes: file.size });
     try {
-      const asset = await upload.mutateAsync(file);
+      const asset = await uploadOne(file);
       toast.success('Image uploaded');
-      onPick(asset);
+      onPickRef.current(asset);
     } catch (error) {
       toast.error(errorMessage(error) || 'Image upload failed. Please try again.');
     } finally {
       setPendingUpload(null);
     }
-  };
+  }, [uploadOne]);
+
+  const dragging = useFileDrop(handleFiles, open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full min-w-0 max-w-2xl overflow-hidden p-4">
+      <DialogContent className="relative w-full min-w-0 max-w-2xl overflow-hidden p-4">
+        {/* Dropping anywhere in the window while the picker is open uploads
+            into it (useFileDrop); this sheet says so over the dialog. */}
+        <div
+          aria-hidden={!dragging}
+          className={cn(
+            'pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-raised/85 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none',
+            dragging ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          <div className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-accent bg-raised px-8 py-6 text-center shadow-lg">
+            <ImagePlusIcon className="size-6 text-accent-ink" />
+            <p className="text-sm font-medium text-ink">Drop an image to upload and use it</p>
+            <p className="text-2xs text-muted">JPEG, PNG, GIF or WebP · up to 5 MB</p>
+          </div>
+        </div>
+
         <DialogHeader>
           <DialogTitle>Choose an image</DialogTitle>
-          <DialogDescription>Images you have uploaded before, ready to reuse.</DialogDescription>
+          <DialogDescription>Images you have uploaded before, ready to reuse — or drop a new one here.</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center gap-2">

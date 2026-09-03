@@ -11,10 +11,16 @@ import { useEffect, useState } from 'react';
  * dragenter/dragleave fire for every element the pointer crosses, so a
  * counter — not a boolean — decides when the drag has really left.
  */
-export function useFileDrop(onFiles: (files: FileList) => void): boolean {
+export function useFileDrop(onFiles: (files: FileList) => void, enabled = true): boolean {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    // A closed picker must not take drops meant for the editor canvas, which
+    // has its own drop-to-upload; while disabled nothing is listened to.
+    if (!enabled) {
+      setDragging(false);
+      return;
+    }
     let depth = 0;
     const carriesFiles = (event: DragEvent) =>
       Array.from(event.dataTransfer?.types ?? []).includes('Files');
@@ -52,7 +58,7 @@ export function useFileDrop(onFiles: (files: FileList) => void): boolean {
       document.removeEventListener('dragover', over);
       document.removeEventListener('drop', drop);
     };
-  }, [onFiles]);
+  }, [onFiles, enabled]);
 
   return dragging;
 }
