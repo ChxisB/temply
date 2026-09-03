@@ -31,10 +31,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex h-9 items-center rounded-sm px-1 text-sm',
+                // The active line is a pseudo-element, not a bottom border:
+                // a border follows the tab's corners and the press scale, and
+                // it sat a pixel above the rail. This one is square and lies
+                // on the rail itself.
+                'relative flex h-9 items-center px-1 text-sm',
                 pressable,
                 isActive
-                  ? 'border-b-2 border-accent font-medium text-ink'
+                  ? 'font-medium text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent'
                   : 'text-muted hover:text-ink',
               )}
             >
