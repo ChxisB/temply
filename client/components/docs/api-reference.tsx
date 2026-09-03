@@ -106,9 +106,11 @@ export function ApiReference() {
         <H3 id="api-data">The data object</H3>
         <P>
           Each key in <Code>data</Code> matches a variable in the template:{' '}
-          <Code>{'{{firstName}}'}</Code> reads <Code>data.firstName</Code>. A missing
-          key falls back to the variable’s fallback, if the template set one, or
-          stays as the literal placeholder. Booleans drive “Show if”: a block gated
+          <Code>{'{{firstName}}'}</Code> reads <Code>data.firstName</Code>. Every
+          variable in the template needs a value: a missing one is a 422 that lists
+          what to add, never a silent stand-in — the placeholder set in the editor
+          is for previews only. A pill marked optional renders as nothing when its
+          value is missing. Booleans drive “Show if”: a block gated
           on <Code>isMember</Code> is dropped when <Code>data.isMember</Code> is false
           and kept when it is true or absent. Omit <Code>data</Code> entirely and you
           get the email with every placeholder intact and every block showing — the
@@ -127,6 +129,7 @@ export function ApiReference() {
           rows={[
             ['401', 'No key, an unknown key, or a revoked one.'],
             ['404', 'No template with that id on this account — or, with a live key, one that has never been published.'],
+            ['422', 'Data was sent but a variable has no value. The body lists them under missing.'],
             ['429', 'The month’s calls are used up. The message says which limit and which plan.'],
             ['500', 'The stored template could not be read. Open it in the editor and save.'],
           ]}

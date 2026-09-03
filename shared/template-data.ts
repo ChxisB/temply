@@ -19,18 +19,18 @@ export type TemplateDataKeys = {
   conditions: string[];
   /** Variable pill names — text. */
   variables: string[];
-  /** The subset of variables that carry a fallback, so an absent value still
-   *  renders as words rather than as the placeholder. */
-  withFallback: string[];
+  /** The placeholder each pill carries, by name — the value previews and
+   *  thumbnails show, and the seed for the editor's preview data. Never
+   *  used on a real render. */
+  placeholders: Record<string, string>;
 };
 
 export function collectDataKeys(content: unknown): TemplateDataKeys {
   const conditions: string[] = [];
   const variables: string[] = [];
-  const withFallback: string[] = [];
+  const placeholders: Record<string, string> = {};
   const seenCondition = new Set<string>();
   const seenVariable = new Set<string>();
-  const seenFallback = new Set<string>();
 
   const push = (list: string[], seen: Set<string>, value: unknown) => {
     if (typeof value !== 'string') return;
@@ -47,7 +47,8 @@ export function collectDataKeys(content: unknown): TemplateDataKeys {
     if (node.type === 'variable') {
       push(variables, seenVariable, node.attrs?.id);
       const fallback = node.attrs?.fallback;
-      if (typeof fallback === 'string' && fallback.trim()) push(withFallback, seenFallback, node.attrs?.id);
+      const id = typeof node.attrs?.id === 'string' ? node.attrs.id.trim() : '';
+      if (id && typeof fallback === 'string' && fallback.trim() && !(id in placeholders)) placeholders[id] = fallback;
     }
 
     // A button's label can be a variable without being a variable node.
@@ -58,5 +59,5 @@ export function collectDataKeys(content: unknown): TemplateDataKeys {
   };
 
   walk(content as Node);
-  return { conditions, variables, withFallback };
+  return { conditions, variables, placeholders };
 }

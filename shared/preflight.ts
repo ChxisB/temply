@@ -193,17 +193,17 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
 }
 
 /**
- * Variable pills that would render as the literal {{name}}: no preview value
- * typed, and no fallback on the pill to stand in for one. A pill with a
- * fallback always renders as words, so it is not a finding — the starter
- * templates lean on this, and a template full of warnings the author cannot
- * act on teaches them to ignore the panel.
+ * Variable pills a test send would have no value for: nothing typed in the
+ * preview data, and no placeholder on the pill to seed it. A pill with a
+ * placeholder is covered — the preview data starts from it — so it is not
+ * a finding; a template full of warnings the author cannot act on teaches
+ * them to ignore the panel.
  */
 export function unresolvedVariables(
   keys: TemplateDataKeys,
   values: Record<string, string>,
 ): string[] {
-  const covered = new Set(keys.withFallback ?? []);
+  const covered = new Set(Object.keys(keys.placeholders ?? {}));
   return keys.variables.filter((key) => !values[key] && !covered.has(key));
 }
 

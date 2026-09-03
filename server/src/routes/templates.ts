@@ -119,7 +119,7 @@ export const templatesRoutes = new Elysia()
     const html = await render(content as JSONContent, {
       theme,
       preview: template.preview_text ?? undefined,
-      showFallbacks: true,
+      showPlaceholders: true,
     });
 
     // Cacheable forever only when the caller keyed the URL to this exact

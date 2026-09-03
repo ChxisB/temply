@@ -15,11 +15,12 @@ export type PreviewData = {
   variables: Record<string, string>;
 };
 
-/** Every condition starts on, so the first preview is the complete email. */
+/** Every condition starts on, so the first preview is the complete email;
+ *  every pill starts on its placeholder, so the first test send has words. */
 export function initialPreviewData(keys: TemplateDataKeys): PreviewData {
   return {
     conditions: Object.fromEntries(keys.conditions.map((key) => [key, true])),
-    variables: Object.fromEntries(keys.variables.map((key) => [key, ''])),
+    variables: Object.fromEntries(keys.variables.map((key) => [key, keys.placeholders?.[key] ?? ''])),
   };
 }
 

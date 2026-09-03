@@ -36,6 +36,14 @@ export function badRequest(message: string) {
   });
 }
 
+/** The request was well-formed but the data cannot be used as sent. */
+export function unprocessable(message: string, extra: Record<string, unknown> = {}) {
+  return new Response(JSON.stringify({ status: 422, message, errors: [message], ...extra }), {
+    status: 422,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export function paymentRequired(message: string) {
   return new Response(JSON.stringify({ status: 402, message, errors: [message] }), {
     status: 402,

@@ -331,9 +331,10 @@ export function Editor() {
           list of the variables already in the template appears; pick one, or
           type a new name to create it. The variable sits in the copy as a pill
           you can click, which is also where you set a{' '}
-          <strong className="font-medium text-ink">Default</strong> — the value
-          used when the data arrives without that key. Button labels and link
-          URLs can be variables too.
+          <strong className="font-medium text-ink">Placeholder</strong> — the
+          words previews, thumbnails and test sends show in its place. A real
+          render never uses it: your data has to carry every value. Button
+          labels and link URLs can be variables too.
         </P>
         <P>
           In the rendered HTML a variable is a{' '}

@@ -315,6 +315,43 @@ describe('POST /api/public/v1/templates/:shortCode/render', () => {
     });
   });
 
+  describe('missing data', () => {
+    const PILLS = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Hi "},{"type":"variable","attrs":{"id":"firstName","fallback":"there"}},{"type":"text","text":", order "},{"type":"variable","attrs":{"id":"orderNumber","fallback":"#1001","required":false}}]}]}';
+
+    it('422s with the names when data is sent but a required value is not', async () => {
+      await givePlan(db, OWNER, 'pro');
+      const { fullKey } = await seedKey(OWNER);
+      const shortCode = await seedTemplate(OWNER, PILLS);
+
+      const res = await renderTemplate(shortCode, fullKey, { orderNumber: '#2002' });
+      expect(res.status).toBe(422);
+      const body = await res.json();
+      expect(body.missing).toEqual(['firstName']);
+      expect(body.message).toContain('firstName');
+    });
+
+    it('never mails the placeholder: an optional pill renders as nothing', async () => {
+      await givePlan(db, OWNER, 'pro');
+      const { fullKey } = await seedKey(OWNER);
+      const shortCode = await seedTemplate(OWNER, PILLS);
+
+      const { html } = await (await renderTemplate(shortCode, fullKey, { firstName: 'Ada' })).json();
+      const text = html.replace(/<!--.*?-->/g, '');
+      expect(text).toContain('Hi Ada, order </p>');
+      expect(text).not.toContain('#1001');
+      expect(text).not.toContain('Hi there');
+    });
+
+    it('shows placeholders when no data is sent at all', async () => {
+      await givePlan(db, OWNER, 'pro');
+      const { fullKey } = await seedKey(OWNER);
+      const shortCode = await seedTemplate(OWNER, PILLS);
+
+      const { html } = await (await renderTemplate(shortCode, fullKey)).json();
+      expect(html).toContain('{{firstName,fallback=there}}');
+    });
+  });
+
   it('returns a text alternative beside the HTML', async () => {
     await givePlan(db, OWNER, 'pro');
     const { fullKey } = await seedKey(OWNER);

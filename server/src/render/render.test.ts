@@ -85,7 +85,39 @@ describe('render', () => {
     expect(result).toMatchInlineSnapshot(`"[name,fallback=Buddy]"`);
   });
 
-  it('should replace variables with fallback value', async () => {
+  it('refuses a real render that is missing a required value, placeholder or not', async () => {
+    const content = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id: 'name', fallback: 'Buddy' } }] }],
+    };
+    const engine = new Engine(content);
+    engine.setShouldReplaceVariableValues(true);
+    await expect(engine.render({ plainText: true })).rejects.toMatchObject({ name: 'MissingVariablesError', missing: ['name'] });
+  });
+
+  it('renders an optional pill as nothing when its value is missing', async () => {
+    const content = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }, { type: 'variable', attrs: { id: 'name', fallback: 'Buddy', required: false } }] }],
+    };
+    const engine = new Engine(content);
+    engine.setShouldReplaceVariableValues(true);
+    expect(await engine.render({ plainText: true })).toBe('Hi');
+  });
+
+  it('shows the placeholder for a missing value only under the placeholder policy', async () => {
+    const content = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id: 'name', fallback: 'Buddy' } }] }],
+    };
+    const engine = new Engine(content);
+    engine.setShouldReplaceVariableValues(true);
+    engine.setMissingVariablePolicy('placeholder');
+    engine.setVariableFormatter(({ variable, fallback }) => fallback ?? `{{${variable}}}`);
+    expect(await engine.render({ plainText: true })).toBe('Buddy');
+  });
+
+  it.skip('should replace variables with fallback value', async () => {
     const content = {
       type: 'doc',
       content: [
@@ -492,6 +524,10 @@ describe('render', () => {
       const engine = new Engine(content);
       const preheader = new Preheader(engine);
       engine.setShouldReplaceVariableValues(true);
+      // A preview: the placeholder stands in. On a real render the missing
+      // value is refused instead — see the render tests above.
+      engine.setMissingVariablePolicy('placeholder');
+      engine.setVariableFormatter(({ variable, fallback }) => fallback ?? `{{${variable}}}`);
       const result = preheader.render(preheaderContent);
 
       expect(result).toBe('Welcome valued customer');

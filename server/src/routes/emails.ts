@@ -1,7 +1,8 @@
 import { Elysia, t } from 'elysia';
 import { Resend } from 'resend';
 import { render } from '../render/render';
-import { json, unauthorized } from '../lib/errors';
+import { MissingVariablesError } from '../render/engine';
+import { json, unauthorized, unprocessable } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
 import { dbPlugin } from '../plugins/db';
 
@@ -48,6 +49,10 @@ export const emailsRoutes = new Elysia()
         // Absent means "composing": variables stay as placeholders and every
         // conditional block shows.
         payload: payload || undefined,
+        // The editor's preview has nothing truer to show for an untyped
+        // value than the placeholder the author wrote for exactly this.
+        showPlaceholders: true,
+        missing: 'placeholder',
         // Indented output for the source view. The email itself stays as
         // rendered — whitespace between table cells is not always harmless.
         pretty: pretty === true,
@@ -98,11 +103,20 @@ export const emailsRoutes = new Elysia()
         preview: previewText,
         payload: payload || undefined,
       };
-      const html = await render(contentJson, renderOptions);
-      // A test send should be the email people actually receive, and a real one
-      // carries a text alternative: filters score HTML-only mail worse, and
-      // some clients show nothing else.
-      const text = await render(contentJson, { ...renderOptions, plainText: true });
+      let html: string;
+      let text: string;
+      try {
+        html = await render(contentJson, renderOptions);
+        // A test send should be the email people actually receive, and a real
+        // one carries a text alternative: filters score HTML-only mail worse,
+        // and some clients show nothing else.
+        text = await render(contentJson, { ...renderOptions, plainText: true });
+      } catch (error) {
+        if (error instanceof MissingVariablesError) {
+          return unprocessable(`${error.message}. Add preview values before sending.`, { missing: error.missing });
+        }
+        throw error;
+      }
 
       const resend = new Resend(apiKey);
       const { error } = await resend.emails.send({

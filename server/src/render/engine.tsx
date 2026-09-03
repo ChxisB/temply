@@ -268,6 +268,22 @@ export type PayloadValue = Record<string, any> | boolean;
 export type PayloadValues = Map<string, PayloadValue>;
 
 /**
+ * What a render with data does about a variable the data does not carry.
+ * `error` is the real thing — the placeholder set in the editor is for
+ * previews, and a send that quietly showed it would mail wrong words;
+ * `placeholder` is the editor's preview, which has nothing better to show;
+ * `empty` drops the pill.
+ */
+export type MissingVariablePolicy = 'error' | 'placeholder' | 'empty';
+
+export class MissingVariablesError extends Error {
+  constructor(readonly missing: string[]) {
+    super(`Missing values for: ${missing.join(', ')}`);
+    this.name = 'MissingVariablesError';
+  }
+}
+
+/**
  * Root-relative sources ("/brand/logo.png") resolve against the app in a
  * browser tab and against nothing in an inbox or a sandboxed preview frame.
  * The renderer makes them absolute with the app's own origin — the same
@@ -295,6 +311,8 @@ export class Engine {
   };
 
   private shouldReplaceVariableValues = false;
+  private missingPolicy: MissingVariablePolicy = 'error';
+  private missing = new Set<string>();
   private variableValues: VariableValues = new Map();
   private linkValues: LinkValues = new Map();
   private openTrackingPixel: string | undefined;
@@ -320,6 +338,19 @@ export class Engine {
 
   setVariableFormatter(formatter: VariableFormatter) {
     this.variableFormatter = formatter;
+  }
+
+  setMissingVariablePolicy(policy: MissingVariablePolicy) {
+    this.missingPolicy = policy;
+  }
+
+  /** Records a variable the data did not carry and answers with what the
+   *  policy allows in its place. */
+  private missingValue(variable: string, placeholder: string, required: boolean): string {
+    if (this.missingPolicy === 'placeholder') return placeholder;
+    if (!required || this.missingPolicy === 'empty') return '';
+    this.missing.add(variable);
+    return placeholder;
   }
 
   /**
@@ -483,9 +514,13 @@ export class Engine {
   async render(
     options: RenderOptions = DEFAULT_RENDER_OPTIONS
   ): Promise<string> {
+    this.missing.clear();
     const markup = this.markup();
-
-    return reactEmailRenderAsync(markup, options);
+    const html = await reactEmailRenderAsync(markup, options);
+    if (this.missingPolicy === 'error' && this.missing.size > 0) {
+      throw new MissingVariablesError([...this.missing]);
+    }
+    return html;
   }
 
   /**
@@ -841,12 +876,16 @@ export class Engine {
       });
     }
 
-    return (
+    const value =
       (typeof payloadValue === 'object'
         ? payloadValue[linkWithoutProtocol]
-        : payloadValue) ??
-      this.variableValues.get(linkWithoutProtocol) ??
-      href
+        : payloadValue) ?? this.variableValues.get(linkWithoutProtocol);
+    if (value !== undefined && value !== null) return value;
+    // A destination, an image or a label has no optional form.
+    return this.missingValue(
+      linkWithoutProtocol,
+      this.variableFormatter({ variable: linkWithoutProtocol }),
+      true,
     );
   }
 
@@ -896,7 +935,7 @@ export class Engine {
 
   private variable(node: JSONContent, options?: NodeOptions): JSX.Element {
     const { payloadValue } = options || {};
-    const { id: variable, fallback } = node.attrs || {};
+    const { id: variable, fallback, required } = node.attrs || {};
 
     const shouldShow = this.shouldShow(node, options);
     if (!shouldShow || !variable) {
@@ -906,7 +945,8 @@ export class Engine {
     const formattedVariable = this.getVariableValue(
       variable,
       fallback,
-      options
+      options,
+      required ?? true
     );
 
     if (node?.marks) {
@@ -922,27 +962,30 @@ export class Engine {
     return <>{formattedVariable}</>;
   }
 
-  getVariableValue(variable: string, fallback?: string, options?: NodeOptions) {
+  getVariableValue(
+    variable: string,
+    fallback?: string,
+    options?: NodeOptions,
+    required: boolean = true,
+  ) {
     const { payloadValue } = options || {};
 
-    let formattedVariable = this.variableFormatter({
+    const formattedVariable = this.variableFormatter({
       variable,
       fallback,
     });
 
-    // If `shouldReplaceVariableValues` is true, replace the variable values
-    // Otherwise, just return the formatted variable
-    if (this.shouldReplaceVariableValues) {
-      formattedVariable =
-        (typeof payloadValue === 'object'
-          ? payloadValue[variable]
-          : payloadValue) ??
-        this.variableValues.get(variable) ??
-        fallback ??
-        formattedVariable;
-    }
+    // Composing: the pill shows as the formatter draws it.
+    if (!this.shouldReplaceVariableValues) return formattedVariable;
 
-    return formattedVariable;
+    const value =
+      (typeof payloadValue === 'object'
+        ? payloadValue[variable]
+        : payloadValue) ?? this.variableValues.get(variable);
+    if (value !== undefined && value !== null) return value;
+    // The editor's placeholder never stands in for missing data on a real
+    // render — see MissingVariablePolicy.
+    return this.missingValue(variable, formattedVariable, required);
   }
 
   private horizontalRule(_: JSONContent, __?: NodeOptions): JSX.Element {

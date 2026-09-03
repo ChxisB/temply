@@ -126,7 +126,7 @@ const variantFor = (mode: ContentMode): RenderVariant =>
 const hasKeys = (keys: TemplateDataKeys) =>
   keys.conditions.length > 0 || keys.variables.length > 0;
 
-/** A file name from the subject line: "Welcome to Acme" → welcome-to-acme. */
+/** A file name from the subject line: "Welcome to Temply" → welcome-to-temply. */
 function fileSlug(title: string): string {
   const slug = title
     .toLowerCase()
@@ -324,7 +324,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [previewKeys, setPreviewKeys] = useState<TemplateDataKeys>({
     conditions: [],
     variables: [],
-    withFallback: [],
+    placeholders: {},
   });
   const [previewData, setPreviewData] = useState<PreviewData>({
     conditions: {},
@@ -508,7 +508,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       ...unresolvedVariables(keys, previewData.variables).map((key) => ({
         id: `variable-${key}`,
         severity: 'warn' as const,
-        message: `The variable {{${key}}} has no default and no preview value — a test send would show the literal placeholder.`,
+        message: `The variable {{${key}}} has no placeholder and no preview value — a test send needs one.`,
       })),
       ...themeWarnings(),
     ];
@@ -844,7 +844,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       return;
     }
     const json = editor?.getJSON();
-    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], withFallback: [] };
+    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], placeholders: {} };
     const content = JSON.stringify(json);
     try {
       await httpPost('/api/v1/emails/send', {

@@ -156,11 +156,11 @@ describe('collectContentFindings — images', () => {
 });
 
 describe('unresolvedVariables', () => {
-  const keys = { conditions: [], variables: ['firstName', 'orderUrl'], withFallback: [] };
+  const keys = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: {} };
 
-  it('is quiet about a pill that carries a fallback', () => {
-    const withFallback = { conditions: [], variables: ['firstName', 'orderUrl'], withFallback: ['firstName'] };
-    expect(unresolvedVariables(withFallback, {})).toEqual(['orderUrl']);
+  it('is quiet about a pill that carries a placeholder', () => {
+    const withPlaceholder = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: { firstName: 'there' } };
+    expect(unresolvedVariables(withPlaceholder, {})).toEqual(['orderUrl']);
   });
 
   it('reports keys whose value is missing or empty', () => {

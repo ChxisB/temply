@@ -5,7 +5,8 @@ import { mails, apiKeysTable } from '@temply/shared/schema';
 import { hashApiKey } from '../lib/codes';
 import { checkApiQuota, recordApiCall } from '../lib/api-quota';
 import { render } from '../render/render';
-import { json, notFound, unauthorized } from '../lib/errors';
+import { MissingVariablesError } from '../render/engine';
+import { json, notFound, unauthorized, unprocessable } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
 import { PUBLIC_PREVIEW_ROUTE, PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE } from '@temply/shared/api';
 import { dbPlugin, type Db } from '../plugins/db';
@@ -103,7 +104,8 @@ export const publicRoutes = new Elysia()
     } catch {
       theme = undefined;
     }
-    const html = await render(content as JSONContent, { theme, preview: template.preview_text ?? undefined });
+    // A reviewer reads the email, not its wiring: pills show their placeholders.
+    const html = await render(content as JSONContent, { theme, preview: template.preview_text ?? undefined, showPlaceholders: true });
     return json({ title: template.title, previewText: template.preview_text, html, updatedAt: template.updated_at });
   })
   .get(PUBLIC_TEMPLATE_ROUTE, async (ctx) => {
@@ -158,13 +160,22 @@ export const publicRoutes = new Elysia()
 
       // The parse above only proves it is JSON; the editor wrote it, so the
       // document shape is a cast, not a check — same trust as before.
-      const html = await render(content as JSONContent, renderOptions);
-      // The same email with the markup stripped. A caller building a multipart
-      // message needs it, and generating it here keeps the two in step —
-      // writing the text version by hand is how they drift.
-      const text = await render(content as JSONContent, { ...renderOptions, plainText: true });
-
-      return json({ html, text, shortCode: template.short_code, updatedAt: served.stamp, mode: key.mode });
+      try {
+        const html = await render(content as JSONContent, renderOptions);
+        // The same email with the markup stripped. A caller building a
+        // multipart message needs it, and generating it here keeps the two in
+        // step — writing the text version by hand is how they drift.
+        const text = await render(content as JSONContent, { ...renderOptions, plainText: true });
+        return json({ html, text, shortCode: template.short_code, updatedAt: served.stamp, mode: key.mode });
+      } catch (error) {
+        // Data was sent but a variable has no value. The placeholder in the
+        // editor is for previews; mailing it would put wrong words in front
+        // of a real recipient, so the render is refused and says what to add.
+        if (error instanceof MissingVariablesError) {
+          return unprocessable(error.message, { missing: error.missing });
+        }
+        throw error;
+      }
     },
     { body: t.Optional(t.Object({ data: t.Optional(t.Any()) })) },
   );

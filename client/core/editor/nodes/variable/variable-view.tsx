@@ -92,7 +92,7 @@ export function VariableView(props: NodeViewProps) {
 
                   <label className="mly:relative">
                     <span className="mly:inline-block mly:px-2 mly:pl-1 mly:text-xs mly:text-midnight-gray">
-                      Default
+                      Placeholder
                     </span>
                     <input
                       {...AUTOCOMPLETE_PASSWORD_MANAGERS_OFF}
