@@ -4,6 +4,7 @@ import { CheckIcon, CopyIcon, KeyIcon, Loader2Icon, LockIcon, PlusIcon, Trash2Ic
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 import { httpDelete, httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import { isLimitReached } from '@temply/shared/plans';
@@ -18,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
+import { PageLoading } from '~/components/ui/page-loading';
 import { Badge, Card, EmptyState, ErrorState } from '~/components/ui/surfaces';
 
 type ApiKeyItem = {
@@ -56,6 +58,7 @@ export default function ApiKeysPage() {
     queryKey: ['api-keys'],
     queryFn: () => httpGet<ApiKeyListResponse>('/api/v1/api-keys', {}),
   });
+  const showLoading = useMinimumDisplay(isLoading);
 
   const { data: billing } = useQuery({
     queryKey: ['billing'],
@@ -143,10 +146,8 @@ export default function ApiKeysPage() {
         </Card>
       ) : null}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2Icon className="size-5 animate-spin text-faint" />
-        </div>
+      {showLoading ? (
+        <PageLoading label="Loading your keys…" />
       ) : isError ? (
         <ErrorState
           description="We could not load your keys. Any keys you already created are still active."

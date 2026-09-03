@@ -13,16 +13,19 @@ import { useDuplicateNameGuard } from '~/components/assets/duplicate-name-dialog
 import { useFileDrop } from '~/components/assets/use-file-drop';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
+import { PageLoading } from '~/components/ui/page-loading';
 import { EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { assetUsage, toastUploaded, UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { errorMessage } from '~/lib/http';
+import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 
 const inputClass =
   'h-9 w-full max-w-xs rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
 
 export default function AssetsPage() {
   const { query, upload, remove } = useAssets();
+  const showLoading = useMinimumDisplay(query.isLoading);
   // Stable across renders, unlike the mutation object itself — the document
   // drop listener must not be re-registered mid-drag.
   const { mutateAsync: uploadOne } = upload;
@@ -160,10 +163,8 @@ export default function AssetsPage() {
         </div>
       ) : null}
 
-      {query.isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2Icon className="size-5 animate-spin text-faint" />
-        </div>
+      {showLoading ? (
+        <PageLoading label="Loading your images…" />
       ) : query.isError ? (
         <ErrorState
           description="We could not load your images. Anything you uploaded is still there."

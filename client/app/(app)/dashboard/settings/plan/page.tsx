@@ -3,10 +3,12 @@
 import { Suspense, useEffect } from 'react';
 import { CheckIcon, Loader2Icon, XIcon } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 import { httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '~/components/ui/button';
+import { PageLoading } from '~/components/ui/page-loading';
 import { Badge, Card, ErrorState, StatTile } from '~/components/ui/surfaces';
 import { cn } from '~/lib/classname';
 
@@ -147,6 +149,7 @@ function PlanContent() {
     queryKey: ['billing'],
     queryFn: () => httpGet<PlanInfo>('/api/v1/billing', {}),
   });
+  const showLoading = useMinimumDisplay(isLoading);
 
   const { mutateAsync: createCheckout, isPending: isCheckoutLoading } = useMutation({
     mutationFn: (plan: 'pro') =>
@@ -165,12 +168,8 @@ function PlanContent() {
     onError: (error) => toast.error(error.message || 'Could not open the billing portal'),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2Icon className="size-5 animate-spin text-faint" />
-      </div>
-    );
+  if (showLoading) {
+    return <PageLoading label="Loading your plan…" />;
   }
 
   // Previously a failed query fell through to `plan: 'free'`, so a paying

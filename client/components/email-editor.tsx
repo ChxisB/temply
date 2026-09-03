@@ -1,6 +1,6 @@
 import type { FocusPosition, Editor as TiptapEditor } from '@tiptap/core';
-import { Loader2Icon } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
+import { PageLoading } from '~/components/ui/page-loading';
 import { cn } from '~/lib/classname';
 import type { Mail } from '~/db/schema';
 
@@ -35,11 +35,7 @@ export function EmailEditor(props: EmailEditorProps) {
 
   return (
     <>
-      {isLoading && (
-        <div className="flex w-full items-center justify-center py-10">
-          <Loader2Icon className="h-8 w-8 animate-spin stroke-[2.5] text-muted" />
-        </div>
-      )}
+      {isLoading && <PageLoading label="Loading the editor…" />}
 
       <Suspense>
         <Editor

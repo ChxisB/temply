@@ -17,10 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
+import { PageLoading } from '~/components/ui/page-loading';
 import { Badge, Card, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import { BrandEditor } from '~/components/brand/brand-editor';
 import { BrandPreview } from '~/components/brand/brand-preview';
+import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 import { brandsQueryOptions, type Brand } from '~/lib/brands';
 
 /** The three colours that read a brand at a glance: page, button, link. */
@@ -63,6 +65,7 @@ export default function BrandsPage() {
   };
 
   const { data, isLoading, isError, refetch } = useQuery(brandsQueryOptions());
+  const showLoading = useMinimumDisplay(isLoading);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['brands'] });
 
@@ -162,10 +165,8 @@ export default function BrandsPage() {
       {/* The user's own saved brands. */}
       <section className="space-y-2.5">
         <h2 className="text-sm font-semibold text-ink">Your brands</h2>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2Icon className="size-5 animate-spin text-faint" />
-          </div>
+        {showLoading ? (
+          <PageLoading label="Loading your brands…" />
         ) : isError ? (
           <ErrorState description="We could not load your brands." onRetry={() => refetch()} />
         ) : brands.length === 0 ? (
