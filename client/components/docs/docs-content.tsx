@@ -446,9 +446,11 @@ export function CreatingATemplate() {
         From there the email leaves Temply one of two ways. The{' '}
         <strong className="font-medium text-ink">HTML</strong> view shows the
         finished source with a{' '}
-        <strong className="font-medium text-ink">Copy HTML</strong> button —
-        take it, paste it into whatever sends your mail, and fill the{' '}
-        <Code>{'{{placeholders}}'}</Code> yourself.
+        <strong className="font-medium text-ink">Copy HTML</strong> button and a{' '}
+        <strong className="font-medium text-ink">Download</strong> button beside it —
+        take the file, drop it into whatever sends your mail, and fill the{' '}
+        <Code>{'{{placeholders}}'}</Code> yourself. The Text view saves the
+        plain-text alternative the same way.
       </P>
       <P>
         Or let your app fetch it. Every template has an id shown at the top of

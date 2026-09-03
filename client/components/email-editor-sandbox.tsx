@@ -5,6 +5,7 @@ import type { Editor, FocusPosition, JSONContent } from '@tiptap/core';
 import {
   CheckIcon,
   CopyIcon,
+  DownloadIcon,
   InfoIcon,
   LayoutTemplateIcon,
   Loader2Icon,
@@ -123,6 +124,37 @@ const variantFor = (mode: ContentMode): RenderVariant =>
 
 const hasKeys = (keys: TemplateDataKeys) =>
   keys.conditions.length > 0 || keys.variables.length > 0;
+
+/** A file name from the subject line: "Welcome to Acme" → welcome-to-acme. */
+function fileSlug(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'email';
+}
+
+/**
+ * Saves what the view shows as a file. The escape hatch that makes the
+ * product safe to try: the HTML is yours, with or without an account.
+ * Nothing is rendered again — it is the same source the pane is showing.
+ */
+function DownloadButton({ content, filename, mimeType, label }: { content: string; filename: string; mimeType: string; label: string }) {
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    // The browser has the blob by now; the URL only needs to outlive the click.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <Button variant="ghost" size="icon-sm" aria-label={label} title={label} onClick={download} disabled={!content}>
+      <DownloadIcon />
+    </Button>
+  );
+}
 
 /** Copies the HTML already on screen — no second render to fetch it. */
 function CopyHtmlButton({ html }: { html: string }) {
@@ -1095,7 +1127,15 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             onModeChange={changeMode}
             viewControls={
               mode === 'html' || mode === 'text' ? (
-                <CopyHtmlButton html={mode === 'html' ? htmlSource : textSource} />
+                <>
+                  <CopyHtmlButton html={mode === 'html' ? htmlSource : textSource} />
+                  <DownloadButton
+                    content={mode === 'html' ? htmlSource : textSource}
+                    filename={`${fileSlug(subject)}.${mode === 'html' ? 'html' : 'txt'}`}
+                    mimeType={mode === 'html' ? 'text/html' : 'text/plain'}
+                    label={mode === 'html' ? 'Download HTML' : 'Download text'}
+                  />
+                </>
               ) : mode === 'preview' ? (
               <>
                 {hasPreviewData && (
