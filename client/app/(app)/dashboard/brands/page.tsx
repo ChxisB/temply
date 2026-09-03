@@ -302,7 +302,7 @@ export default function BrandsPage() {
                 <input
                   id="brand-name"
                   className="h-8 w-full rounded-sm border border-line bg-raised px-2.5 text-sm text-ink placeholder:text-faint"
-                  placeholder="Acme"
+                  placeholder="Your brand name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoFocus

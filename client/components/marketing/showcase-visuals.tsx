@@ -249,7 +249,7 @@ const placeholders = [
 // Each brand is a ramp rather than a base plus a near-black: a near-black
 // swatch vanishes into the surface in dark mode and the trio reads as a pair.
 const brands = [
-  { name: 'Acme', swatches: ['#4f46e5', '#818cf8', '#eef0fe'] },
+  { name: 'Temply', swatches: ['#4f46e5', '#818cf8', '#eef0fe'] },
   { name: 'Northwind', swatches: ['#0f766e', '#2dd4bf', '#ccfbf1'] },
   { name: 'Beacon', swatches: ['#b45309', '#f59e0b', '#fef3c7'] },
 ];

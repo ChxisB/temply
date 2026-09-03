@@ -7,9 +7,13 @@ import type { JSONContent } from '@tiptap/core';
  * finding, and every button points at a variable or a real URL — the test
  * beside this file holds that line.
  *
- * Content is the editor's own JSON. Variables render as {{name}} pills and
- * take a fallback for the preview; a button whose `isUrlVariable` is set
- * reads its destination from the data at render time.
+ * Content is the editor's own JSON. Variables render as {{name}} pills with
+ * a placeholder for previews (stored under the node's `fallback` attribute);
+ * a real render needs every value in the data. A button whose
+ * `isUrlVariable` is set reads its destination from the data too. The sample
+ * company is Temply itself — a name every user of ours already knows to
+ * replace, where "Acme" only reads as a placeholder to people who know the
+ * convention.
  */
 export type StarterTemplate = {
   id: string;
@@ -35,7 +39,7 @@ const heading = (content: string | JSONContent[], level: 1 | 2 | 3 = 2): JSONCon
 const text = (value: string): JSONContent => ({ type: 'text', text: value });
 const variable = (id: string, fallback: string): JSONContent => ({
   type: 'variable',
-  attrs: { id, label: null, fallback, required: false, hideDefaultValue: false },
+  attrs: { id, label: null, fallback, required: true, hideDefaultValue: false },
 });
 const paragraph = (...content: JSONContent[]): JSONContent => ({ type: 'paragraph', content });
 const button = (label: string, url: { variable: string } | { href: string }): JSONContent => ({
@@ -74,18 +78,18 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     id: 'welcome',
     name: 'Welcome',
     description: 'The first email after sign-up: one thing to do next.',
-    subject: 'Welcome to Acme',
+    subject: 'Welcome to Temply',
     previewText: 'Here is how to get the most out of your first week.',
     content: doc(
       logo,
       spacer('xl'),
       heading('Welcome aboard'),
       paragraph(text('Hi '), variable('firstName', 'there'), text(', thanks for signing up. You are all set — here is the one thing worth doing first.')),
-      paragraph(text('Create your first project. It takes about two minutes, and everything else in Acme starts from there.')),
+      paragraph(text('Create your first project. It takes about two minutes, and everything else in Temply starts from there.')),
       button('Create a project', { variable: 'dashboardUrl' }),
       spacer('xl'),
       paragraph(text('Questions? Reply to this email — a real person reads it.')),
-      footer(text('You are receiving this because you created an Acme account.')),
+      footer(text('You are receiving this because you created an Temply account.')),
     ),
   },
   {
@@ -103,7 +107,7 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
       button('Confirm email', { variable: 'verifyUrl' }),
       spacer('xl'),
       paragraph(text('If you did not create an account, you can ignore this email.')),
-      footer(text('Sent by Acme because someone used this address to sign up.')),
+      footer(text('Sent by Temply because someone used this address to sign up.')),
     ),
   },
   {
@@ -120,14 +124,14 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
       button('Choose a new password', { variable: 'resetUrl' }),
       spacer('xl'),
       paragraph(text('If you did not ask for this, ignore this email. Your password stays as it is.')),
-      footer(text('Acme will never ask for your password by email.')),
+      footer(text('Temply will never ask for your password by email.')),
     ),
   },
   {
     id: 'receipt',
     name: 'Receipt',
     description: 'What they paid, for what, and where to see the order.',
-    subject: 'Your Acme receipt',
+    subject: 'Your Temply receipt',
     previewText: 'Thanks for your order.',
     content: doc(
       logo,
@@ -139,32 +143,32 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
       button('View order', { variable: 'orderUrl' }),
       spacer('xl'),
       paragraph(text('Something not right? Reply to this email and we will sort it out.')),
-      footer(text('Acme Inc. · This is your receipt; keep it for your records.')),
+      footer(text('Temply · This is your receipt; keep it for your records.')),
     ),
   },
   {
     id: 'invite',
     name: 'Team invite',
     description: 'Who invited them, to what, and one button to accept.',
-    subject: 'You have been invited to Acme',
+    subject: 'You have been invited to Temply',
     previewText: 'Accept the invite to join the team.',
     content: doc(
       logo,
       spacer('xl'),
       heading('Join the team'),
-      paragraph(variable('inviterName', 'A teammate'), text(' invited you to '), variable('workspaceName', 'their workspace'), text(' on Acme.')),
+      paragraph(variable('inviterName', 'A teammate'), text(' invited you to '), variable('workspaceName', 'their workspace'), text(' on Temply.')),
       paragraph(text('Accept to start working together. The invite expires in seven days.')),
       button('Accept invite', { variable: 'inviteUrl' }),
       spacer('xl'),
       paragraph(text('Not expecting this? You can ignore it, and nothing will happen.')),
-      footer(text('Sent by Acme on behalf of '), variable('inviterName', 'a teammate'), text('.')),
+      footer(text('Sent by Temply on behalf of '), variable('inviterName', 'a teammate'), text('.')),
     ),
   },
   {
     id: 'announcement',
     name: 'Product update',
     description: 'One feature, why it matters, one link.',
-    subject: 'New in Acme: something worth a look',
+    subject: 'New in Temply: something worth a look',
     previewText: 'A short note on what changed this week.',
     content: doc(
       logo,
@@ -175,7 +179,7 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
       button('See what changed', { href: 'https://example.com/changelog' }),
       spacer('xl'),
       paragraph(text('As always, reply if you have thoughts. We read every one.')),
-      footer(text('You get product updates because you have an Acme account. Unsubscribe from the account page.')),
+      footer(text('You get product updates because you have an Temply account. Unsubscribe from the account page.')),
     ),
   },
 ];

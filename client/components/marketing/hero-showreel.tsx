@@ -618,7 +618,7 @@ export function HeroShowreel() {
             </div>
 
             <div className="reel-row reel-row-head">
-              <h3 className="reel-head">Welcome to Acme</h3>
+              <h3 className="reel-head">Welcome to Temply</h3>
             </div>
 
             <div className="reel-row reel-row-para">

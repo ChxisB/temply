@@ -35,7 +35,7 @@ export function BrandPreview({ theme }: { theme: RendererThemeOptions }) {
         >
           <div className="flex items-center gap-2">
             <span className="size-6 shrink-0 rounded-full" style={{ background: btnBg }} />
-            <span className="text-[11px] font-semibold" style={{ color: text }}>Acme</span>
+            <span className="text-[11px] font-semibold" style={{ color: text }}>Temply</span>
           </div>
 
           <div className="mt-3 text-[15px] font-semibold leading-snug" style={{ color: text }}>

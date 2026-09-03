@@ -156,7 +156,7 @@ export function DemoShowIf() {
               </div>
             </div>
 
-            <p className="docs-showif-footer">You are receiving this from Acme.</p>
+            <p className="docs-showif-footer">You are receiving this from Temply.</p>
           </div>
         </div>
       </div>
