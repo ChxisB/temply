@@ -193,15 +193,18 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
 }
 
 /**
- * Variable pills whose preview value is missing or empty. toPayload drops
- * empty values, so these render as literal {{name}} in a send — usually a
- * value nobody typed, occasionally deliberate, hence surfaced not blocked.
+ * Variable pills that would render as the literal {{name}}: no preview value
+ * typed, and no fallback on the pill to stand in for one. A pill with a
+ * fallback always renders as words, so it is not a finding — the starter
+ * templates lean on this, and a template full of warnings the author cannot
+ * act on teaches them to ignore the panel.
  */
 export function unresolvedVariables(
   keys: TemplateDataKeys,
   values: Record<string, string>,
 ): string[] {
-  return keys.variables.filter((key) => !values[key]);
+  const covered = new Set(keys.withFallback ?? []);
+  return keys.variables.filter((key) => !values[key] && !covered.has(key));
 }
 
 /**

@@ -324,6 +324,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const [previewKeys, setPreviewKeys] = useState<TemplateDataKeys>({
     conditions: [],
     variables: [],
+    withFallback: [],
   });
   const [previewData, setPreviewData] = useState<PreviewData>({
     conditions: {},
@@ -507,7 +508,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       ...unresolvedVariables(keys, previewData.variables).map((key) => ({
         id: `variable-${key}`,
         severity: 'warn' as const,
-        message: `The variable {{${key}}} has no preview value — a send would show the literal placeholder.`,
+        message: `The variable {{${key}}} has no default and no preview value — a test send would show the literal placeholder.`,
       })),
       ...themeWarnings(),
     ];
@@ -843,7 +844,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       return;
     }
     const json = editor?.getJSON();
-    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [] };
+    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], withFallback: [] };
     const content = JSON.stringify(json);
     try {
       await httpPost('/api/v1/emails/send', {

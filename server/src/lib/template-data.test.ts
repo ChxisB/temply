@@ -53,14 +53,11 @@ describe('collectDataKeys', () => {
   });
 
   test('a document with neither yields empty lists', () => {
-    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({
-      conditions: [],
-      variables: [],
-    });
+    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({ conditions: [], variables: [], withFallback: [] });
   });
 
   test('survives malformed input', () => {
-    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [] });
-    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [] });
+    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [], withFallback: [] });
+    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [], withFallback: [] });
   });
 });
