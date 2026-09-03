@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { EmptyState, ErrorState } from '~/components/ui/surfaces';
 import { AssetGrid, type PendingUpload } from './asset-grid';
 import { useAssets } from './use-assets';
+import { useDuplicateNameGuard } from './duplicate-name-dialog';
 import { useFileDrop } from './use-file-drop';
 import { cn } from '~/lib/classname';
 
@@ -40,12 +41,14 @@ export function AssetPickerDialog({
   const assets = (query.data?.assets ?? []).filter((asset) =>
     asset.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
+  const duplicates = useDuplicateNameGuard(query.data?.assets ?? []);
 
   // Uploading from inside the picker is "use this now", so the new asset is
   // picked without a second click.
   const handleFiles = useCallback(async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
+    if (!(await duplicates.check(file))) return;
     setPendingUpload({ id: crypto.randomUUID(), name: file.name, bytes: file.size });
     try {
       const result = await uploadOne(file);
@@ -56,7 +59,7 @@ export function AssetPickerDialog({
     } finally {
       setPendingUpload(null);
     }
-  }, [uploadOne]);
+  }, [uploadOne, duplicates.check]);
 
   const dragging = useFileDrop(handleFiles, open);
 
@@ -107,6 +110,8 @@ export function AssetPickerDialog({
             Upload
           </Button>
         </div>
+
+        {duplicates.dialog}
 
         <div className="max-h-[60vh] overflow-y-auto">
           {query.isLoading ? (

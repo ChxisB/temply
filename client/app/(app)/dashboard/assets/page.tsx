@@ -9,6 +9,7 @@ import { AssetGrid, type PendingUpload } from '~/components/assets/asset-grid';
 import { AssetPreviewDialog } from '~/components/assets/asset-preview-dialog';
 import { AssetViewSwitch, useAssetView } from '~/components/assets/asset-view-switch';
 import { useAssets } from '~/components/assets/use-assets';
+import { useDuplicateNameGuard } from '~/components/assets/duplicate-name-dialog';
 import { useFileDrop } from '~/components/assets/use-file-drop';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
@@ -36,6 +37,7 @@ export default function AssetsPage() {
   const assets = (list?.assets ?? []).filter((asset) =>
     asset.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
+  const duplicates = useDuplicateNameGuard(list?.assets ?? []);
 
   const used = list?.usedBytes ?? 0;
   const limit = list?.limitBytes ?? null;
@@ -43,9 +45,15 @@ export default function AssetsPage() {
   const usage = limit ? `${formatBytes(used)} of ${formatBytes(limit)} used` : `${formatBytes(used)} used`;
 
   const uploadFiles = useCallback(async (files: FileList | File[] | null) => {
+    // A name the library already holds is asked about first; a declined
+    // file is skipped, the rest go ahead.
+    const accepted: File[] = [];
+    for (const file of Array.from(files ?? [])) {
+      if (await duplicates.check(file)) accepted.push(file);
+    }
     // Every file gets its placeholder card up front, so a multi-file drop
     // shows the whole queue rather than one card at a time.
-    const queue = Array.from(files ?? []).map((file) => ({
+    const queue = accepted.map((file) => ({
       file,
       pending: { id: crypto.randomUUID(), name: file.name, bytes: file.size },
     }));
@@ -65,7 +73,7 @@ export default function AssetsPage() {
         break;
       }
     }
-  }, [uploadOne]);
+  }, [uploadOne, duplicates.check]);
 
   const dragging = useFileDrop(uploadFiles);
 
@@ -178,6 +186,8 @@ export default function AssetsPage() {
           onPreview={setPreview}
         />
       )}
+
+      {duplicates.dialog}
 
       <AssetPreviewDialog
         asset={preview}

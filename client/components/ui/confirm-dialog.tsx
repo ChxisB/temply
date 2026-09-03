@@ -20,6 +20,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = 'Delete',
+  confirmVariant = 'danger',
   onConfirm,
   children,
   open: controlledOpen,
@@ -28,6 +29,9 @@ export function ConfirmDialog({
   title: string;
   description: string;
   confirmLabel?: string;
+  /** Red for destruction (the default); primary for a choice that only
+   *  adds, like keeping a second file under an existing name. */
+  confirmVariant?: 'danger' | 'primary';
   onConfirm: () => void;
   /** The trigger, rendered as-is (asChild) — keep it a single Button. Omit
    *  when the dialog is opened programmatically through `open`. */
@@ -57,10 +61,12 @@ export function ConfirmDialog({
             Cancel
           </Button>
           <Button
-            variant="danger"
+            variant={confirmVariant}
             onClick={() => {
-              setOpen(false);
+              // Confirm before closing: a controlled caller that treats
+              // "closed" as "cancelled" must hear the answer first.
               onConfirm();
+              setOpen(false);
             }}
           >
             {confirmLabel}
