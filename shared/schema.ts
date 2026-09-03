@@ -36,6 +36,12 @@ export const apiKeysTable = sqliteTable('api_keys', {
   name: text('name').notNull(),
   key_prefix: text('key_prefix').notNull(),
   key_hash: text('key_hash').notNull(),
+  /**
+   * `live` renders the published copy and spends the plan's quota. `test`
+   * renders the draft, is free on every plan, and has its own small monthly
+   * cap — for staging, never for sending.
+   */
+  mode: text('mode', { enum: ['live', 'test'] }).notNull().default('live'),
   created_at: text('created_at').default(now),
   last_used_at: text('last_used_at'),
   revoked_at: text('revoked_at'),

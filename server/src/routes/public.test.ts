@@ -15,15 +15,16 @@ beforeEach(() => {
   app = createTestApp(db, publicRoutes);
 });
 
-async function seedKey(userId: string, { revoked = false } = {}) {
-  const { fullKey, prefix, hash } = generateApiKey();
+async function seedKey(userId: string, { revoked = false, mode = 'live' as 'live' | 'test' } = {}) {
+  const { fullKey, prefix, hash } = generateApiKey(mode);
   const id = crypto.randomUUID();
   await db.insert(apiKeysTable).values({
     id,
     user_id: userId,
-    name: 'Production',
+    name: mode === 'test' ? 'Staging' : 'Production',
     key_prefix: prefix,
     key_hash: hash,
+    mode,
     revoked_at: revoked ? new Date().toISOString() : null,
   });
   return { id, fullKey };
@@ -239,6 +240,56 @@ describe('POST /api/public/v1/templates/:shortCode/render', () => {
     const body = await (await renderTemplate(shortCode, fullKey)).json();
     expect(body.html).toContain('Published words');
     expect(body.html).not.toContain('Draft words');
+  });
+
+  describe('with a test key', () => {
+    const DRAFT = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Draft words"}]}]}';
+    const LIVE = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Published words"}]}]}';
+
+    it('renders the draft, not the published copy', async () => {
+      const { fullKey } = await seedKey(OWNER, { mode: 'test' });
+      const shortCode = await seedTemplate(OWNER, LIVE);
+      await db.update(mails).set({ content: DRAFT, updated_at: '2026-06-01T00:00:00.000Z' }).where(eq(mails.short_code, shortCode));
+
+      const body = await (await renderTemplate(shortCode, fullKey)).json();
+      expect(body.html).toContain('Draft words');
+      expect(body.html).not.toContain('Published words');
+      expect(body.mode).toBe('test');
+      expect(body.updatedAt).toBe('2026-06-01T00:00:00.000Z');
+    });
+
+    it('serves a template that has never been published', async () => {
+      const { fullKey } = await seedKey(OWNER, { mode: 'test' });
+      const shortCode = await seedTemplate(OWNER, DRAFT, { published: false });
+
+      expect((await renderTemplate(shortCode, fullKey)).status).toBe(200);
+      const meta = await (await fetchTemplate(shortCode, fullKey)).json();
+      expect(meta.mode).toBe('test');
+      expect(meta.publishedAt).toBeNull();
+    });
+
+    it('works on the free plan and leaves the live quota alone', async () => {
+      const { fullKey } = await seedKey(OWNER, { mode: 'test' });
+      const shortCode = await seedTemplate(OWNER);
+
+      expect((await renderTemplate(shortCode, fullKey)).status).toBe(200);
+
+      const { getApiUsage } = await import('../lib/api-quota');
+      expect(await getApiUsage(db, OWNER)).toBe(0);
+      expect(await getApiUsage(db, OWNER, new Date(), 'test')).toBe(1);
+    });
+
+    it('stops at its own monthly cap', async () => {
+      const { fullKey } = await seedKey(OWNER, { mode: 'test' });
+      const shortCode = await seedTemplate(OWNER);
+      const { ukMonthString } = await import('../lib/api-quota');
+      const { TEST_API_CALLS_PER_MONTH } = await import('@temply/shared/plans');
+      await db.insert(apiUsage).values({ user_id: OWNER, period: `${ukMonthString()}#test`, count: TEST_API_CALLS_PER_MONTH });
+
+      const res = await renderTemplate(shortCode, fullKey);
+      expect(res.status).toBe(429);
+      expect((await res.json()).message).toContain('Test keys');
+    });
   });
 
   it('returns a text alternative beside the HTML', async () => {

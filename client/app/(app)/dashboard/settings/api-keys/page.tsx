@@ -8,7 +8,8 @@ import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 import { httpDelete, httpGet, httpPost } from '~/lib/http';
 import { toast } from 'sonner';
 import { isLimitReached } from '@temply/shared/plans';
-import { Button } from '~/components/ui/button';
+import { Button, pressable } from '~/components/ui/button';
+import { cn } from '~/lib/classname';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import {
@@ -22,10 +23,13 @@ import {
 import { PageLoading } from '~/components/ui/page-loading';
 import { Badge, Card, EmptyState, ErrorState } from '~/components/ui/surfaces';
 
+type ApiKeyMode = 'live' | 'test';
+
 type ApiKeyItem = {
   id: string;
   name: string;
   key_prefix: string;
+  mode: ApiKeyMode;
   created_at: string | null;
   last_used_at: string | null;
   revoked_at: string | null;
@@ -51,6 +55,7 @@ export default function ApiKeysPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [keyName, setKeyName] = useState('');
+  const [keyMode, setKeyMode] = useState<ApiKeyMode>('live');
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -71,7 +76,8 @@ export default function ApiKeysPage() {
   const atLimit = billing ? isLimitReached(billing.usage?.apiKeys ?? 0, apiKeyLimit) : false;
 
   const { mutateAsync: createKey, isPending: isCreating } = useMutation({
-    mutationFn: (name: string) => httpPost<CreateKeyResponse>('/api/v1/api-keys', { name }),
+    mutationFn: (input: { name: string; mode: ApiKeyMode }) =>
+      httpPost<CreateKeyResponse>('/api/v1/api-keys', input),
     onSuccess: (result) => {
       setNewlyCreatedKey(result.key.full_key);
       setKeyName('');
@@ -89,9 +95,17 @@ export default function ApiKeysPage() {
     onError: (error) => toast.error(error.message || 'Could not revoke the key'),
   });
 
+  // Live keys are gated by the plan; a test key is open to everyone, so on
+  // a locked plan the dialog opens on Test and Live is shown as the upsell.
+  const openCreate = () => {
+    setNewlyCreatedKey(null);
+    setKeyMode(featureLocked || atLimit ? 'test' : 'live');
+    setShowCreate(true);
+  };
+
   const handleCreate = async () => {
     if (!keyName.trim()) return;
-    await createKey(keyName.trim());
+    await createKey({ name: keyName.trim(), mode: keyMode });
     setShowCreate(false);
   };
 
@@ -108,14 +122,7 @@ export default function ApiKeysPage() {
       {/* The layout's header carries the title now, so the one action the page
           owns sits on its own row rather than being dropped with it. */}
       <div className="flex justify-end">
-        <Button
-          variant="primary"
-          disabled={featureLocked || atLimit}
-          onClick={() => {
-            setNewlyCreatedKey(null);
-            setShowCreate(true);
-          }}
-        >
+        <Button variant="primary" onClick={openCreate}>
           <PlusIcon />
           Create key
         </Button>
@@ -153,15 +160,21 @@ export default function ApiKeysPage() {
           description="We could not load your keys. Any keys you already created are still active."
           onRetry={() => refetch()}
         />
-      ) : featureLocked ? (
+      ) : keys.length === 0 && featureLocked ? (
         <EmptyState
           icon={LockIcon}
-          title="API keys are a Pro feature"
-          description="Upgrade to create keys and read your templates from your own application."
+          title="Live keys are a Pro feature"
+          description="A test key is free on every plan: it renders your drafts so you can build against the API before you upgrade."
           action={
-            <Button variant="primary" asChild>
-              <Link href="/dashboard/settings/plan">Upgrade to Pro</Link>
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button variant="primary" onClick={openCreate}>
+                <PlusIcon />
+                Create test key
+              </Button>
+              <Button asChild>
+                <Link href="/dashboard/settings/plan">Upgrade to Pro</Link>
+              </Button>
+            </div>
           }
         />
       ) : keys.length === 0 ? (
@@ -170,13 +183,7 @@ export default function ApiKeysPage() {
           title="No API keys"
           description="Create one to read your templates from your own application."
           action={
-            <Button
-              variant="primary"
-              onClick={() => {
-                setNewlyCreatedKey(null);
-                setShowCreate(true);
-              }}
-            >
+            <Button variant="primary" onClick={openCreate}>
               <PlusIcon />
               Create key
             </Button>
@@ -200,7 +207,12 @@ export default function ApiKeysPage() {
             <tbody className="divide-y divide-line">
               {keys.map((key) => (
                 <tr key={key.id}>
-                  <td className="px-3.5 py-2.5 font-medium text-ink">{key.name}</td>
+                  <td className="px-3.5 py-2.5 font-medium text-ink">
+                    <span className="flex items-center gap-2">
+                      {key.name}
+                      {key.mode === 'test' ? <Badge tone="neutral">Test</Badge> : null}
+                    </span>
+                  </td>
                   <td className="px-3.5 py-2.5">
                     <code className="rounded-xs bg-hover px-1.5 py-0.5 font-mono text-xs text-muted">
                       {key.key_prefix}…
@@ -241,14 +253,14 @@ export default function ApiKeysPage() {
         </div>
       )}
 
-      {/* Hidden when the feature is locked — no point showing how to use a key
-          you cannot create. */}
-      {featureLocked ? null : (
+      {(
         <Card>
           <h2 className="text-sm font-semibold text-ink">Using a key</h2>
           <p className="mt-1 text-sm text-muted">
-            Send it as a bearer token when you call the public API. The API renders the
-            published version of a template — edits wait in the draft until you publish.
+            Send it as a bearer token when you call the public API. A live key renders the
+            published version of a template — edits wait in the draft until you publish. A
+            test key renders the draft instead, is free on every plan, and stops at 1,000
+            calls a month.
           </p>
           <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
             <code>{`# The template's details
@@ -280,6 +292,45 @@ curl -X POST -H "Authorization: Bearer tply_live_..." \\
               Name it after where it will be used, so you know what you are revoking later.
             </DialogDescription>
           </DialogHeader>
+
+          {/* Two chips, not a select: the choice is binary and the difference
+              needs a sentence, which a dropdown has nowhere to put. */}
+          <div className="space-y-1.5">
+            <span className="block text-sm font-medium text-ink">Key type</span>
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Key type">
+              {(
+                [
+                  { mode: 'live' as const, label: 'Live', hint: 'Renders what you published. Counts toward your plan.' },
+                  { mode: 'test' as const, label: 'Test', hint: 'Renders your draft. Free on every plan, 1,000 calls a month.' },
+                ] as const
+              ).map((option) => {
+                const locked = option.mode === 'live' && (featureLocked || atLimit);
+                const active = keyMode === option.mode;
+                return (
+                  <button
+                    key={option.mode}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    disabled={locked}
+                    onClick={() => setKeyMode(option.mode)}
+                    className={cn(
+                      'flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left',
+                      pressable,
+                      active ? 'border-accent bg-accent-wash' : 'border-line hover:bg-hover',
+                      locked && 'opacity-60',
+                    )}
+                  >
+                    <span className={cn('text-sm font-medium', active ? 'text-accent-ink' : 'text-ink')}>
+                      {option.label}
+                      {locked ? <span className="ml-1.5 text-xs font-normal text-muted">Pro</span> : null}
+                    </span>
+                    <span className="text-xs text-muted">{option.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="space-y-1.5">
             <label htmlFor="api-key-name" className="block text-sm font-medium text-ink">

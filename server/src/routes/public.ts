@@ -9,9 +9,14 @@ import { json, notFound, unauthorized } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
 import { dbPlugin, type Db } from '../plugins/db';
 
+type Row = typeof mails.$inferSelect;
+
+/** What the caller gets to see: the draft on a test key, else the published copy. */
+type Served = { content: string; theme: string | null; previewText: string | null; stamp: string | null };
+
 type Resolved =
   | { error: Response }
-  | { key: { id: string; user_id: string }; template: typeof mails.$inferSelect };
+  | { key: { id: string; user_id: string; mode: 'live' | 'test' }; template: Row; served: Served };
 
 /**
  * Everything both endpoints need before they can answer: a live key, quota
@@ -33,7 +38,7 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .limit(1);
   if (!key) return { error: unauthorized('Invalid or revoked API key') };
 
-  const quota = await checkApiQuota(ctx.db, key.user_id);
+  const quota = await checkApiQuota(ctx.db, key.user_id, new Date(), key.mode);
   if (!quota.allowed) {
     return {
       error: json({ status: 429, message: quota.message!, errors: [quota.message!] }, 429),
@@ -46,20 +51,27 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .where(and(eq(mails.short_code, ctx.params.shortCode), eq(mails.user_id, key.user_id)))
     .limit(1);
   if (!template) return { error: notFound('Template not found') };
-  // The API serves the published copy only. A draft that has never been
-  // published is the author's, not the integrator's — and a template whose
-  // draft is mid-edit keeps serving what was last published.
-  if (template.published_at === null || template.published_content === null) {
-    return { error: notFound('This template has not been published yet') };
+  // A live key serves the published copy only: a draft that has never been
+  // published is the author's, not the integrator's, and a template whose
+  // draft is mid-edit keeps serving what was last published. A test key is
+  // the staging view — it sees the draft, published or not.
+  let served: Served;
+  if (key.mode === 'test') {
+    served = { content: template.content, theme: template.theme, previewText: template.preview_text, stamp: template.updated_at };
+  } else {
+    if (template.published_at === null || template.published_content === null) {
+      return { error: notFound('This template has not been published yet') };
+    }
+    served = { content: template.published_content, theme: template.published_theme, previewText: template.published_preview_text, stamp: template.published_at };
   }
 
   await ctx.db
     .update(apiKeysTable)
     .set({ last_used_at: new Date().toISOString() })
     .where(eq(apiKeysTable.id, key.id));
-  await recordApiCall(ctx.db, key.user_id);
+  await recordApiCall(ctx.db, key.user_id, new Date(), key.mode);
 
-  return { key, template };
+  return { key, template, served };
 }
 
 export const publicRoutes = new Elysia()
@@ -68,18 +80,19 @@ export const publicRoutes = new Elysia()
   .get('/api/public/v1/templates/:shortCode', async (ctx) => {
     const resolved = await resolve(ctx);
     if ('error' in resolved) return resolved.error;
-    const { template } = resolved;
+    const { template, served, key } = resolved;
 
-    // updatedAt is the publish time: it is the field an integrator caches
-    // on, so it has to move when the served content moves, not when the
-    // author types.
+    // updatedAt is the time the served copy last changed: the publish time
+    // on a live key, the draft's on a test key. It is the field an
+    // integrator caches on, so it moves with the content, not the typing.
     return json({
       id: template.id,
       shortCode: template.short_code,
       title: template.title,
-      previewText: template.published_preview_text,
+      previewText: served.previewText,
       publishedAt: template.published_at,
-      updatedAt: template.published_at,
+      updatedAt: served.stamp,
+      mode: key.mode,
     });
   })
 
@@ -94,11 +107,11 @@ export const publicRoutes = new Elysia()
     async (ctx) => {
       const resolved = await resolve(ctx);
       if ('error' in resolved) return resolved.error;
-      const { template } = resolved;
+      const { template, served, key } = resolved;
 
       let content: unknown;
       try {
-        content = JSON.parse(template.published_content!);
+        content = JSON.parse(served.content);
       } catch {
         return json(
           { status: 500, message: 'Template content is corrupt', errors: ['Unparseable content'] },
@@ -107,8 +120,8 @@ export const publicRoutes = new Elysia()
       }
 
       const renderOptions = {
-        theme: template.published_theme ? JSON.parse(template.published_theme) : undefined,
-        preview: template.published_preview_text ?? undefined,
+        theme: served.theme ? JSON.parse(served.theme) : undefined,
+        preview: served.previewText ?? undefined,
         // Omitted entirely when the caller sends none, which keeps variables as
         // `{{placeholders}}` and every conditional block visible.
         payload: ctx.body?.data,
@@ -122,7 +135,7 @@ export const publicRoutes = new Elysia()
       // writing the text version by hand is how they drift.
       const text = await render(content as JSONContent, { ...renderOptions, plainText: true });
 
-      return json({ html, text, shortCode: template.short_code, updatedAt: template.published_at });
+      return json({ html, text, shortCode: template.short_code, updatedAt: served.stamp, mode: key.mode });
     },
     { body: t.Optional(t.Object({ data: t.Optional(t.Any()) })) },
   );

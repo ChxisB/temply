@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { subscriptions, mails, apiKeysTable, brands, assets } from '@temply/shared/schema';
 import type { Db } from '../plugins/db';
 import { PLAN_LIMITS as planLimits, type Plan } from '@temply/shared/plans';
@@ -31,10 +31,11 @@ export async function getUsage(db: Db, userId: string) {
     .from(mails)
     .where(eq(mails.user_id, userId));
 
+  // Test keys sit outside the plan, so only live ones count toward its cap.
   const [apiKeyCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(apiKeysTable)
-    .where(eq(apiKeysTable.user_id, userId));
+    .where(and(eq(apiKeysTable.user_id, userId), eq(apiKeysTable.mode, 'live')));
 
   return { templates: templateCount?.count ?? 0, apiKeys: apiKeyCount?.count ?? 0 };
 }

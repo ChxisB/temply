@@ -16,6 +16,7 @@ export function initTables(sqlite: Database) {
   sqlite.run(`CREATE TABLE IF NOT EXISTS api_keys (
     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
     key_prefix TEXT NOT NULL, key_hash TEXT NOT NULL,
+    mode TEXT NOT NULL DEFAULT 'live',
     created_at TEXT DEFAULT (datetime('now')), last_used_at TEXT, revoked_at TEXT
   )`);
   sqlite.run(`CREATE TABLE IF NOT EXISTS template_versions (
@@ -62,6 +63,8 @@ export function initTables(sqlite: Database) {
 
   addColumnIfMissing(sqlite, 'mails', 'theme', 'TEXT');
   addColumnIfMissing(sqlite, 'template_versions', 'theme', 'TEXT');
+  // Every key from before test keys existed was a live one.
+  addColumnIfMissing(sqlite, 'api_keys', 'mode', "TEXT NOT NULL DEFAULT 'live'");
 
   // Draft / published split. Rows from before it exist only as a single copy
   // the API was already serving, so that copy becomes the published one and

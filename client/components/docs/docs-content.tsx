@@ -471,7 +471,16 @@ export function CreatingATemplate() {
         The response carries the rendered <Code>html</Code>, with your data
         already in it, ready to hand to your mail provider. Omit the{' '}
         <Code>data</Code> object and you get the same email with its
-        placeholders intact. API access is a Pro feature.
+        placeholders intact.
+      </P>
+      <P>
+        Keys come in two kinds. A <strong className="font-medium text-ink">live</strong>{' '}
+        key (<Code>tply_live_…</Code>) renders what you published and counts
+        toward your plan; live keys are a Pro feature. A{' '}
+        <strong className="font-medium text-ink">test</strong> key
+        (<Code>tply_test_…</Code>) renders your current draft — published or
+        not — so staging always shows what you are working on. Test keys are
+        free on every plan and stop at 1,000 calls a month.
       </P>
     </section>
   );

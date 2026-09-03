@@ -46,6 +46,13 @@ export function serialiseLimits(limits: PlanLimits): WireLimits {
   };
 }
 
+/**
+ * Test keys are outside the plans: any account may hold them, and their
+ * calls never touch the plan's quota. This cap is what stops a test key from
+ * quietly becoming a free production key.
+ */
+export const TEST_API_CALLS_PER_MONTH = 1_000;
+
 /** null (or a non-finite) limit means unlimited, so nothing is ever "reached". */
 export function isLimitReached(used: number, limit: number | null): boolean {
   if (limit === null || !Number.isFinite(limit)) return false;

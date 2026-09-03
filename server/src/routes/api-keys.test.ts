@@ -52,6 +52,24 @@ describe('POST /api/v1/api-keys', () => {
     expect(JSON.stringify(stored)).not.toContain(body.key.full_key);
   });
 
+  it('mints a test key on the free plan, outside the live-key cap', async () => {
+    const res = await post(app, '/api/v1/api-keys', { name: 'Staging', mode: 'test' }, OWNER);
+    expect(res.status).toBe(200);
+    const { key } = await res.json();
+    expect(key.full_key).toMatch(/^tply_test_[0-9A-Za-z]{32}$/);
+    expect(key.key_prefix).toBe(key.full_key.slice(0, 14));
+    expect(key.mode).toBe('test');
+
+    // The live cap is untouched: a free user still gets their one live key.
+    expect((await createKey(OWNER)).status).toBe(200);
+  });
+
+  it('lists the mode of each key', async () => {
+    await post(app, '/api/v1/api-keys', { name: 'Staging', mode: 'test' }, OWNER);
+    const { keys } = await (await get(app, '/api/v1/api-keys', OWNER)).json();
+    expect(keys[0].mode).toBe('test');
+  });
+
   it('rejects an empty name', async () => {
     await givePlan(db, OWNER, 'pro');
     const res = await post(app, '/api/v1/api-keys', { name: '' }, OWNER);
