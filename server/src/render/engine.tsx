@@ -267,6 +267,19 @@ export type LinkValues = Map<string, string>;
 export type PayloadValue = Record<string, any> | boolean;
 export type PayloadValues = Map<string, PayloadValue>;
 
+/**
+ * Root-relative sources ("/brand/logo.png") resolve against the app in a
+ * browser tab and against nothing in an inbox or a sandboxed preview frame.
+ * The renderer makes them absolute with the app's own origin — the same
+ * origin billing sends Stripe back to — so the editor, the API and the review
+ * page all show the same image.
+ */
+function absoluteSrc<T extends string | null | undefined>(src: T): T | string {
+  if (typeof src !== 'string' || !src.startsWith('/') || src.startsWith('//')) return src;
+  const origin = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9000').replace(/\/$/, '');
+  return `${origin}${src}`;
+}
+
 export class Engine {
   readonly preheader = new Preheader(this);
 
@@ -1169,7 +1182,7 @@ export class Engine {
         <Column align={alignment}>
           <Img
             alt={alt || title || 'Logo'}
-            src={src}
+            src={absoluteSrc(src)}
             style={{
               width: logoSizes[size as AllowedLogoSizes] || size,
               height: logoSizes[size as AllowedLogoSizes] || size,
@@ -1222,7 +1235,7 @@ export class Engine {
     const mainImage = (
       <Img
         alt={alt || title || 'Image'}
-        src={src}
+        src={absoluteSrc(src)}
         style={{
           width: widthStyle, // Use the calculated width
           height: heightStyle, // Use the calculated height
@@ -1850,7 +1863,7 @@ export class Engine {
 
     const image = (
       <img
-        src={src}
+        src={absoluteSrc(src)}
         alt={alt}
         title={title}
         width={width}
