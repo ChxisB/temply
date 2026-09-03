@@ -64,6 +64,9 @@ function PrimaryTarget({
 type Slots = {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  /** One line and an ellipsis by default; two for a gallery where the
+   *  subtitle is the pitch and cutting it mid-sentence reads as broken. */
+  subtitleLines?: 1 | 2;
   /** One or more Badges; a tile stacks them top-right, a row keeps them inline. */
   badge?: React.ReactNode;
   /** Small trailing facts — a date, a size. Rows may pass several columns. */
@@ -79,6 +82,7 @@ export function Tile({
   media,
   title,
   subtitle,
+  subtitleLines = 1,
   badge,
   meta,
   actions,
@@ -129,7 +133,11 @@ export function Tile({
             >
               {title}
             </p>
-            {subtitle ? <p className="mt-0.5 truncate text-xs text-muted">{subtitle}</p> : null}
+            {subtitle ? (
+              <p className={cn('mt-0.5 text-xs text-muted', subtitleLines === 2 ? 'line-clamp-2' : 'truncate')}>
+                {subtitle}
+              </p>
+            ) : null}
             {children}
           </div>
           {badge ? <div className="flex shrink-0 flex-col items-end gap-1">{badge}</div> : null}
