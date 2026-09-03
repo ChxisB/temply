@@ -9,6 +9,13 @@ export const PUBLIC_API_PREFIX = '/api/public/v1';
 export const PUBLIC_TEMPLATE_ROUTE = `${PUBLIC_API_PREFIX}/templates/:shortCode`;
 export const PUBLIC_RENDER_ROUTE = `${PUBLIC_TEMPLATE_ROUTE}/render`;
 
+/** The signed-out review page's data: a share token, no key, the draft. */
+export const PUBLIC_PREVIEW_ROUTE = `${PUBLIC_API_PREFIX}/preview/:token`;
+
+export function publicPreviewPath(token: string): string {
+  return `${PUBLIC_API_PREFIX}/preview/${token}`;
+}
+
 export function publicTemplatePath(shortCode: string): string {
   return `${PUBLIC_API_PREFIX}/templates/${shortCode}`;
 }

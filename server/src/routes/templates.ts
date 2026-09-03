@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import type { JSONContent } from '@tiptap/core';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { mails, templateVersions } from '@temply/shared/schema';
-import { generateShortCode } from '../lib/codes';
+import { generateShareToken, generateShortCode } from '../lib/codes';
 import { nextStamp } from '../lib/stamp';
 import { hasUnpublishedChanges } from '@temply/shared/publish';
 import { checkTemplateLimit, shouldSnapshot } from '../lib/billing';
@@ -210,6 +210,26 @@ export const templatesRoutes = new Elysia()
       .where(eq(mails.id, row.id));
     const [restored] = await ctx.db.select().from(mails).where(eq(mails.id, row.id)).limit(1);
     return json({ template: withFlags(restored) });
+  })
+
+  // A review link. Creating one when it exists returns the same link — a
+  // teammate who already has it should not be cut off by a second click.
+  .post('/api/v1/templates/:id/share', async (ctx) => {
+    if (!ctx.userId) return unauthorized();
+    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!row) return notFound('Template not found');
+    if (row.share_token) return json({ token: row.share_token });
+    const token = generateShareToken();
+    await ctx.db.update(mails).set({ share_token: token }).where(eq(mails.id, row.id));
+    return json({ token });
+  })
+
+  .delete('/api/v1/templates/:id/share', async (ctx) => {
+    if (!ctx.userId) return unauthorized();
+    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!row) return notFound('Template not found');
+    await ctx.db.update(mails).set({ share_token: null }).where(eq(mails.id, row.id));
+    return json({ status: 'ok' });
   })
 
   .delete('/api/v1/templates/:id', async (ctx) => {

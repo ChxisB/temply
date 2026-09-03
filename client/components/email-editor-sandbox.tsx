@@ -62,6 +62,7 @@ import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import defaultEmailJSON from '~/lib/default-editor-json.json';
 import { VersionHistoryDialog } from './version-history-dialog';
+import { ShareLinkPopover } from './share-link-popover';
 import { TemplateThemePanel } from './template-theme-panel';
 import { DEFAULT_RENDERER_THEME, type RendererThemeOptions } from '@temply/shared/theme';
 // The app-wide input treatment; the global :focus-visible ring supplies focus.
@@ -966,6 +967,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             hasUnpublishedChanges={unpublished}
             onDiscarded={handleDiscarded}
           />
+          <ShareLinkPopover templateId={template.id} initialToken={template.share_token ?? null} />
         </div>
 
         <div className="flex items-center gap-2">

@@ -7,7 +7,7 @@ import { checkApiQuota, recordApiCall } from '../lib/api-quota';
 import { render } from '../render/render';
 import { json, notFound, unauthorized } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
-import { PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE } from '@temply/shared/api';
+import { PUBLIC_PREVIEW_ROUTE, PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE } from '@temply/shared/api';
 import { dbPlugin, type Db } from '../plugins/db';
 
 type Row = typeof mails.$inferSelect;
@@ -78,6 +78,34 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
 export const publicRoutes = new Elysia()
   .use(authPlugin)
   .use(dbPlugin)
+  /**
+   * The review page's data. No key and no quota: the secret in the URL is
+   * the whole credential, and the author handed it out on purpose. It shows
+   * the draft — a review is of the work in progress, not of what shipped —
+   * with placeholders intact, the way the editor's own preview does.
+   */
+  .get(PUBLIC_PREVIEW_ROUTE, async (ctx) => {
+    const [template] = await ctx.db
+      .select()
+      .from(mails)
+      .where(eq(mails.share_token, ctx.params.token))
+      .limit(1);
+    if (!template) return notFound('This link is not active');
+    let content: unknown;
+    try {
+      content = JSON.parse(template.content);
+    } catch {
+      return json({ status: 500, message: 'Template content is corrupt', errors: ['Unparseable content'] }, 500);
+    }
+    let theme;
+    try {
+      theme = template.theme ? JSON.parse(template.theme) : undefined;
+    } catch {
+      theme = undefined;
+    }
+    const html = await render(content as JSONContent, { theme, preview: template.preview_text ?? undefined });
+    return json({ title: template.title, previewText: template.preview_text, html, updatedAt: template.updated_at });
+  })
   .get(PUBLIC_TEMPLATE_ROUTE, async (ctx) => {
     const resolved = await resolve(ctx);
     if ('error' in resolved) return resolved.error;

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { apiKeysTable, apiUsage, mails } from '@temply/shared/schema';
 import { generateApiKey, generateShortCode } from '../lib/codes';
-import { createTestApp, createTestDb, givePlan, type TestDb } from '../test/helpers';
+import { createTestApp, createTestDb, get, givePlan, type TestDb } from '../test/helpers';
 import { publicRoutes } from './public';
 
 let db: TestDb;
@@ -81,6 +81,29 @@ function fetchTemplate(shortCode: string, apiKey?: string) {
     }),
   );
 }
+
+describe('GET /api/public/v1/preview/:token', () => {
+  const DRAFT = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Draft words"}]}]}';
+
+  it('renders the draft for a valid token, with no key and no quota', async () => {
+    const shortCode = await seedTemplate(OWNER, '{"type":"doc"}');
+    await db.update(mails).set({ content: DRAFT, share_token: 'abcdefghijklmnopqrstuvwx' }).where(eq(mails.short_code, shortCode));
+
+    const res = await get(app, '/api/public/v1/preview/abcdefghijklmnopqrstuvwx');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.title).toBe('Welcome email');
+    expect(body.html).toContain('Draft words');
+
+    const { getApiUsage } = await import('../lib/api-quota');
+    expect(await getApiUsage(db, OWNER)).toBe(0);
+  });
+
+  it('404s for an unknown or switched-off link', async () => {
+    const res = await get(app, '/api/public/v1/preview/nothingherexxxxxxxxxxxxx');
+    expect(res.status).toBe(404);
+  });
+});
 
 describe('GET /api/public/v1/templates/:shortCode', () => {
   it('401s without an Authorization header', async () => {

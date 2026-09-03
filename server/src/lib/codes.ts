@@ -25,6 +25,11 @@ export function generateApiKey(mode: ApiKeyMode = 'live'): { fullKey: string; pr
   return { fullKey, prefix, hash };
 }
 
+/** Long enough that a link cannot be guessed; short enough to paste. */
+export function generateShareToken(): string {
+  return randomBase62(24);
+}
+
 export function hashApiKey(key: string): string {
   return createHash('sha256').update(key).digest('hex');
 }

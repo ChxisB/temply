@@ -453,6 +453,12 @@ export function CreatingATemplate() {
         plain-text alternative the same way.
       </P>
       <P>
+        Need a second pair of eyes first?{' '}
+        <strong className="font-medium text-ink">Share</strong> makes a link
+        anyone can open without signing in. It shows the draft as it stands,
+        and you can turn it off whenever you like.
+      </P>
+      <P>
         Or let your app fetch it. Every template has an id shown at the top of
         the editor, in the form <Code>tpl_XXXXXXXX</Code>. Create a key under
         Settings → API keys, then post to the render endpoint with the data for

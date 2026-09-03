@@ -75,6 +75,8 @@ export function initTables(sqlite: Database) {
   addColumnIfMissing(sqlite, 'mails', 'published_theme', 'TEXT');
   addColumnIfMissing(sqlite, 'mails', 'published_preview_text', 'TEXT');
   addColumnIfMissing(sqlite, 'mails', 'published_at', 'TEXT');
+  addColumnIfMissing(sqlite, 'mails', 'share_token', 'TEXT');
+  sqlite.run(`CREATE UNIQUE INDEX IF NOT EXISTS mails_share_token ON mails(share_token)`);
   sqlite.run(`UPDATE mails SET
     published_content = content, published_theme = theme,
     published_preview_text = preview_text, published_at = updated_at

@@ -335,6 +335,37 @@ describe('POST /api/v1/templates/:id/discard', () => {
   });
 });
 
+describe('share links', () => {
+  it('mints a token once and hands the same one back', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    const first = await (await post(app, `/api/v1/templates/${template.id}/share`, {}, OWNER)).json();
+    const second = await (await post(app, `/api/v1/templates/${template.id}/share`, {}, OWNER)).json();
+    expect(first.token).toMatch(/^[0-9A-Za-z]{24}$/);
+    expect(second.token).toBe(first.token);
+
+    const { template: row } = await (await get(app, `/api/v1/templates/${template.id}`, OWNER)).json();
+    expect(row.share_token).toBe(first.token);
+  });
+
+  it('turning the link off clears the token, and a new link is a new secret', async () => {
+    const template = await createTemplate(OWNER, 'Welcome');
+    const { token } = await (await post(app, `/api/v1/templates/${template.id}/share`, {}, OWNER)).json();
+
+    expect((await del(app, `/api/v1/templates/${template.id}/share`, OWNER)).status).toBe(200);
+    const [row] = await db.select().from(mails).where(eq(mails.id, template.id));
+    expect(row.share_token).toBeNull();
+
+    const { token: next } = await (await post(app, `/api/v1/templates/${template.id}/share`, {}, OWNER)).json();
+    expect(next).not.toBe(token);
+  });
+
+  it('404s for another user’s template', async () => {
+    const template = await createTemplate(OWNER, 'Mine');
+    expect((await post(app, `/api/v1/templates/${template.id}/share`, {}, OTHER)).status).toBe(404);
+    expect((await del(app, `/api/v1/templates/${template.id}/share`, OTHER)).status).toBe(404);
+  });
+});
+
 describe('a legacy row from before publishing existed', () => {
   it('is published as it stood, so the API keeps serving it', async () => {
     // A row the way the old code wrote it: a single copy, nothing published.

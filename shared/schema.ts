@@ -28,6 +28,10 @@ export const mails = sqliteTable('mails', {
   published_theme: text('published_theme'),
   published_preview_text: text('published_preview_text'),
   published_at: text('published_at'),
+  /** A review link's secret: anyone holding it can view the draft, signed
+   *  out. Null means no link. Turning the link off clears it; making a new
+   *  one mints a new secret, so an old link stays dead. */
+  share_token: text('share_token').unique(),
 });
 
 export const apiKeysTable = sqliteTable('api_keys', {
