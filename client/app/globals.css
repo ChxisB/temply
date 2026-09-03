@@ -295,7 +295,21 @@
 
   /* One focus treatment, defined once, inherited everywhere. The previous UI
      defined focus styles in 24% of files and left the rest on the browser
-     default. */
+     default.
+
+     Focusable elements carry the outline at rest, transparent, and focus only
+     recolours it — outline-style cannot animate, outline-color can, so the
+     ring fades in on the same beat as a hover tint instead of switching on.
+     Tailwind's transition-colors lists outline-color too, so a control that
+     already eases its hover keeps this fade. */
+  a,
+  button,
+  summary,
+  [tabindex]:not([tabindex='-1']) {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color var(--ds-motion-fast) var(--ds-ease-out);
+  }
   :focus-visible {
     outline: 2px solid var(--ds-accent-ink);
     outline-offset: 2px;
