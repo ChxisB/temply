@@ -45,7 +45,7 @@
       "type": "button",
       "attrs": {
         "text": "Get Started →",
-        "url": "",
+        "url": "https://example.com",
         "alignment": "left",
         "variant": "filled",
         "borderRadius": "smooth",
