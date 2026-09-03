@@ -1,14 +1,15 @@
 'use client';
 
-import { ImageIcon, Loader2Icon, UploadIcon } from 'lucide-react';
+import { ImageIcon, ImagePlusIcon, Loader2Icon, UploadIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { formatBytes } from '@temply/shared/bytes';
 import { AssetGrid, type PendingUpload } from '~/components/assets/asset-grid';
 import { AssetPreviewDialog } from '~/components/assets/asset-preview-dialog';
 import { AssetViewSwitch, useAssetView } from '~/components/assets/asset-view-switch';
 import { useAssets } from '~/components/assets/use-assets';
+import { useFileDrop } from '~/components/assets/use-file-drop';
 import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
@@ -21,8 +22,10 @@ const inputClass =
 
 export default function AssetsPage() {
   const { query, upload, remove } = useAssets();
+  // Stable across renders, unlike the mutation object itself — the document
+  // drop listener must not be re-registered mid-drag.
+  const { mutateAsync: uploadOne } = upload;
   const [search, setSearch] = useState('');
-  const [dragging, setDragging] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ asset: Asset; templates: number } | null>(null);
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
   const [preview, setPreview] = useState<Asset | null>(null);
@@ -39,7 +42,7 @@ export default function AssetsPage() {
   const ratio = limit ? used / limit : 0;
   const usage = limit ? `${formatBytes(used)} of ${formatBytes(limit)} used` : `${formatBytes(used)} used`;
 
-  const uploadFiles = async (files: FileList | File[] | null) => {
+  const uploadFiles = useCallback(async (files: FileList | File[] | null) => {
     // Every file gets its placeholder card up front, so a multi-file drop
     // shows the whole queue rather than one card at a time.
     const queue = Array.from(files ?? []).map((file) => ({
@@ -52,7 +55,7 @@ export default function AssetsPage() {
 
     for (const [index, { file, pending }] of queue.entries()) {
       try {
-        await upload.mutateAsync(file);
+        await uploadOne(file);
         toast.success('Image uploaded');
         settle([pending.id]);
       } catch (error) {
@@ -63,7 +66,9 @@ export default function AssetsPage() {
         break;
       }
     }
-  };
+  }, [uploadOne]);
+
+  const dragging = useFileDrop(uploadFiles);
 
   const askDelete = async (asset: Asset) => {
     setPreview(null);
@@ -88,24 +93,23 @@ export default function AssetsPage() {
   };
 
   return (
-    <div
-      className={cn(
-        'space-y-5 rounded-lg border border-transparent transition-colors duration-200 motion-reduce:transition-none',
-        dragging && 'border-accent bg-accent-wash/40',
-      )}
-      onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
-      onDragLeave={(event) => {
-        // A child element's own drag-enter fires dragleave on this element
-        // first; only clear the state once the pointer has actually left
-        // the drop zone, or the border flickers while dragging over a card.
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
-      }}
-      onDrop={(event) => {
-        event.preventDefault();
-        setDragging(false);
-        void uploadFiles(event.dataTransfer.files);
-      }}
-    >
+    <div className="space-y-5">
+      {/* The whole window is the drop target (see useFileDrop); this is the
+          sheet that says so while a file is in the air. */}
+      <div
+        aria-hidden={!dragging}
+        className={cn(
+          'pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-surface/80 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none',
+          dragging ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        <div className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-accent bg-raised px-10 py-8 text-center shadow-lg">
+          <ImagePlusIcon className="size-6 text-accent-ink" />
+          <p className="text-sm font-medium text-ink">Drop images to upload</p>
+          <p className="text-2xs text-muted">JPEG, PNG, GIF or WebP · up to 5 MB each</p>
+        </div>
+      </div>
+
       <PageHeader
         title="Assets"
         description={usage}
@@ -162,7 +166,7 @@ export default function AssetsPage() {
         <EmptyState
           icon={ImageIcon}
           title={search ? 'No images match' : 'No images yet'}
-          description={search ? 'Try a different file name.' : 'Upload one to reuse it across templates'}
+          description={search ? 'Try a different file name.' : 'Upload one to reuse it across templates, or drop images anywhere on this page'}
           action={search ? undefined : <Button variant="primary" onClick={() => fileInput.current?.click()}>Upload</Button>}
         />
       ) : (
