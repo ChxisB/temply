@@ -30,7 +30,7 @@ export function EdgeSpacingControl(props: EdgeSpacingControlProps) {
 
   return (
     <Popover>
-      <PopoverTrigger className="mly:rounded mly:hover:bg-gray-100">
+      <PopoverTrigger className="mly:rounded mly:transition-colors mly:hover:bg-gray-100">
         <ChevronUp size={14} />
       </PopoverTrigger>
       <PopoverContent

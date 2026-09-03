@@ -21,7 +21,7 @@ export function ColumnsWidthConfig(props: ColumnsWidthConfigProps) {
 
   return (
     <Popover>
-      <PopoverTrigger className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:text-sm mly:data-[state=open]:bg-soft-gray mly:hover:bg-soft-gray">
+      <PopoverTrigger className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:text-sm mly:data-[state=open]:bg-soft-gray mly:transition-colors mly:hover:bg-soft-gray">
         <SlidersVertical className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
       </PopoverTrigger>
       <PopoverContent
@@ -116,7 +116,7 @@ function SwitchButton(props: SwitchButtonProps) {
   return (
     <button
       className={cn(
-        'mly:flex mly:h-7 mly:items-center mly:gap-1 mly:rounded-md mly:px-2 mly:text-sm mly:text-gray-500 mly:hover:bg-soft-gray mly:hover:text-midnight-gray',
+        'mly:flex mly:h-7 mly:items-center mly:gap-1 mly:rounded-md mly:px-2 mly:text-sm mly:text-gray-500 mly:transition-colors mly:hover:bg-soft-gray mly:hover:text-midnight-gray',
         isActive && 'mly:bg-soft-gray mly:text-midnight-gray'
       )}
       onClick={onClick}

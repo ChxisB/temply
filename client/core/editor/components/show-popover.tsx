@@ -66,7 +66,7 @@ function _ShowPopover(props: ShowPopoverProps) {
         <TooltipTrigger asChild>
           <PopoverTrigger
             className={cn(
-              'mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:data-[state=open]:bg-soft-gray mly:hover:bg-soft-gray mly:focus-visible:relative mly:focus-visible:z-10 ',
+              'mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:data-[state=open]:bg-soft-gray mly:transition-colors mly:hover:bg-soft-gray mly:focus-visible:relative mly:focus-visible:z-10 ',
               // A configured condition is a normal state, not a problem: it
                 // used to light up in the danger colour.
                 showIfKey &&

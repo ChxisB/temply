@@ -186,7 +186,7 @@ export function ContentMenu(props: ContentMenuProps) {
               <Divider type="horizontal" />
               <BaseButton
                 onClick={deleteCurrentNode}
-                className="mly:h-auto mly:justify-start mly:gap-2 mly:rounded! mly:bg-red-100 mly:px-2 mly:py-1 mly:text-sm mly:font-normal mly:text-red-600 mly:hover:bg-red-200 mly:focus:bg-red-200"
+                className="mly:h-auto mly:justify-start mly:gap-2 mly:rounded! mly:bg-red-100 mly:px-2 mly:py-1 mly:text-sm mly:font-normal mly:text-red-600 mly:transition-colors mly:hover:bg-red-200 mly:focus:bg-red-200"
               >
                 <Trash2 className="mly:size-[15px] mly:shrink-0" />
                 Delete

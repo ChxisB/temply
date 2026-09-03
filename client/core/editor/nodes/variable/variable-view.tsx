@@ -139,9 +139,9 @@ export const DefaultRenderVariable: RenderVariableFunction = (props) => {
     return (
       <div
         className={cn(
-          'mly:inline-grid mly:h-7 mly:min-w-28 mly:max-w-xs mly:grid-cols-[12px_1fr] mly:items-center mly:gap-1.5 mly:rounded-md mly:border mly:border-gray-200 mly:px-2 mly:font-mono mly:text-sm mly:hover:bg-soft-gray',
+          'mly:inline-grid mly:h-7 mly:min-w-28 mly:max-w-xs mly:grid-cols-[12px_1fr] mly:items-center mly:gap-1.5 mly:rounded-md mly:border mly:border-gray-200 mly:px-2 mly:font-mono mly:text-sm mly:transition-colors mly:hover:bg-soft-gray',
           !valid &&
-            'mly:border-rose-400 mly:bg-rose-50 mly:text-rose-600 mly:hover:bg-rose-100'
+            'mly:border-rose-400 mly:bg-rose-50 mly:text-rose-600 mly:transition-colors mly:hover:bg-rose-100'
         )}
       >
         <Braces className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5] mly:text-rose-600" />

@@ -111,7 +111,7 @@ export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
                   onMouseEnter={() => onHoverItem?.(item)}
                   onMouseLeave={() => onHoverItem?.(null)}
                   className={cn(
-                    'mly:flex mly:w-fit mly:min-w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-sm mly:text-gray-900 mly:hover:bg-soft-gray',
+                    'mly:flex mly:w-fit mly:min-w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-sm mly:text-gray-900 mly:transition-colors mly:hover:bg-soft-gray',
                     index === selectedIndex
                       ? 'mly:bg-soft-gray'
                       : 'mly:bg-white'
@@ -122,7 +122,7 @@ export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
                 </button>
               ))
             ) : (
-              <div className="mly:flex mly:h-7 mly:w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-[13px] mly:text-gray-900 mly:hover:bg-soft-gray">
+              <div className="mly:flex mly:h-7 mly:w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-[13px] mly:text-gray-900 mly:transition-colors mly:hover:bg-soft-gray">
                 No result
               </div>
             )}

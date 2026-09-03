@@ -108,7 +108,7 @@ export function SlashCommandItem(props: SlashCommandItemProps) {
       <TooltipTrigger asChild>
         <button
           className={cn(
-            'mly:flex mly:w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:text-sm mly:text-gray-900 mly:hover:bg-gray-100 mly:hover:text-gray-900',
+            'mly:flex mly:w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:text-sm mly:text-gray-900 mly:transition-colors mly:hover:bg-gray-100 mly:hover:text-gray-900',
             isActive
               ? 'mly:bg-gray-100 mly:text-gray-900'
               : 'mly:bg-transparent'

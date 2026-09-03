@@ -37,7 +37,7 @@ export function TurnIntoBlock(props: TurnIntoBlockProps) {
         <TooltipTrigger asChild>
           <PopoverTrigger
             className={cn(
-              'mly:flex mly:aspect-square mly:h-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:data-[state=open]:bg-soft-gray mly:hover:bg-soft-gray mly:focus-visible:relative mly:focus-visible:z-10 '
+              'mly:flex mly:aspect-square mly:h-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:data-[state=open]:bg-soft-gray mly:transition-colors mly:hover:bg-soft-gray mly:focus-visible:relative mly:focus-visible:z-10 '
             )}
           >
             <ActiveIcon className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5]" />
