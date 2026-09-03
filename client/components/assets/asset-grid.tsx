@@ -16,7 +16,7 @@ type Props = {
   pending?: PendingUpload[];
   /** Cards or rows. The picker only ever needs cards. */
   view?: AssetView;
-  /** `sm` packs the page's grid; `md` suits a dialog that is only ~40rem wide. */
+  /** `sm` is the page's grid (the list view carries density); `md` suits a dialog ~40rem wide. */
   size?: 'sm' | 'md';
 } & (
   | { mode: 'pick'; onPick: (asset: Asset) => void; onDelete?: never; onPreview?: never }
@@ -62,7 +62,7 @@ export function AssetGrid(props: Props) {
     <ul
       className={cn(
         'grid gap-3',
-        size === 'sm' ? 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8' : 'grid-cols-3 sm:grid-cols-4',
+        size === 'sm' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-3 sm:grid-cols-4',
       )}
     >
       {pending.map((file) => (
@@ -74,8 +74,8 @@ export function AssetGrid(props: Props) {
           <div className="flex aspect-[4/3] items-center justify-center rounded-t-lg bg-sunken">
             <Loader2Icon className="size-5 animate-spin text-faint" />
           </div>
-          <div className="min-w-0 px-2 py-1.5">
-            <p className="truncate text-xs text-ink" title={file.name}>{file.name}</p>
+          <div className="min-w-0 px-2.5 py-2">
+            <p className="truncate text-sm text-ink" title={file.name}>{file.name}</p>
             <p className="text-2xs text-muted tabular-nums">Uploading · {formatBytes(file.bytes)}</p>
           </div>
         </li>
@@ -93,8 +93,8 @@ export function AssetGrid(props: Props) {
           </div>
         );
         const caption = (
-          <div className="min-w-0 px-2 py-1.5">
-            <p className="truncate text-xs text-ink" title={asset.name}>{asset.name}</p>
+          <div className="min-w-0 px-2.5 py-2">
+            <p className="truncate text-sm text-ink" title={asset.name}>{asset.name}</p>
             <p className="truncate text-2xs text-muted tabular-nums">{assetMeta(asset)}</p>
           </div>
         );
