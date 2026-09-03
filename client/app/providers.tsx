@@ -12,7 +12,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         {children}
+        {/* Top-centre, not the default bottom-right: in development Clerk
+            parks its "Configure your application" panel there at the
+            maximum z-index, and every toast — save, upload, delete — was
+            drawn underneath it. */}
         <Toaster
+          position="top-center"
           toastOptions={{
             classNames: {
               toast: 'bg-raised text-ink border border-line',
