@@ -326,6 +326,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     variables: [],
     placeholders: {},
     where: {},
+    urlVariables: [],
   });
   const [previewData, setPreviewData] = useState<PreviewData>({
     conditions: {},
@@ -852,7 +853,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       return;
     }
     const json = editor?.getJSON();
-    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], placeholders: {}, where: {} };
+    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], placeholders: {}, where: {}, urlVariables: [] };
     const content = JSON.stringify(json);
     try {
       await httpPost('/api/v1/emails/send', {

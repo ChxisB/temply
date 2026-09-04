@@ -15,12 +15,23 @@ export type PreviewData = {
   variables: Record<string, string>;
 };
 
+/** A destination with no placeholder of its own gets an obvious stand-in,
+ *  so a test send has somewhere to point and nobody is asked to invent a
+ *  URL for a button that already says what it is. */
+export function standInUrl(name: string): string {
+  return `https://example.com/${name}`;
+}
+
 /** Every condition starts on, so the first preview is the complete email;
- *  every pill starts on its placeholder, so the first test send has words. */
+ *  every pill starts on its placeholder and every destination on a stand-in
+ *  URL, so the first test send has words and working links. */
 export function initialPreviewData(keys: TemplateDataKeys): PreviewData {
+  const urls = new Set(keys.urlVariables ?? []);
   return {
     conditions: Object.fromEntries(keys.conditions.map((key) => [key, true])),
-    variables: Object.fromEntries(keys.variables.map((key) => [key, keys.placeholders?.[key] ?? ''])),
+    variables: Object.fromEntries(
+      keys.variables.map((key) => [key, keys.placeholders?.[key] ?? (urls.has(key) ? standInUrl(key) : '')]),
+    ),
   };
 }
 

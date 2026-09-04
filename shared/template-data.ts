@@ -27,6 +27,9 @@ export type TemplateDataKeys = {
   /** Where each variable first appears, so a finding can point at the block
    *  rather than leave the author hunting through the document. */
   where: Record<string, VariableLocation>;
+  /** Variables that are destinations — a button's or link's URL, an image's
+   *  source. They have no placeholder field, so previews stand one in. */
+  urlVariables: string[];
 };
 
 export type VariableLocation = {
@@ -60,8 +63,10 @@ export function collectDataKeys(content: unknown): TemplateDataKeys {
   const variables: string[] = [];
   const placeholders: Record<string, string> = {};
   const where: Record<string, VariableLocation> = {};
+  const urlVariables: string[] = [];
   const seenCondition = new Set<string>();
   const seenVariable = new Set<string>();
+  const seenUrl = new Set<string>();
 
   const locate = (name: unknown, block: Node | null) => {
     if (typeof name !== 'string' || !name.trim() || !block || where[name.trim()]) return;
@@ -98,12 +103,18 @@ export function collectDataKeys(content: unknown): TemplateDataKeys {
     }
     if (node.attrs?.isUrlVariable) {
       push(variables, seenVariable, node.attrs?.url);
+      push(urlVariables, seenUrl, node.attrs?.url);
       locate(node.attrs?.url, here);
+    }
+    if (node.attrs?.isSrcVariable) {
+      push(variables, seenVariable, node.attrs?.src);
+      push(urlVariables, seenUrl, node.attrs?.src);
+      locate(node.attrs?.src, here);
     }
 
     for (const child of node.content ?? []) walk(child, here);
   };
 
   walk(content as Node, null);
-  return { conditions, variables, placeholders, where };
+  return { conditions, variables, placeholders, where, urlVariables };
 }

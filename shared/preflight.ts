@@ -203,7 +203,9 @@ export function unresolvedVariables(
   keys: TemplateDataKeys,
   values: Record<string, string>,
 ): string[] {
-  const covered = new Set(Object.keys(keys.placeholders ?? {}));
+  // A destination has no placeholder field, but previews stand a URL in
+  // for it, so it is covered the same way.
+  const covered = new Set([...Object.keys(keys.placeholders ?? {}), ...(keys.urlVariables ?? [])]);
   return keys.variables.filter((key) => !values[key] && !covered.has(key));
 }
 

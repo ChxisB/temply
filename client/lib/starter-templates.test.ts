@@ -21,18 +21,9 @@ describe('starter templates', () => {
         ...collectContentFindings(starter.content),
       ].map((f) => f.message);
       expect(findings).toEqual([]);
-      // Every pill carries a fallback, so the only "no preview value"
-      // findings an untouched starter can raise are its button destinations
-      // — a button has nowhere to hold a fallback, and a test send with no
-      // URL typed is worth a word.
-      const keys = collectDataKeys(starter.content);
-      const buttonUrls = new Set<string>();
-      const walk = (node: any) => {
-        if (node?.type === 'button' && node.attrs?.isUrlVariable) buttonUrls.add(node.attrs.url);
-        for (const child of node?.content ?? []) walk(child);
-      };
-      walk(starter.content);
-      for (const key of unresolvedVariables(keys, {})) expect(buttonUrls.has(key)).toBe(true);
+      // Every pill carries a placeholder and every destination is stood in
+      // for, so an untouched starter raises no "no preview value" finding.
+      expect(unresolvedVariables(collectDataKeys(starter.content), {})).toEqual([]);
     });
   }
 });

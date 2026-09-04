@@ -1,4 +1,4 @@
-import { Link, LinkIcon, LucideIcon } from 'lucide-react';
+import { Link, LinkIcon, LucideIcon, Pencil } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { BaseButton } from '../base-button';
 import { useRef, useState } from 'react';
@@ -133,7 +133,15 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
           <div className="mly:isolate mly:flex mly:rounded-lg">
             {!isEditing && (
               <div className="mly:flex mly:h-8 mly:items-center mly:rounded-lg mly:border mly:border-gray-300 mly:bg-panel mly:px-0.5">
+                {/* The pill is the way to a different destination — a URL
+                    or another variable — so it has to read as a control:
+                    a pointer, a name, and a pencil beside it. type=button
+                    keeps a click from submitting the form around it. */}
                 <button
+                  type="button"
+                  title="Change the destination"
+                  aria-label="Change the destination"
+                  className="mly:flex mly:cursor-pointer mly:items-center mly:gap-1.5 mly:rounded-md mly:pr-1.5 mly:transition-colors mly:hover:bg-soft-gray"
                   onClick={() => {
                     setIsEditing(true);
                     setTimeout(() => {
@@ -150,6 +158,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
                     from: 'bubble-variable',
                     editor,
                   })}
+                  <Pencil className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5] mly:text-midnight-gray" />
                 </button>
               </div>
             )}

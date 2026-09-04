@@ -12,6 +12,7 @@ describe('collectDataKeys locations', () => {
     });
     expect(keys.where.firstName).toEqual({ kind: 'heading', text: 'Hi {{firstName}}' });
     expect(keys.where.inviteUrl).toEqual({ kind: 'button', text: 'Accept invite' });
+    expect(keys.urlVariables).toEqual(['inviteUrl']);
   });
 });
 
@@ -67,11 +68,11 @@ describe('collectDataKeys', () => {
   });
 
   test('a document with neither yields empty lists', () => {
-    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
+    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({ conditions: [], variables: [], placeholders: {}, where: {}, urlVariables: [] });
   });
 
   test('survives malformed input', () => {
-    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
-    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
+    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [], placeholders: {}, where: {}, urlVariables: [] });
+    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [], placeholders: {}, where: {}, urlVariables: [] });
   });
 });
