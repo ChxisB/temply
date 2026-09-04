@@ -1,17 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import {
-  FileTextIcon,
-  KeyRoundIcon,
-  Loader2Icon,
-  MailCheckIcon,
-  MegaphoneIcon,
-  PlusIcon,
-  ReceiptIcon,
-  SparklesIcon,
-  UsersIcon,
-} from 'lucide-react';
+import { Loader2Icon, PlusIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '~/components/ui/button';
@@ -22,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
+import { StarterThumbnail } from '~/components/dashboard/starter-thumbnail';
 import { Tile } from '~/components/ui/item';
 import { httpPost } from '~/lib/http';
 import { STARTER_TEMPLATES, type StarterTemplate } from '~/lib/starter-templates';
@@ -29,17 +20,6 @@ import { toast } from 'sonner';
 
 type SaveTemplateResponse = {
   template: { id: string };
-};
-
-/** One glyph per starter, so the gallery reads at a glance. */
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  blank: FileTextIcon,
-  welcome: SparklesIcon,
-  'verify-email': MailCheckIcon,
-  'password-reset': KeyRoundIcon,
-  receipt: ReceiptIcon,
-  invite: UsersIcon,
-  announcement: MegaphoneIcon,
 };
 
 /**
@@ -101,7 +81,6 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
 
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={isPending || undefined}>
             {STARTER_TEMPLATES.map((starter) => {
-              const Icon = ICONS[starter.id] ?? FileTextIcon;
               const busy = picked === starter.id;
               return (
                 <Tile
@@ -110,12 +89,13 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
                   onClick={() => pick(starter)}
                   primaryLabel={`Start from ${starter.name}`}
                   media={
-                    <div className="flex aspect-[5/3] items-center justify-center bg-sunken">
+                    <div className="relative">
+                      <StarterThumbnail starter={starter} />
                       {busy ? (
-                        <Loader2Icon className="size-5 animate-spin text-faint" />
-                      ) : (
-                        <Icon className="size-6 text-muted" />
-                      )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-raised/70">
+                          <Loader2Icon className="size-5 animate-spin text-faint" />
+                        </div>
+                      ) : null}
                     </div>
                   }
                   title={starter.name}
