@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DocsNav } from '~/components/docs/docs-nav';
 import { ApiReference } from '~/components/docs/api-reference';
+import { YourTeam } from '~/components/docs/team';
 import {
   CreatingATemplate,
   Editor,
@@ -25,6 +26,7 @@ const sections = [
   { id: 'introduction', label: 'Introduction' },
   { id: 'creating-a-template', label: 'Creating a template' },
   { id: 'brands', label: 'Using brands' },
+  { id: 'team', label: 'Your team' },
   {
     id: 'api',
     label: 'The API',
@@ -67,7 +69,8 @@ export default function DocsPage() {
           </h1>
           <p className="mt-4 max-w-xl text-lg text-pretty text-muted">
             What the editor gives you, how a template goes from empty to sent,
-            what a brand carries, and how your app asks for the finished email.
+            what a brand carries, who on your team can do what, and how your
+            app asks for the finished email.
           </p>
         </header>
 
@@ -86,6 +89,7 @@ export default function DocsPage() {
             <Introduction />
             <CreatingATemplate />
             <UsingBrands />
+            <YourTeam />
             <ApiReference />
             <Editor />
           </div>
