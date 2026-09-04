@@ -23,7 +23,7 @@ export function RepeatView(props: NodeViewProps) {
         }}
       >
         <Repeat2 className="mly:size-3 mly:stroke-[2.5] mly:text-midnight-gray" />
-        <div className="mly:w-[1.5px] mly:grow mly:rounded-full mly:bg-rose-300" />
+        <div className="mly:w-[1.5px] mly:grow mly:rounded-full mly:bg-accent-ink" />
       </div>
     </NodeViewWrapper>
   );

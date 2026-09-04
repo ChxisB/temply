@@ -109,8 +109,10 @@ export function SlashCommandItem(props: SlashCommandItemProps) {
         <button
           className={cn(
             'mly:flex mly:w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:text-sm mly:text-gray-900 mly:transition-colors mly:hover:bg-gray-100 mly:hover:text-gray-900',
+            // The keyboard's row is a selection, so it takes the accent wash;
+            // the hover tint alone could not be told from the group header.
             isActive
-              ? 'mly:bg-gray-100 mly:text-gray-900'
+              ? 'mly:bg-accent-wash mly:text-accent-ink mly:hover:bg-accent-wash mly:hover:text-accent-ink'
               : 'mly:bg-transparent'
           )}
           onClick={() => selectItem(groupIndex, commandIndex)}

@@ -66,7 +66,9 @@
   --color-slate-600: var(--ds-muted);
   --color-slate-700: var(--ds-ink);
 
+  --color-rose-50: var(--ds-danger-wash);
   --color-rose-100: var(--ds-danger-wash);
+  --color-rose-400: var(--ds-danger);
   --color-rose-500: var(--ds-danger);
   --color-rose-600: var(--ds-danger-ink);
   --color-rose-800: var(--ds-danger-ink);

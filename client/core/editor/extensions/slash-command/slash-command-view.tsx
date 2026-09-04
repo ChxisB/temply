@@ -183,13 +183,27 @@ const CommandList = forwardRef<SuggestionListRef, CommandListProps>((props, ref)
     };
   }, []);
 
+  // A search with no match says so, like the variable menu does, instead
+  // of the menu vanishing under the caret.
   if (!groups || groups.length === 0) {
-    return null;
+    return (
+      <div
+        data-state="open"
+        data-side="top"
+        className="overlay-panel mly:z-50 mly:w-72 mly:rounded-md mly:border mly:border-gray-200 mly:bg-panel mly:p-2 mly:text-sm mly:text-gray-500 mly:shadow-md"
+      >
+        No result
+      </div>
+    );
   }
 
   return (
     <TooltipProvider>
-      <div className="mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:bg-panel mly:shadow-md mly:transition-all">
+      <div
+        data-state="open"
+        data-side="top"
+        className="overlay-panel mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:bg-panel mly:shadow-md"
+      >
         <div
           id="slash-command"
           ref={commandListContainer}

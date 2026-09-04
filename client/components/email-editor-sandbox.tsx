@@ -1204,12 +1204,19 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
             the selection and the undo history, and previewing is a glance. */}
         {/* In dark mode the canvas is dimmed a touch to take the glare off —
             comfort only, the theme's colours still hold: recipients get them
-            at full brightness, and so does the preview. */}
+            at full brightness, and so does the preview. The dim is a veil
+            over the canvas rather than a filter on it: a filter would also
+            dim the bubble menus drawn inside, leaving them a shade darker
+            than the menus that float on the page. */}
         <div
           ref={editorPaneRef}
-          className={cn(mode !== 'edit' ? 'hidden' : paneClass, 'dark:brightness-90')}
+          className={cn(mode !== 'edit' ? 'hidden' : paneClass, 'relative')}
           style={pageStyle}
         >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-10 hidden rounded-[inherit] bg-black/10 dark:block"
+          />
           <div style={cardStyle}>
             <EmailEditor
               allowedMimeTypes={UPLOAD_MIME_TYPES}

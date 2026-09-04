@@ -117,18 +117,18 @@ const lines: string[] = [];
 for (const theme of ['light', 'dark'] as const) {
   lines.push(`\n  ${theme}`);
 
-  // Every panel in the editor floats on `raised`, so check that first — it is
+  // Every panel in the editor floats on `panel`, so check that first — it is
   // the pairing the bubble menus actually make.
-  const surfaceList = ['__raised', ...SURFACES];
+  const surfaceList = ['panel', ...SURFACES];
 
   for (const surface of surfaceList) {
-    const surfaceHex = surface === '__raised' ? themes[theme]['raised'] : resolve(surface, theme);
+    const surfaceHex = resolve(surface, theme);
     if (!surfaceHex) {
       failures++;
       lines.push(`    UNMAPPED surface ${surface}`);
       continue;
     }
-    const label = surface === '__raised' ? 'raised (panel default)' : surface;
+    const label = surface;
 
     for (const [group, min] of [[TEXT_ON_SURFACE, 4.5], [MARKS, 3.0]] as const) {
       for (const fg of group) {
@@ -159,7 +159,19 @@ for (const theme of ['light', 'dark'] as const) {
  * it learned to follow the theme. An unmapped surface is the mechanism, so
  * catch it directly.
  */
-const COMPONENTS = join(here, '..', 'core', 'editor', 'components');
+// The whole editor, not just components/: the menus that shipped white lived
+// in nodes/ and extensions/, which the earlier scope never walked.
+const COMPONENTS = join(here, '..', 'core', 'editor');
+/** Files whose colours belong to the email being edited, not to our chrome:
+ *  the editor body the canvas paints over, the HTML block's source view, the
+ *  link card's badge, and the text-selection highlight — all drawn on the
+ *  canvas, which follows the template's theme and ignores app dark mode. */
+const CONTENT_FILES = [
+  'core/editor/index.tsx',
+  'core/editor/nodes/html/html-view.tsx',
+  'core/editor/nodes/link-card.tsx',
+  'core/editor/extensions/selection/selection.ts',
+];
 
 function walk(dir: string): string[] {
   const { readdirSync, statSync } = require('node:fs') as typeof import('node:fs');
@@ -181,6 +193,7 @@ const BG = /mly:bg-([a-z]+(?:-[a-z]+)*(?:-\d+)?)/g;
 const CONTENT_SURFACES = new Set(['transparent', 'current', 'inherit', 'canvas']);
 
 for (const file of walk(COMPONENTS)) {
+  if (CONTENT_FILES.some((c) => file.endsWith(c))) continue;
   const src = readFileSync(file, 'utf8');
   for (const match of src.matchAll(BG)) {
     const name = match[1];

@@ -82,7 +82,7 @@ export function VariableView(props: NodeViewProps) {
                     });
                   }}
                   placeholder="ie. name..."
-                  className="mly:h-7 mly:w-36 mly:rounded-md mly:bg-soft-gray mly:px-2 mly:text-sm mly:text-midnight-gray mly:focus:bg-soft-gray mly:focus:outline-hidden mly:disabled:cursor-not-allowed"
+                  className="mly:h-7 mly:w-36 mly:rounded-md mly:bg-soft-gray mly:px-2 mly:text-sm mly:text-midnight-gray mly:focus:bg-soft-gray mly:disabled:cursor-not-allowed"
                 />
               </label>
 
@@ -103,7 +103,7 @@ export function VariableView(props: NodeViewProps) {
                         });
                       }}
                       placeholder="ie. John Doe..."
-                      className="mly:h-7 mly:w-32 mly:rounded-md mly:bg-soft-gray mly:px-2 mly:pr-6 mly:text-sm mly:text-midnight-gray mly:focus:bg-soft-gray mly:focus:outline-none"
+                      className="mly:h-7 mly:w-32 mly:rounded-md mly:bg-soft-gray mly:px-2 mly:pr-6 mly:text-sm mly:text-midnight-gray mly:focus:bg-soft-gray"
                     />
                     <div className="mly:absolute mly:inset-y-0 mly:right-1 mly:flex mly:items-center">
                       <Pencil className="mly:h-3 mly:w-3 mly:stroke-[2.5] mly:text-midnight-gray" />
