@@ -949,26 +949,31 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
           anonymous playground it would render as an empty box. */}
       {template?.id && (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="primary"
-            disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
-            onClick={handlePublish}
-            title={publishedLabel ?? undefined}
-          >
-            {isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
-            {publishArmed ? 'Publish anyway' : 'Publish'}
-          </Button>
-          {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
-          <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
-
-          {/* Preview lives in the Content header now, beside what it shows. */}
-          <VersionHistoryDialog
-            templateId={template.id}
-            hasUnpublishedChanges={unpublished}
-            onDiscarded={handleDiscarded}
-          />
-          <ShareLinkPopover templateId={template.id} initialToken={template.share_token ?? null} />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* The actions sit together; the state of the draft reads as one
+              quiet line beside them rather than being threaded between. */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
+              onClick={handlePublish}
+              title={publishedLabel ?? undefined}
+            >
+              {isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
+              {publishArmed ? 'Publish anyway' : 'Publish'}
+            </Button>
+            {/* Preview lives in the Content header now, beside what it shows. */}
+            <VersionHistoryDialog
+              templateId={template.id}
+              hasUnpublishedChanges={unpublished}
+              onDiscarded={handleDiscarded}
+            />
+            <ShareLinkPopover templateId={template.id} initialToken={template.share_token ?? null} />
+          </div>
+          <div className="flex items-center gap-2">
+            <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
+            {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
