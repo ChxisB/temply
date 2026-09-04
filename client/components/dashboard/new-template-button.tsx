@@ -1,5 +1,6 @@
 'use client';
 
+import { useOrganization } from '@clerk/nextjs';
 import { useMutation } from '@tanstack/react-query';
 import { FileTextIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,7 @@ import {
 import { StarterThumbnail } from '~/components/dashboard/starter-thumbnail';
 import { Tile } from '~/components/ui/item';
 import { httpPost } from '~/lib/http';
-import { STARTER_TEMPLATES, type StarterTemplate } from '~/lib/starter-templates';
+import { personaliseStarter, STARTER_TEMPLATES, type StarterTemplate } from '~/lib/starter-templates';
 import { toast } from 'sonner';
 
 type SaveTemplateResponse = {
@@ -31,6 +32,10 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
+  // The starters are written for a sample company; the workspace's own name
+  // goes in before anyone sees them, in the gallery and in the template made.
+  const { organization } = useOrganization();
+  const starters = STARTER_TEMPLATES.map((starter) => personaliseStarter(starter, organization?.name));
 
   const { mutateAsync: createTemplate, isPending } = useMutation({
     mutationFn: async (starter: StarterTemplate) => {
@@ -80,7 +85,7 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
           </DialogHeader>
 
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy={isPending || undefined}>
-            {STARTER_TEMPLATES.map((starter) => {
+            {starters.map((starter) => {
               const busy = picked === starter.id;
               return (
                 <Tile

@@ -15,6 +15,10 @@ import type { JSONContent } from '@tiptap/core';
  * replace, where "Acme" only reads as a placeholder to people who know the
  * convention.
  */
+/** The company every starter is written for. It stands in until the
+ *  workspace's own name replaces it — see personaliseStarter. */
+export const SAMPLE_COMPANY = 'Temply';
+
 export type StarterTemplate = {
   id: string;
   name: string;
@@ -183,3 +187,25 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
     ),
   },
 ];
+
+/**
+ * The starter with the workspace's name where the sample company was —
+ * subject, preview text and every run of text in the document. The logo
+ * is left alone: it is an image, and theirs replaces it in the editor.
+ */
+export function personaliseStarter(starter: StarterTemplate, companyName: string | null | undefined): StarterTemplate {
+  const name = companyName?.trim();
+  if (!name || name === SAMPLE_COMPANY) return starter;
+  const swap = (text: string) => text.split(SAMPLE_COMPANY).join(name);
+  const walk = (node: JSONContent): JSONContent => ({
+    ...node,
+    ...(typeof node.text === 'string' ? { text: swap(node.text) } : {}),
+    ...(node.content ? { content: node.content.map(walk) } : {}),
+  });
+  return {
+    ...starter,
+    subject: swap(starter.subject),
+    previewText: swap(starter.previewText),
+    content: walk(starter.content),
+  };
+}
