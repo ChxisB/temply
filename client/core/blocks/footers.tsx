@@ -46,7 +46,7 @@ export const footerCommunityFeedbackCta: BlockItem = {
         {
           type: 'image',
           attrs: {
-            src: '/brand/logo.png',
+            src: '/brand/mark.png',
             alt: null,
             title: null,
             width: '42',
@@ -96,7 +96,7 @@ export const footerCompanySignature: BlockItem = {
         {
           type: 'image',
           attrs: {
-            src: '/brand/logo.png',
+            src: '/brand/mark.png',
             alt: null,
             title: null,
             width: '48',

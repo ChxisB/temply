@@ -37,7 +37,7 @@ export const inlineImage: BlockItem = {
       .deleteRange(range)
       // @ts-ignore
       .setInlineImage({
-        src: '/brand/logo.png',
+        src: '/brand/mark.png',
       })
       // @ts-ignore
       .command((props) => {

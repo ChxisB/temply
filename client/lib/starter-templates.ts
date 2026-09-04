@@ -28,7 +28,7 @@ export type StarterTemplate = {
 
 const logo: JSONContent = {
   type: 'logo',
-  attrs: { src: '/brand/logo.png', alt: null, title: null, size: 'md', alignment: 'left' },
+  attrs: { src: '/brand/mark.png', alt: null, title: null, size: 'md', alignment: 'left' },
 };
 const spacer = (height: 'sm' | 'md' | 'lg' | 'xl' = 'lg'): JSONContent => ({ type: 'spacer', attrs: { height } });
 const heading = (content: string | JSONContent[], level: 1 | 2 | 3 = 2): JSONContent => ({
