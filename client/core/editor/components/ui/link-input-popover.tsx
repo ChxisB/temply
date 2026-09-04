@@ -43,17 +43,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(!isVariable);
-  // Track the live field value so validation reacts as they type, not only on
-  // submit. Seeded from the saved value.
-  const [draft, setDraft] = useState(defaultValue);
-
   const linkInputRef = useRef<HTMLInputElement>(null);
-
-  const imageStatus = useImageUrlStatus(
-    showImageStatus ? draft : '',
-    showImageStatus ? !!isVariable : false,
-  );
-  const statusMessage = showImageStatus ? imageUrlMessage(imageStatus) : null;
 
   const { placeholderUrl = DEFAULT_PLACEHOLDER_URL } = useMailyContext();
   const options = useVariableOptions(editor);
@@ -63,18 +53,53 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   const variableTriggerCharacter =
     options?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
 
+  // The field is a draft until it is committed — on Enter, on picking a
+  // suggestion, or on the popover closing. Writing every keystroke into the
+  // node turned a variable into a plain URL the moment its name was touched,
+  // with no way back but retyping it. A variable is edited as "@name", so
+  // the suggestions open and it stays recognisable as one.
+  const seed = () =>
+    isVariable ? `${variableTriggerCharacter}${defaultValue}` : defaultValue;
+  const [draft, setDraft] = useState(seed);
+
+  /** What a committed draft means: "@name" or a known name is a variable. */
+  const interpret = (raw: string): { value: string; isVariable: boolean } => {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith(variableTriggerCharacter)) {
+      return {
+        value: trimmed.slice(variableTriggerCharacter.length),
+        isVariable: true,
+      };
+    }
+    const known =
+      Array.isArray(variables) && variables.some((v) => v.name === trimmed);
+    return { value: trimmed, isVariable: known };
+  };
+
+  const commit = (raw: string) => {
+    const next = interpret(raw);
+    if (next.value === defaultValue && next.isVariable === !!isVariable) return;
+    onValueChange?.(next.value, next.isVariable);
+  };
+
+  const imageStatus = useImageUrlStatus(
+    showImageStatus ? interpret(draft).value : '',
+    showImageStatus ? interpret(draft).isVariable : false,
+  );
+  const statusMessage = showImageStatus ? imageUrlMessage(imageStatus) : null;
+
   const autoCompleteOptions = useMemo(() => {
-    const withoutTrigger = defaultValue.replace(
+    const withoutTrigger = draft.replace(
       new RegExp(variableTriggerCharacter, 'g'),
       ''
     );
-
     return processVariables(variables, {
       query: withoutTrigger || '',
       from: 'bubble-variable',
       editor,
     }).map((variable) => variable.name);
-  }, [variables, variableTriggerCharacter, defaultValue, editor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variables, variableTriggerCharacter, draft, editor]);
 
   const popoverButton = (
     <PopoverTrigger asChild>
@@ -96,9 +121,14 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       onOpenChange={(open) => {
         setIsOpen(open);
         if (open) {
+          setDraft(seed());
+          setIsEditing(!isVariable);
           setTimeout(() => {
             linkInputRef.current?.focus();
           }, 0);
+        } else if (isEditing) {
+          // Closing is a commit too: what was typed is what they meant.
+          commit(draft);
         }
       }}
     >
@@ -121,12 +151,9 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            const input = linkInputRef.current;
-            if (!input) {
-              return;
-            }
-
-            onValueChange?.(input.value);
+            if (!isEditing) return;
+            commit(draft);
+            setIsEditing(!interpret(draft).isVariable);
             setIsOpen(false);
           }}
         >
@@ -171,24 +198,17 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
 
                 <InputAutocomplete
                   editor={editor}
-                  value={defaultValue}
-                  onValueChange={(value) => {
-                    setDraft(value);
-                    onValueChange?.(value);
-                  }}
+                  value={draft}
+                  onValueChange={setDraft}
                   autoCompleteOptions={autoCompleteOptions}
                   ref={linkInputRef}
                   placeholder={placeholderUrl}
                   className="-mly:ms-px mly:block mly:h-8 mly:w-56 mly:rounded-lg mly:border mly:border-gray-300 mly:px-2 mly:py-1.5 mly:pl-6 mly:pr-6 mly:text-sm mly:shadow-sm mly:placeholder:text-gray-400"
                   triggerChar={variableTriggerCharacter}
                   onSelectOption={(value) => {
-                    const isVariable =
-                      autoCompleteOptions.includes(value) ?? false;
-                    if (isVariable) {
-                      setIsEditing(false);
-                    }
-
-                    onValueChange?.(value, isVariable);
+                    setDraft(`${variableTriggerCharacter}${value}`);
+                    onValueChange?.(value, true);
+                    setIsEditing(false);
                     setIsOpen(false);
                   }}
                 />
