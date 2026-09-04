@@ -58,6 +58,9 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
+      // Signing out — and deleting the account, which signs out — lands on
+      // the front page, not on whatever settings sub-path Clerk was showing.
+      afterSignOutUrl="/"
       // Clerk otherwise titles its screens after the instance name, so the
       // sign-in page for Temply read "Sign in to My Application".
       localization={{

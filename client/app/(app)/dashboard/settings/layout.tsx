@@ -6,8 +6,9 @@ import { PageHeader } from '~/components/ui/surfaces';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
-/** Every tab is a leaf, so an exact match is the whole rule — Account sits at
- *  the section root and would otherwise light up for the other two. */
+/** Plan and API keys are leaves; Account owns the section root and every
+ *  path under it that is not one of theirs — Clerk's own Security tab and
+ *  its sub-pages live there. */
 const TABS = [
   { href: '/dashboard/settings', label: 'Account' },
   { href: '/dashboard/settings/plan', label: 'Plan' },
@@ -23,7 +24,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
       <nav className="flex gap-5 border-b border-line" aria-label="Settings">
         {TABS.map((tab) => {
-          const isActive = pathname === tab.href;
+          const isActive =
+            tab.href === '/dashboard/settings'
+              ? pathname === tab.href ||
+                (pathname.startsWith('/dashboard/settings/') &&
+                  !TABS.some((other) => other.href !== tab.href && pathname.startsWith(other.href)))
+              : pathname === tab.href;
 
           return (
             <Link
