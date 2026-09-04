@@ -15,16 +15,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         {/* Top-centre, not the default bottom-right: in development Clerk
             parks its "Configure your application" panel there at the
             maximum z-index, and every toast — save, upload, delete — was
-            drawn underneath it. */}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            classNames: {
-              toast: 'bg-raised text-ink border border-line',
-              description: 'text-muted',
-            },
-          }}
-        />
+            drawn underneath it. Colours come from the toast block in
+            globals.css, not from classNames — Sonner's own selectors
+            outrank a utility class. */}
+        <Toaster position="top-center" />
         <NavigationLoadingBar />
       </ThemeProvider>
     </QueryClientProvider>

@@ -641,3 +641,49 @@ html {
   max-width: 100%;
   min-width: 0;
 }
+
+/* ---------------------------------------------------------------------------
+   Toasts
+
+   Sonner paints a toast from its own variables through paired attribute
+   selectors, which outrank any utility class handed to it — so the surface is
+   themed here, by pointing those variables at our tokens. `html` in front
+   lifts each rule just above Sonner's own so it wins regardless of import
+   order. The `data-sonner-theme` attribute is matched but never read: both
+   themes come from the tokens, which already follow `.dark`.
+--------------------------------------------------------------------------- */
+html [data-sonner-toaster][data-sonner-theme] {
+  --normal-bg: var(--ds-raised);
+  --normal-bg-hover: var(--ds-hover);
+  --normal-border: var(--ds-line);
+  --normal-border-hover: var(--ds-line-strong);
+  --normal-text: var(--ds-ink);
+  --border-radius: 8px;
+}
+html [data-sonner-toast][data-styled] {
+  /* A menu's rung: it floats over the page without a scrim. */
+  box-shadow: var(--ds-shadow-lg);
+}
+html [data-sonner-toast][data-styled] [data-description] {
+  color: var(--ds-muted);
+}
+html [data-sonner-toast][data-styled] [data-close-button] {
+  color: var(--ds-ink);
+  background: var(--ds-raised);
+  border-color: var(--ds-line);
+}
+html [data-sonner-toast][data-styled]:hover [data-close-button]:hover {
+  background: var(--ds-hover);
+  border-color: var(--ds-line-strong);
+}
+/* Sonner leaves its icons in the text colour unless richColors is on, which
+   would also recolour the whole toast. The icon alone carries the severity. */
+html [data-sonner-toast][data-type='success'] [data-icon] {
+  color: var(--ds-success-ink);
+}
+html [data-sonner-toast][data-type='error'] [data-icon] {
+  color: var(--ds-danger-ink);
+}
+html [data-sonner-toast][data-type='warning'] [data-icon] {
+  color: var(--ds-warn-ink);
+}
