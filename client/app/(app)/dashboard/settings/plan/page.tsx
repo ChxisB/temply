@@ -1,7 +1,9 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
+
 import { Suspense, useEffect } from 'react';
-import { CheckIcon, Loader2Icon, XIcon } from 'lucide-react';
+import { CheckIcon, Loader2Icon, XIcon, LockIcon } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 import { httpGet, httpPost } from '~/lib/http';
@@ -9,7 +11,7 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '~/components/ui/button';
 import { PageLoading } from '~/components/ui/page-loading';
-import { Badge, Card, ErrorState, StatTile } from '~/components/ui/surfaces';
+import { Badge, Card, EmptyState, ErrorState, StatTile } from '~/components/ui/surfaces';
 import { cn } from '~/lib/classname';
 
 type PlanInfo = {
@@ -150,6 +152,8 @@ function PlanContent() {
     queryFn: () => httpGet<PlanInfo>('/api/v1/billing', {}),
   });
   const showLoading = useMinimumDisplay(isLoading);
+  const { orgRole } = useAuth();
+  const isAdmin = orgRole === 'org:admin';
 
   const { mutateAsync: createCheckout, isPending: isCheckoutLoading } = useMutation({
     mutationFn: (plan: 'pro') =>
@@ -167,6 +171,16 @@ function PlanContent() {
     },
     onError: (error) => toast.error(error.message || 'Could not open the billing portal'),
   });
+
+  if (!isAdmin) {
+    return (
+      <EmptyState
+        icon={LockIcon}
+        title="Plan and billing are for admins"
+        description="Ask an admin on your team to change the plan or manage billing."
+      />
+    );
+  }
 
   if (showLoading) {
     return <PageLoading label="Loading your plan…" />;

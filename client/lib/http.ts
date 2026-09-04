@@ -71,6 +71,11 @@ export async function httpCall<ResponseType = AppResponse>(
     const data = doesAcceptHtml ? await response.text() : await response.json();
 
     if (!response.ok) {
+      // A signed-in user with no organization: every dashboard call answers
+      // this, and the only useful response is the onboarding that makes one.
+      if (response.status === 403 && data?.code === 'no-workspace' && typeof window !== 'undefined') {
+        window.location.assign('/onboarding');
+      }
       if ('errors' in data) {
         throw new FetchError(response.status, data.message);
       } else {

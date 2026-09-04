@@ -10,7 +10,7 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
   const pathStr = path ? path.join('/') : '';
   const search = request.nextUrl.search;
 
-  const { userId } = await auth();
+  const { userId, orgId, orgRole } = await auth();
   const targetUrl = pathStr ? `${API_TARGET}/api/${pathStr}${search}` : `${API_TARGET}/api${search}`;
 
   // Forward all relevant headers
@@ -19,7 +19,11 @@ async function handleRequest(request: NextRequest, { params }: { params: Promise
     'Cookie': request.headers.get('Cookie') || '',
     'Authorization': request.headers.get('Authorization') || '',
     'x-user-id': userId || '',
-    // Proves to the API that this forwarded user id came from our own proxy.
+    // The active organization and the caller's role in it — the API scopes
+    // every row by the former and gates account actions on the latter.
+    'x-org-id': orgId || '',
+    'x-org-role': orgRole || '',
+    // Proves to the API that these forwarded ids came from our own proxy.
     'x-internal-token': process.env.INTERNAL_API_SECRET || '',
   };
 

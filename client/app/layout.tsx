@@ -65,7 +65,7 @@ export default function RootLayout({
       // the card on /login or Clerk's own verification screens — and so
       // does a sign-in that arrived with nowhere particular to return to.
       // Without these Clerk falls back to "/", the marketing page.
-      signUpForceRedirectUrl="/dashboard"
+      signUpForceRedirectUrl="/onboarding"
       signInFallbackRedirectUrl="/dashboard"
       // Clerk otherwise titles its screens after the instance name, so the
       // sign-in page for Temply read "Sign in to My Application".

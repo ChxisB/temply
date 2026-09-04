@@ -1,5 +1,7 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
+
 import { CheckIcon, CopyIcon, KeyIcon, Loader2Icon, LockIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -64,6 +66,8 @@ export default function ApiKeysPage() {
     queryFn: () => httpGet<ApiKeyListResponse>('/api/v1/api-keys', {}),
   });
   const showLoading = useMinimumDisplay(isLoading);
+  const { orgRole } = useAuth();
+  const isAdmin = orgRole === 'org:admin';
 
   const { data: billing } = useQuery({
     queryKey: ['billing'],
@@ -116,6 +120,16 @@ export default function ApiKeysPage() {
   };
 
   const keys = data?.keys ?? [];
+
+  if (!isAdmin) {
+    return (
+      <EmptyState
+        icon={LockIcon}
+        title="API keys are for admins"
+        description="Ask an admin on your team to create or revoke keys. Your app keeps working with the keys they made."
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">

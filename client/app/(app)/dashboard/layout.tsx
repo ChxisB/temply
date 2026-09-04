@@ -4,12 +4,18 @@ import { MobileNav } from '~/components/dashboard/mobile-nav';
 import { Sidebar } from '~/components/dashboard/sidebar';
 import { ThemeToggle } from '~/components/theme-toggle';
 import { Button } from '~/components/ui/button';
+import { serverFetch } from '~/lib/server-fetch';
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Rows made before organizations are claimed by the active one on every
+  // visit. Idempotent and a handful of empty updates once done; a failure
+  // here must not take the dashboard down, so it is swallowed.
+  await serverFetch('/api/v1/workspace/adopt', { method: 'POST', body: '{}' }).catch(() => undefined);
+
   return (
     <div className="flex h-screen overflow-hidden bg-surface">
       <div className="hidden w-56 shrink-0 md:block">

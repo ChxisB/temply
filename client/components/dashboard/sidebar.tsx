@@ -1,10 +1,41 @@
 'use client';
 
+import { OrganizationSwitcher } from '@clerk/nextjs';
 import Link from 'next/link';
 import { BrandMark } from '~/components/brand-mark';
+import { useTheme } from '~/components/theme-provider';
 import { NavLinks } from './nav-items';
 import { QuotaWidget } from './quota-widget';
 import { UserMenu } from './user-menu';
+
+/** Clerk's switcher on the rail. A person can belong to several
+ *  organizations — a client's, say — and the active one is the scope of
+ *  everything below it. Personal accounts are hidden: every account is an
+ *  organization here. */
+export function WorkspaceSwitcher() {
+  const { clerkAppearance } = useTheme();
+  return (
+    <OrganizationSwitcher
+      hidePersonal
+      afterCreateOrganizationUrl="/onboarding/invite"
+      afterSelectOrganizationUrl="/dashboard"
+      afterLeaveOrganizationUrl="/onboarding"
+      organizationProfileMode="navigation"
+      organizationProfileUrl="/dashboard/settings/team"
+      appearance={{
+        ...clerkAppearance,
+        elements: {
+          ...(clerkAppearance.elements as Record<string, string>),
+          rootBox: 'w-full',
+          organizationSwitcherTrigger:
+            'w-full justify-between rounded-md px-2 py-1.5 text-rail-ink hover:bg-rail-hover focus-visible:ring-[3px] focus-visible:ring-accent/25',
+          organizationPreviewMainIdentifier: 'text-rail-ink',
+          organizationPreviewSecondaryIdentifier: 'text-rail-muted',
+        },
+      }}
+    />
+  );
+}
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -18,6 +49,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         >
           Temply
         </Link>
+      </div>
+
+      <div className="border-b border-rail-line p-2.5">
+        <WorkspaceSwitcher />
       </div>
 
       <div className="flex-1 overflow-y-auto p-2.5">

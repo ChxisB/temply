@@ -9,6 +9,7 @@ import { BrandMark } from '~/components/brand-mark';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { NavLinks } from './nav-items';
+import { WorkspaceSwitcher } from './sidebar';
 import { QuotaWidget } from './quota-widget';
 import { UserMenu } from './user-menu';
 
@@ -53,6 +54,10 @@ export function MobileNav() {
             >
               <XIcon className="size-4" />
             </DialogPrimitive.Close>
+          </div>
+
+          <div className="border-b border-rail-line p-2">
+            <WorkspaceSwitcher />
           </div>
 
           <div className="flex-1 overflow-y-auto p-2">

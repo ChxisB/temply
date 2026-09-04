@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PageHeader } from '~/components/ui/surfaces';
@@ -10,20 +11,29 @@ import { cn } from '~/lib/classname';
  *  path under it that is not one of theirs — Clerk's own Security tab and
  *  its sub-pages live there. */
 const TABS = [
-  { href: '/dashboard/settings', label: 'Account' },
-  { href: '/dashboard/settings/plan', label: 'Plan' },
-  { href: '/dashboard/settings/api-keys', label: 'API keys' },
+  { href: '/dashboard/settings', label: 'Account', adminOnly: false },
+  { href: '/dashboard/settings/team', label: 'Team', adminOnly: false },
+  { href: '/dashboard/settings/plan', label: 'Plan', adminOnly: true },
+  { href: '/dashboard/settings/api-keys', label: 'API keys', adminOnly: true },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // Admin manages the account: plan and keys are theirs. A member still has
+  // an Account and a Team to look at.
+  const { orgRole } = useAuth();
+  const isAdmin = orgRole === 'org:admin';
+  const tabs = TABS.filter((tab) => isAdmin || !tab.adminOnly);
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Settings" description="Your account, plan and API access." />
+      <PageHeader
+        title="Settings"
+        description={isAdmin ? 'Your account, team, plan and API access.' : 'Your account and your team.'}
+      />
 
       <nav className="flex gap-5 border-b border-line" aria-label="Settings">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isActive =
             tab.href === '/dashboard/settings'
               ? pathname === tab.href ||

@@ -15,7 +15,7 @@ export async function serverFetch(path: string, init?: RequestInit) {
   // Forward the resolved user the same way the /api proxy does. Without this
   // the API can only fall back to verifying the Clerk session itself, which
   // needs CLERK_SECRET_KEY — unset in keyless development.
-  const { userId } = await auth();
+  const { userId, orgId, orgRole } = await auth();
 
   return fetch(`${API_TARGET}${path}`, {
     ...init,
@@ -24,6 +24,8 @@ export async function serverFetch(path: string, init?: RequestInit) {
       Cookie: cookieHeader,
       'Content-Type': 'application/json',
       'x-user-id': userId || '',
+      'x-org-id': orgId || '',
+      'x-org-role': orgRole || '',
       'x-internal-token': process.env.INTERNAL_API_SECRET || '',
     },
   });
