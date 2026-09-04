@@ -23,6 +23,6 @@ export function resetImageKitForTests(): void {
 
 /** Organisational only — the private key is the access boundary, the folder
  *  just keeps one user's files together in the ImageKit console. */
-export function assetFolder(userId: string): string {
-  return `/temply/${userId}`;
+export function assetFolder(orgId: string): string {
+  return `/temply/${orgId}`;
 }

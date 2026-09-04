@@ -8,6 +8,10 @@ const now = sql`(datetime('now'))`;
 export const mails = sqliteTable('mails', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   title: text('title').notNull(),
   preview_text: text('preview_text'),
   content: text('content').notNull(),
@@ -37,6 +41,10 @@ export const mails = sqliteTable('mails', {
 export const apiKeysTable = sqliteTable('api_keys', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   name: text('name').notNull(),
   key_prefix: text('key_prefix').notNull(),
   key_hash: text('key_hash').notNull(),
@@ -55,6 +63,10 @@ export const templateVersions = sqliteTable('template_versions', {
   id: text('id').primaryKey(),
   template_id: text('template_id').notNull(),
   user_id: text('user_id').notNull(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   title: text('title').notNull(),
   preview_text: text('preview_text'),
   content: text('content').notNull(),
@@ -68,6 +80,10 @@ export const templateVersions = sqliteTable('template_versions', {
 export const subscriptions = sqliteTable('subscriptions', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull().unique(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   stripe_customer_id: text('stripe_customer_id').unique(),
   stripe_subscription_id: text('stripe_subscription_id'),
   plan: text('plan').notNull().default('free'),
@@ -103,9 +119,25 @@ export const apiUsage = sqliteTable(
 
 export type ApiUsage = typeof apiUsage.$inferSelect;
 
+/** One row per organization per UK calendar month, and a suffixed period
+ *  for test keys. Replaces api_usage, which was keyed by user. */
+export const orgUsage = sqliteTable(
+  'org_usage',
+  {
+    org_id: text('org_id').notNull(),
+    period: text('period').notNull(),
+    count: integer('count').notNull().default(0),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.org_id, t.period] }) }),
+);
+
 export const brands = sqliteTable('brands', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   name: text('name').notNull(),
   /** Serialised RendererThemeOptions. */
   theme: text('theme').notNull(),
@@ -127,6 +159,13 @@ export const userPrefs = sqliteTable('user_prefs', {
 
 export type UserPrefs = typeof userPrefs.$inferSelect;
 
+/** The organization's default look — same shape as user_prefs, keyed by
+ *  org. The default is shared by the team, not per member. */
+export const orgPrefs = sqliteTable('org_prefs', {
+  org_id: text('org_id').primaryKey(),
+  default_brand_id: text('default_brand_id'),
+});
+
 /** Landing-page contact submissions. Stored before any delivery attempt, so a
  *  mail outage never loses a message. */
 export const contactMessages = sqliteTable('contact_messages', {
@@ -145,6 +184,10 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 export const assets = sqliteTable('assets', {
   id: text('id').primaryKey(),
   user_id: text('user_id').notNull(),
+  /** The organization this row belongs to; every query scopes on it.
+   *  user_id stays as who did it. Null only on rows from before
+   *  organizations, until adoption moves them. */
+  org_id: text('org_id'),
   imagekit_file_id: text('imagekit_file_id').notNull(),
   url: text('url').notNull(),
   name: text('name').notNull(),

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { apiUsage } from '@temply/shared/schema';
+import { orgUsage } from '@temply/shared/schema';
 import { createTestDb, givePlan, type TestDb } from '../test/helpers';
 import { checkApiQuota, getApiUsage, nextResetDate, recordApiCall, ukMonthString } from './api-quota';
 
@@ -39,7 +39,7 @@ describe('checkApiQuota', () => {
     const before = await checkApiQuota(db, USER, now);
     expect(before.allowed).toBe(true);
     // Seed usage to exactly the plan limit rather than looping recordApiCall.
-    await db.insert(apiUsage).values({ user_id: USER, period: ukMonthString(now), count: before.limit });
+    await db.insert(orgUsage).values({ org_id: USER, period: ukMonthString(now), count: before.limit });
     const blocked = await checkApiQuota(db, USER, now);
     expect(blocked.allowed).toBe(false);
     expect(blocked.remaining).toBe(0);

@@ -10,6 +10,7 @@ import { billingRoutes } from './routes/billing';
 import { quotaRoutes } from './routes/quota';
 import { emailsRoutes } from './routes/emails';
 import { publicRoutes } from './routes/public';
+import { workspaceRoutes } from './routes/workspace';
 import { contactRoutes } from './routes/contact';
 import { webhookRoutes } from './routes/webhooks/stripe';
 import { authRoutes } from './routes/auth/logout';
@@ -32,6 +33,7 @@ const app = new Elysia()
   .use(quotaRoutes)
   .use(emailsRoutes)
   .use(publicRoutes)
+  .use(workspaceRoutes)
   .use(contactRoutes)
   .use(webhookRoutes)
   .use(authRoutes)

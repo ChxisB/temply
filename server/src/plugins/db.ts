@@ -66,6 +66,22 @@ export function initTables(sqlite: Database) {
   // Every key from before test keys existed was a live one.
   addColumnIfMissing(sqlite, 'api_keys', 'mode', "TEXT NOT NULL DEFAULT 'live'");
 
+  // Organizations. Every scoped row learns which org it belongs to; rows
+  // from before stay null until the owner's first visit adopts them (see
+  // routes/workspace.ts). Usage and prefs move to org-keyed tables.
+  for (const table of ['mails', 'api_keys', 'template_versions', 'subscriptions', 'brands', 'assets']) {
+    addColumnIfMissing(sqlite, table, 'org_id', 'TEXT');
+    sqlite.run(`CREATE INDEX IF NOT EXISTS ${table}_org_id ON ${table}(org_id)`);
+  }
+  sqlite.run(`CREATE UNIQUE INDEX IF NOT EXISTS subscriptions_org_id_unique ON subscriptions(org_id) WHERE org_id IS NOT NULL`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS org_usage (
+    org_id TEXT NOT NULL, period TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (org_id, period)
+  )`);
+  sqlite.run(`CREATE TABLE IF NOT EXISTS org_prefs (
+    org_id TEXT PRIMARY KEY, default_brand_id TEXT
+  )`);
+
   // Draft / published split. Rows from before it exist only as a single copy
   // the API was already serving, so that copy becomes the published one and
   // nothing an integrator fetches changes. Create and duplicate publish in

@@ -23,7 +23,7 @@ async function addTemplates(userId: string, count: number) {
   for (let i = 0; i < count; i++) {
     await db.insert(mails).values({
       id: crypto.randomUUID(),
-      user_id: userId,
+      user_id: userId, org_id: userId,
       title: `Template ${i}`,
       content: '{}',
       short_code: `tpl_${userId}_${i}`,
@@ -35,7 +35,7 @@ async function addApiKeys(userId: string, count: number) {
   for (let i = 0; i < count; i++) {
     await db.insert(apiKeysTable).values({
       id: crypto.randomUUID(),
-      user_id: userId,
+      user_id: userId, org_id: userId,
       name: `Key ${i}`,
       key_prefix: 'tply_live_aaaa',
       key_hash: `hash-${userId}-${i}`,
@@ -132,7 +132,7 @@ describe('checkBrandLimit', () => {
   it('blocks a free user at 1 brand', async () => {
     const db = createTestDb();
     expect((await checkBrandLimit(db, 'u')).allowed).toBe(true);
-    await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', name: 'B1', theme: '{}' });
+    await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', org_id: 'u', name: 'B1', theme: '{}' });
     const res = await checkBrandLimit(db, 'u');
     expect(res.allowed).toBe(false);
     expect(res.message).toContain('Upgrade');
@@ -141,7 +141,7 @@ describe('checkBrandLimit', () => {
   it('lets a pro user reach 5', async () => {
     const db = createTestDb();
     await givePlan(db, 'u', 'pro');
-    for (let i = 0; i < 5; i++) await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', name: `B${i}`, theme: '{}' });
+    for (let i = 0; i < 5; i++) await db.insert(brands).values({ id: crypto.randomUUID(), user_id: 'u', org_id: 'u', name: `B${i}`, theme: '{}' });
     expect((await checkBrandLimit(db, 'u')).allowed).toBe(false);
   });
 });
@@ -160,7 +160,7 @@ describe('shouldSnapshot', () => {
 describe('checkStorageLimit', () => {
   const seed = (userId: string, bytes: number) =>
     db.insert(assets).values({
-      id: crypto.randomUUID(), user_id: userId, imagekit_file_id: 'f', url: 'https://ik.imagekit.io/t/x.png',
+      id: crypto.randomUUID(), user_id: userId, org_id: userId, imagekit_file_id: 'f', url: 'https://ik.imagekit.io/t/x.png',
       name: 'x.png', mime: 'image/png', bytes,
     });
 

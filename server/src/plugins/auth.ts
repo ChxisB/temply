@@ -17,6 +17,19 @@ function proxyTokenIsValid(presented: string | null): boolean {
   return timingSafeEqual(a, b);
 }
 
+export type OrgRole = 'admin' | 'member';
+
+/** Clerk spells the role "org:admin" in v1 session claims and "admin" in v2;
+ *  the API only ever wants the bare word. */
+export function normaliseRole(raw: unknown): OrgRole | null {
+  if (typeof raw !== 'string' || !raw) return null;
+  const bare = raw.replace(/^org:/, '');
+  return bare === 'admin' ? 'admin' : 'member';
+}
+
+type Identity = { userId: string | null; orgId: string | null; orgRole: OrgRole | null };
+const nobody: Identity = { userId: null, orgId: null, orgRole: null };
+
 export const authPlugin = new Elysia({ name: 'auth' })
   // `as: 'global'` is required. Elysia's default `local` scope keeps the derive
   // on this instance, so every route module mounted alongside it in index.ts
@@ -27,7 +40,14 @@ export const authPlugin = new Elysia({ name: 'auth' })
     const forwardedUserId = request.headers.get('x-user-id');
     if (forwardedUserId) {
       if (proxyTokenIsValid(request.headers.get('x-internal-token'))) {
-        return { userId: forwardedUserId };
+        // The active organization rides on two more headers from the proxy,
+        // proven by the same token; absent means the user has none yet.
+        const identity: Identity = {
+          userId: forwardedUserId,
+          orgId: request.headers.get('x-org-id') || null,
+          orgRole: normaliseRole(request.headers.get('x-org-role')),
+        };
+        return identity;
       }
       console.warn('[auth] rejected x-user-id without a valid proxy token');
     }
@@ -46,7 +66,14 @@ export const authPlugin = new Elysia({ name: 'auth' })
           secretKey: process.env.CLERK_SECRET_KEY,
         });
         console.log('[auth] verified via __session token:', payload.sub);
-        return { userId: payload.sub };
+        // v2 tokens carry the org under `o`; v1 tokens spell it out.
+        const claims = payload as Record<string, unknown> & { o?: { id?: string; rol?: string } };
+        const identity: Identity = {
+          userId: payload.sub,
+          orgId: (claims.o?.id as string | undefined) ?? (claims.org_id as string | undefined) ?? null,
+          orgRole: normaliseRole(claims.o?.rol ?? claims.org_role),
+        };
+        return identity;
       } catch (e) {
         console.log('[auth] __session verifyToken failed:', (e as Error)?.message);
       }
@@ -65,7 +92,12 @@ export const authPlugin = new Elysia({ name: 'auth' })
           const userId: string | undefined = authObj?.userId ?? undefined;
           if (userId) {
             console.log('[auth] verified via authenticateRequest:', userId);
-            return { userId };
+            const identity: Identity = {
+              userId,
+              orgId: (authObj as { orgId?: string | null })?.orgId ?? null,
+              orgRole: normaliseRole((authObj as { orgRole?: string | null })?.orgRole),
+            };
+            return identity;
           }
         }
         console.log('[auth] authenticateRequest status:', authState.status, 'reason:', authState.reason);
@@ -74,5 +106,5 @@ export const authPlugin = new Elysia({ name: 'auth' })
       }
     }
 
-    return { userId: null };
+    return nobody;
   });

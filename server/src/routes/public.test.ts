@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { apiKeysTable, apiUsage, mails } from '@temply/shared/schema';
+import { apiKeysTable, orgUsage, mails } from '@temply/shared/schema';
 import { generateApiKey, generateShortCode } from '../lib/codes';
 import { createTestApp, createTestDb, get, givePlan, type TestDb } from '../test/helpers';
 import { publicRoutes } from './public';
@@ -20,7 +20,7 @@ async function seedKey(userId: string, { revoked = false, mode = 'live' as 'live
   const id = crypto.randomUUID();
   await db.insert(apiKeysTable).values({
     id,
-    user_id: userId,
+    user_id: userId, org_id: userId,
     name: mode === 'test' ? 'Staging' : 'Production',
     key_prefix: prefix,
     key_hash: hash,
@@ -35,7 +35,7 @@ async function seedTemplate(userId: string, content = '{"type":"doc"}', { publis
   const stamp = '2026-01-01T00:00:00.000Z';
   await db.insert(mails).values({
     id: crypto.randomUUID(),
-    user_id: userId,
+    user_id: userId, org_id: userId,
     title: 'Welcome email',
     preview_text: 'Hello there',
     content,
@@ -143,7 +143,7 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
     const { fullKey } = await seedKey(OWNER);
     const shortCode = await seedTemplate(OWNER);
     const { ukMonthString } = await import('../lib/api-quota');
-    await db.insert(apiUsage).values({ user_id: OWNER, period: ukMonthString(), count: 10_000 });
+    await db.insert(orgUsage).values({ org_id: OWNER, period: ukMonthString(), count: 10_000 });
 
     const res = await fetchTemplate(shortCode, fullKey);
     expect(res.status).toBe(429);
@@ -307,7 +307,7 @@ describe('POST /api/public/v1/templates/:shortCode/render', () => {
       const shortCode = await seedTemplate(OWNER);
       const { ukMonthString } = await import('../lib/api-quota');
       const { TEST_API_CALLS_PER_MONTH } = await import('@temply/shared/plans');
-      await db.insert(apiUsage).values({ user_id: OWNER, period: `${ukMonthString()}#test`, count: TEST_API_CALLS_PER_MONTH });
+      await db.insert(orgUsage).values({ org_id: OWNER, period: `${ukMonthString()}#test`, count: TEST_API_CALLS_PER_MONTH });
 
       const res = await renderTemplate(shortCode, fullKey);
       expect(res.status).toBe(429);

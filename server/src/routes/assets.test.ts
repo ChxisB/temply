@@ -148,7 +148,7 @@ describe('POST /api/v1/assets', () => {
 
   it('402 when the plan quota would be crossed, with the formatted numbers', async () => {
     await db.insert(assets).values({
-      id: 'seed', user_id: OWNER, imagekit_file_id: 'f0', url: 'https://ik.imagekit.io/test/x.png',
+      id: 'seed', user_id: OWNER, org_id: OWNER, imagekit_file_id: 'f0', url: 'https://ik.imagekit.io/test/x.png',
       name: 'x.png', mime: 'image/png', bytes: 49 * 1024 * 1024,
     });
     const res = await upload(OWNER, 2 * 1024 * 1024);
@@ -160,7 +160,7 @@ describe('POST /api/v1/assets', () => {
   it('never hits quota on enterprise', async () => {
     await givePlan(db, OWNER, 'enterprise');
     await db.insert(assets).values({
-      id: 'seed', user_id: OWNER, imagekit_file_id: 'f0', url: 'https://ik.imagekit.io/test/x.png',
+      id: 'seed', user_id: OWNER, org_id: OWNER, imagekit_file_id: 'f0', url: 'https://ik.imagekit.io/test/x.png',
       name: 'x.png', mime: 'image/png', bytes: 3 * 1024 * 1024 * 1024,
     });
     expect((await upload(OWNER)).status).toBe(200);
@@ -195,12 +195,12 @@ describe('GET /api/v1/assets', () => {
 describe('GET /api/v1/assets/:id/usage', () => {
   it('names each template whose content or a version snapshot carries the URL', async () => {
     const { asset } = await (await upload(OWNER)).json();
-    await db.insert(mails).values({ id: 'm1', user_id: OWNER, title: 'Welcome', content: JSON.stringify({ src: asset.url }) });
-    await db.insert(mails).values({ id: 'm2', user_id: OWNER, title: 'Old', content: '{}' });
+    await db.insert(mails).values({ id: 'm1', user_id: OWNER, org_id: OWNER, title: 'Welcome', content: JSON.stringify({ src: asset.url }) });
+    await db.insert(mails).values({ id: 'm2', user_id: OWNER, org_id: OWNER, title: 'Old', content: '{}' });
     await db.insert(templateVersions).values({
-      id: 'v1', template_id: 'm2', user_id: OWNER, title: 'Old', content: JSON.stringify({ src: asset.url }), version_number: 1,
+      id: 'v1', template_id: 'm2', user_id: OWNER, org_id: OWNER, title: 'Old', content: JSON.stringify({ src: asset.url }), version_number: 1,
     });
-    await db.insert(mails).values({ id: 'm3', user_id: OTHER, title: 'Not mine', content: JSON.stringify({ src: asset.url }) });
+    await db.insert(mails).values({ id: 'm3', user_id: OTHER, org_id: OTHER, title: 'Not mine', content: JSON.stringify({ src: asset.url }) });
     const body = await (await get(app, `/api/v1/assets/${asset.id}/usage`, OWNER)).json();
     expect(body.templates.map((t: { id: string }) => t.id).sort()).toEqual(['m1', 'm2']);
   });

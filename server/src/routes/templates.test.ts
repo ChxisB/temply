@@ -393,7 +393,7 @@ describe('a legacy row from before publishing existed', () => {
   it('is published as it stood, so the API keeps serving it', async () => {
     // A row the way the old code wrote it: a single copy, nothing published.
     const id = crypto.randomUUID();
-    await db.insert(mails).values({ id, user_id: OWNER, title: 'Old', content: '{"old":true}', short_code: 'tpl_legacy00', updated_at: '2024-01-01 00:00:00' });
+    await db.insert(mails).values({ id, user_id: OWNER, org_id: OWNER, title: 'Old', content: '{"old":true}', short_code: 'tpl_legacy00', updated_at: '2024-01-01 00:00:00' });
 
     // The same statement initTables runs at startup.
     await db.run(sql`UPDATE mails SET published_content = content, published_theme = theme, published_preview_text = preview_text, published_at = updated_at WHERE published_at IS NULL`);

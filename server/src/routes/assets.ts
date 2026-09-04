@@ -6,6 +6,7 @@ import { checkStorageLimit, getPlan, getStorageUsed } from '../lib/billing';
 import { json, notFound, paymentRequired, unauthorized } from '../lib/errors';
 import { assetFolder, getImageKit } from '../lib/imagekit';
 import { authPlugin } from '../plugins/auth';
+import { noWorkspace } from '../lib/workspace';
 import { dbPlugin } from '../plugins/db';
 
 export const MAX_ASSET_BYTES = 5 * 1024 * 1024;
@@ -59,6 +60,7 @@ export const assetsRoutes = new Elysia()
   .use(dbPlugin)
   .post('/api/v1/assets', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     const file = ctx.body.file;
     // Cheapest check first: an oversized file is refused before its bytes
     // are ever read into memory.
@@ -74,7 +76,7 @@ export const assetsRoutes = new Elysia()
     if (!mime || !ASSET_MIME_TYPES.has(mime)) {
       return json({ status: 400, message: 'Only JPEG, PNG, GIF and WebP images can be uploaded.', errors: ['Only JPEG, PNG, GIF and WebP images can be uploaded.'] }, 400);
     }
-    const limit = await checkStorageLimit(ctx.db, ctx.userId, file.size);
+    const limit = await checkStorageLimit(ctx.db, ctx.orgId, file.size);
     if (!limit.allowed) return paymentRequired(limit.message!);
 
     const ik = getImageKit();
@@ -88,7 +90,7 @@ export const assetsRoutes = new Elysia()
     const [existing] = await ctx.db
       .select({ count: sql<number>`count(*)` })
       .from(assets)
-      .where(and(eq(assets.user_id, ctx.userId), eq(assets.name, fileName)));
+      .where(and(eq(assets.org_id, ctx.orgId), eq(assets.name, fileName)));
     const duplicateName = Number(existing?.count ?? 0) > 0;
 
     let uploaded;
@@ -96,7 +98,7 @@ export const assetsRoutes = new Elysia()
       uploaded = await ik.upload({
         file: bytes,
         fileName,
-        folder: assetFolder(ctx.userId),
+        folder: assetFolder(ctx.orgId),
         useUniqueFileName: true,
       });
     } catch {
@@ -106,6 +108,7 @@ export const assetsRoutes = new Elysia()
     const asset = {
       id: crypto.randomUUID(),
       user_id: ctx.userId,
+      org_id: ctx.orgId,
       imagekit_file_id: uploaded.fileId,
       url: uploaded.url,
       // The name the user gave, not the one ImageKit uniquified: the random
@@ -125,29 +128,31 @@ export const assetsRoutes = new Elysia()
 
   .get('/api/v1/assets', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const list = await ctx.db.select().from(assets).where(eq(assets.user_id, ctx.userId)).orderBy(desc(assets.created_at), desc(sql`rowid`));
-    const { plan } = await getPlan(ctx.db, ctx.userId);
+    if (!ctx.orgId) return noWorkspace();
+    const list = await ctx.db.select().from(assets).where(eq(assets.org_id, ctx.orgId)).orderBy(desc(assets.created_at), desc(sql`rowid`));
+    const { plan } = await getPlan(ctx.db, ctx.orgId);
     const raw = PLAN_LIMITS[plan].maxStorageBytes;
     return json({
       assets: list,
-      usedBytes: await getStorageUsed(ctx.db, ctx.userId),
+      usedBytes: await getStorageUsed(ctx.db, ctx.orgId),
       limitBytes: Number.isFinite(raw) ? raw : null,
     });
   })
 
   .get('/api/v1/assets/:id/usage', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     const [asset] = await ctx.db.select().from(assets)
-      .where(and(eq(assets.id, ctx.params.id), eq(assets.user_id, ctx.userId))).limit(1);
+      .where(and(eq(assets.id, ctx.params.id), eq(assets.org_id, ctx.orgId))).limit(1);
     if (!asset) return notFound('Asset not found');
     // A substring match over serialised content is enough: the URL is unique
     // per file and a transform suffix does not change its prefix.
     const needle = `%${asset.url}%`;
     const inContent = ctx.db.select({ id: mails.id, title: mails.title }).from(mails)
-      .where(and(eq(mails.user_id, ctx.userId), like(mails.content, needle)));
+      .where(and(eq(mails.org_id, ctx.orgId), like(mails.content, needle)));
     const inVersions = ctx.db.select({ id: mails.id, title: mails.title }).from(templateVersions)
       .innerJoin(mails, eq(mails.id, templateVersions.template_id))
-      .where(and(eq(templateVersions.user_id, ctx.userId), like(templateVersions.content, needle)));
+      .where(and(eq(templateVersions.org_id, ctx.orgId), like(templateVersions.content, needle)));
     const seen = new Map<string, { id: string; title: string }>();
     for (const row of [...(await inContent), ...(await inVersions)]) seen.set(row.id, row);
     return json({ templates: [...seen.values()] });
@@ -155,8 +160,9 @@ export const assetsRoutes = new Elysia()
 
   .delete('/api/v1/assets/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     const [asset] = await ctx.db.select().from(assets)
-      .where(and(eq(assets.id, ctx.params.id), eq(assets.user_id, ctx.userId))).limit(1);
+      .where(and(eq(assets.id, ctx.params.id), eq(assets.org_id, ctx.orgId))).limit(1);
     if (!asset) return notFound('Asset not found');
     const ik = getImageKit();
     if (ik) {
@@ -170,6 +176,6 @@ export const assetsRoutes = new Elysia()
         }
       }
     }
-    await ctx.db.delete(assets).where(and(eq(assets.id, asset.id), eq(assets.user_id, ctx.userId)));
+    await ctx.db.delete(assets).where(and(eq(assets.id, asset.id), eq(assets.org_id, ctx.orgId)));
     return json({ status: 'ok' });
   });

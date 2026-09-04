@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from '@temply/shared/schema';
 import { Elysia, type AnyElysia } from 'elysia';
 import { initTables } from '../plugins/db';
+import { normaliseRole } from '../plugins/auth';
 import { errorResponse } from '../lib/errors';
 
 export type TestDb = ReturnType<typeof drizzle<typeof schema>>;
@@ -33,6 +34,8 @@ export function createTestApp(db: TestDb, routes: AnyElysia) {
     .use(
       new Elysia({ name: 'auth' }).derive({ as: 'global' }, ({ request }) => ({
         userId: request.headers.get('x-user-id'),
+        orgId: request.headers.get('x-org-id') || null,
+        orgRole: normaliseRole(request.headers.get('x-org-role')),
       })),
     )
     .use(new Elysia({ name: 'db' }).derive({ as: 'global' }, () => ({ db })))
@@ -70,14 +73,21 @@ export function put(app: TestApp, path: string, body: unknown, userId?: string |
   );
 }
 
-export function del(app: TestApp, path: string, userId?: string | null) {
+export function del(app: TestApp, path: string, userId?: string | null, headers: Record<string, string> = {}) {
   return app.handle(
-    new Request(`http://localhost${path}`, { method: 'DELETE', headers: withUser({}, userId) }),
+    new Request(`http://localhost${path}`, { method: 'DELETE', headers: withUser(headers, userId) }),
   );
 }
 
+/**
+ * Each test user is a one-person organization named after them, and its
+ * admin, unless a test passes its own x-org-* headers — that is how a test
+ * puts two users in one org, makes someone a member, or leaves a user with
+ * no workspace at all (`'x-org-id': ''`).
+ */
 function withUser(headers: Record<string, string>, userId?: string | null): Record<string, string> {
-  return userId ? { ...headers, 'x-user-id': userId } : headers;
+  if (!userId) return headers;
+  return { 'x-org-id': userId, 'x-org-role': 'admin', ...headers, 'x-user-id': userId };
 }
 
 /** Multipart POST — `fetch` sets the boundary header from the FormData. */
@@ -92,6 +102,7 @@ export async function givePlan(db: TestDb, userId: string, plan: 'free' | 'pro' 
   await db.insert(schema.subscriptions).values({
     id: crypto.randomUUID(),
     user_id: userId,
+    org_id: userId,
     plan,
     status,
   });

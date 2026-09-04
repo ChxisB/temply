@@ -4,6 +4,7 @@ import { getApiUsage, nextResetDate } from '../lib/api-quota';
 import { PLAN_LIMITS } from '@temply/shared/plans';
 import { json, unauthorized } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
+import { noWorkspace } from '../lib/workspace';
 import { dbPlugin } from '../plugins/db';
 
 export const quotaRoutes = new Elysia()
@@ -11,10 +12,11 @@ export const quotaRoutes = new Elysia()
   .use(dbPlugin)
   .get('/api/v1/quota', async (ctx) => {
   if (!ctx.userId) return unauthorized();
-  const { plan } = await getPlan(ctx.db, ctx.userId);
+  if (!ctx.orgId) return noWorkspace();
+  const { plan } = await getPlan(ctx.db, ctx.orgId);
   const rawLimit = PLAN_LIMITS[plan].maxApiCalls;
   const limit = Number.isFinite(rawLimit) ? rawLimit : null; // null = unlimited over the wire
-  const used = await getApiUsage(ctx.db, ctx.userId);
+  const used = await getApiUsage(ctx.db, ctx.orgId);
   return json({
     plan,
     api: { used, limit, remaining: limit === null ? null : Math.max(0, limit - used) },

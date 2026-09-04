@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm';
-import { apiUsage } from '@temply/shared/schema';
+import { orgUsage } from '@temply/shared/schema';
 import type { Db } from '../plugins/db';
 import { PLAN_LIMITS, TEST_API_CALLS_PER_MONTH } from '@temply/shared/plans';
 import { getPlan } from './billing';
@@ -39,23 +39,23 @@ export function nextResetDate(now: Date = new Date()): string {
   return `${year}-${String(month).padStart(2, '0')}-01`;
 }
 
-export async function getApiUsage(db: Db, userId: string, now: Date = new Date(), mode: ApiKeyMode = 'live'): Promise<number> {
+export async function getApiUsage(db: Db, orgId: string, now: Date = new Date(), mode: ApiKeyMode = 'live'): Promise<number> {
   const period = periodFor(now, mode);
   const [row] = await db
     .select()
-    .from(apiUsage)
-    .where(and(eq(apiUsage.user_id, userId), eq(apiUsage.period, period)))
+    .from(orgUsage)
+    .where(and(eq(orgUsage.org_id, orgId), eq(orgUsage.period, period)))
     .limit(1);
   return row?.count ?? 0;
 }
 
 export async function checkApiQuota(
   db: Db,
-  userId: string,
+  orgId: string,
   now: Date = new Date(),
   mode: ApiKeyMode = 'live',
 ): Promise<{ allowed: boolean; message?: string; used: number; limit: number; remaining: number }> {
-  const used = await getApiUsage(db, userId, now, mode);
+  const used = await getApiUsage(db, orgId, now, mode);
   if (mode === 'test') {
     const limit = TEST_API_CALLS_PER_MONTH;
     const remaining = Math.max(0, limit - used);
@@ -70,7 +70,7 @@ export async function checkApiQuota(
     }
     return { allowed: true, used, limit, remaining };
   }
-  const { plan } = await getPlan(db, userId);
+  const { plan } = await getPlan(db, orgId);
   const limit = PLAN_LIMITS[plan].maxApiCalls;
   if (!Number.isFinite(limit)) return { allowed: true, used, limit, remaining: Infinity };
   const remaining = Math.max(0, limit - used);
@@ -86,13 +86,13 @@ export async function checkApiQuota(
   return { allowed: true, used, limit, remaining };
 }
 
-export async function recordApiCall(db: Db, userId: string, now: Date = new Date(), mode: ApiKeyMode = 'live'): Promise<void> {
+export async function recordApiCall(db: Db, orgId: string, now: Date = new Date(), mode: ApiKeyMode = 'live'): Promise<void> {
   const period = periodFor(now, mode);
   await db
-    .insert(apiUsage)
-    .values({ user_id: userId, period, count: 1 })
+    .insert(orgUsage)
+    .values({ org_id: orgId, period, count: 1 })
     .onConflictDoUpdate({
-      target: [apiUsage.user_id, apiUsage.period],
-      set: { count: sql`${apiUsage.count} + 1` },
+      target: [orgUsage.org_id, orgUsage.period],
+      set: { count: sql`${orgUsage.count} + 1` },
     });
 }

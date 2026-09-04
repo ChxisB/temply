@@ -18,7 +18,7 @@ type Served = { content: string; theme: string | null; previewText: string | nul
 
 type Resolved =
   | { error: Response }
-  | { key: { id: string; user_id: string; mode: 'live' | 'test' }; template: Row; served: Served };
+  | { key: { id: string; user_id: string; org_id: string | null; mode: 'live' | 'test' }; template: Row; served: Served };
 
 /**
  * Everything both endpoints need before they can answer: a live key, quota
@@ -40,17 +40,22 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .limit(1);
   if (!key) return { error: unauthorized('Invalid or revoked API key') };
 
-  const quota = await checkApiQuota(ctx.db, key.user_id, new Date(), key.mode);
+  const quota = await checkApiQuota(ctx.db, key.org_id ?? key.user_id, new Date(), key.mode);
   if (!quota.allowed) {
     return {
       error: json({ status: 429, message: quota.message!, errors: [quota.message!] }, 429),
     };
   }
 
+  // The key's organization is the scope. A key from before organizations
+  // that nobody has adopted yet still points at the rows its owner made.
+  const scope = key.org_id
+    ? eq(mails.org_id, key.org_id)
+    : and(eq(mails.user_id, key.user_id), isNull(mails.org_id));
   const [template] = await ctx.db
     .select()
     .from(mails)
-    .where(and(eq(mails.short_code, ctx.params.shortCode), eq(mails.user_id, key.user_id)))
+    .where(and(eq(mails.short_code, ctx.params.shortCode), scope))
     .limit(1);
   if (!template) return { error: notFound('Template not found') };
   // A live key serves the published copy only: a draft that has never been
@@ -71,7 +76,7 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .update(apiKeysTable)
     .set({ last_used_at: new Date().toISOString() })
     .where(eq(apiKeysTable.id, key.id));
-  await recordApiCall(ctx.db, key.user_id, new Date(), key.mode);
+  await recordApiCall(ctx.db, key.org_id ?? key.user_id, new Date(), key.mode);
 
   return { key, template, served };
 }

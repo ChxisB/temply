@@ -9,6 +9,7 @@ import { checkTemplateLimit, shouldSnapshot } from '../lib/billing';
 import { render } from '../render/render';
 import { json, unauthorized, notFound, paymentRequired, badRequest } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
+import { noWorkspace } from '../lib/workspace';
 import { dbPlugin } from '../plugins/db';
 import type { Db } from '../plugins/db';
 
@@ -50,6 +51,7 @@ async function snapshotVersion(db: Db, row: Row) {
     id: crypto.randomUUID(),
     template_id: row.id,
     user_id: row.user_id,
+    org_id: row.org_id,
     title: row.title,
     preview_text: row.preview_text,
     content: row.content,
@@ -63,8 +65,8 @@ async function snapshotVersion(db: Db, row: Row) {
     );
 }
 
-async function ownRow(db: Db, userId: string, id: string): Promise<Row | undefined> {
-  const [row] = await db.select().from(mails).where(and(eq(mails.id, id), eq(mails.user_id, userId))).limit(1);
+async function ownRow(db: Db, orgId: string, id: string): Promise<Row | undefined> {
+  const [row] = await db.select().from(mails).where(and(eq(mails.id, id), eq(mails.org_id, orgId))).limit(1);
   return row;
 }
 
@@ -73,17 +75,19 @@ export const templatesRoutes = new Elysia()
   .use(dbPlugin)
   .get('/api/v1/templates', (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     return ctx.db
       .select()
       .from(mails)
-      .where(eq(mails.user_id, ctx.userId))
+      .where(eq(mails.org_id, ctx.orgId))
       .orderBy(desc(mails.updated_at))
       .then((rows) => json({ templates: rows.map(withFlags) }));
   })
 
   .get('/api/v1/templates/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const template = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const template = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!template) return notFound('Template not found');
     return json({ template: withFlags(template) });
   })
@@ -97,7 +101,8 @@ export const templatesRoutes = new Elysia()
    */
   .get('/api/v1/templates/:id/preview', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const template = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const template = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!template) return notFound('Template not found');
 
     let content: unknown;
@@ -143,7 +148,8 @@ export const templatesRoutes = new Elysia()
   // finds the Publish button.
   .post('/api/v1/templates', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const limit = await checkTemplateLimit(ctx.db, ctx.userId);
+    if (!ctx.orgId) return noWorkspace();
+    const limit = await checkTemplateLimit(ctx.db, ctx.orgId);
     if (!limit.allowed) return paymentRequired(limit.message!);
     const { title, previewText, content, theme } = ctx.body;
     const id = crypto.randomUUID();
@@ -153,6 +159,7 @@ export const templatesRoutes = new Elysia()
     await ctx.db.insert(mails).values({
       id,
       user_id: ctx.userId,
+      org_id: ctx.orgId,
       title,
       ...draft,
       short_code: shortCode,
@@ -166,6 +173,7 @@ export const templatesRoutes = new Elysia()
   // Saves the draft. The published copy is untouched until /publish.
   .post('/api/v1/templates/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     const { title, previewText, content, theme } = ctx.body;
     // `theme` is omitted rather than null when the client is not editing it,
     // so an absent field must not wipe a theme the template already has.
@@ -177,17 +185,18 @@ export const templatesRoutes = new Elysia()
       updated_at: nextStamp(),
     };
     if (theme !== undefined) patch.theme = theme;
-    await ctx.db.update(mails).set(patch).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
+    await ctx.db.update(mails).set(patch).where(and(eq(mails.id, ctx.params.id), eq(mails.org_id, ctx.orgId)));
     return json({ status: 'ok' });
   }, { body: t.Object({ title: t.String({ minLength: 3 }), previewText: t.Optional(t.String()), content: t.String(), theme: t.Optional(t.String()) }) })
 
   .post('/api/v1/templates/:id/publish', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const row = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!row) return notFound('Template not found');
     const stamp = nextStamp();
     await ctx.db.update(mails).set(publishedPatch(row, stamp)).where(eq(mails.id, row.id));
-    if (await shouldSnapshot(ctx.db, ctx.userId)) await snapshotVersion(ctx.db, row);
+    if (await shouldSnapshot(ctx.db, ctx.orgId)) await snapshotVersion(ctx.db, row);
     const [published] = await ctx.db.select().from(mails).where(eq(mails.id, row.id)).limit(1);
     return json({ template: withFlags(published) });
   })
@@ -196,7 +205,8 @@ export const templatesRoutes = new Elysia()
   // shared stamp clears the unpublished flag.
   .post('/api/v1/templates/:id/discard', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const row = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!row) return notFound('Template not found');
     if (row.published_at === null || row.published_content === null) {
       return badRequest('This template has never been published, so there is nothing to go back to.');
@@ -218,7 +228,8 @@ export const templatesRoutes = new Elysia()
   // teammate who already has it should not be cut off by a second click.
   .post('/api/v1/templates/:id/share', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const row = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!row) return notFound('Template not found');
     if (row.share_token) return json({ token: row.share_token });
     const token = generateShareToken();
@@ -228,7 +239,8 @@ export const templatesRoutes = new Elysia()
 
   .delete('/api/v1/templates/:id/share', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const row = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    if (!ctx.orgId) return noWorkspace();
+    const row = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!row) return notFound('Template not found');
     await ctx.db.update(mails).set({ share_token: null }).where(eq(mails.id, row.id));
     return json({ status: 'ok' });
@@ -236,7 +248,8 @@ export const templatesRoutes = new Elysia()
 
   .delete('/api/v1/templates/:id', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    await ctx.db.delete(mails).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
+    if (!ctx.orgId) return noWorkspace();
+    await ctx.db.delete(mails).where(and(eq(mails.id, ctx.params.id), eq(mails.org_id, ctx.orgId)));
     return json({ status: 'ok' });
   })
 
@@ -244,10 +257,11 @@ export const templatesRoutes = new Elysia()
   // published at once, like a new template.
   .post('/api/v1/templates/:id/duplicate', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     // Duplicating adds a template, so it must respect the plan cap like create.
-    const limit = await checkTemplateLimit(ctx.db, ctx.userId);
+    const limit = await checkTemplateLimit(ctx.db, ctx.orgId);
     if (!limit.allowed) return paymentRequired(limit.message!);
-    const template = await ownRow(ctx.db, ctx.userId, ctx.params.id);
+    const template = await ownRow(ctx.db, ctx.orgId, ctx.params.id);
     if (!template) return notFound('Template not found');
     const newId = crypto.randomUUID();
     const shortCode = generateShortCode();
@@ -255,6 +269,7 @@ export const templatesRoutes = new Elysia()
     await ctx.db.insert(mails).values({
       id: newId,
       user_id: ctx.userId,
+      org_id: ctx.orgId,
       title: `[DUPLICATE] ${template.title}`,
       preview_text: template.preview_text,
       content: template.content,
@@ -269,13 +284,15 @@ export const templatesRoutes = new Elysia()
 
   .get('/api/v1/templates/:id/versions', async (ctx) => {
     if (!ctx.userId) return unauthorized();
+    if (!ctx.orgId) return noWorkspace();
     const versions = await ctx.db.select({ id: templateVersions.id, version_number: templateVersions.version_number, title: templateVersions.title, created_at: templateVersions.created_at }).from(templateVersions).where(eq(templateVersions.template_id, ctx.params.id)).orderBy(desc(templateVersions.created_at));
     return json({ versions });
   })
 
   .get('/api/v1/templates/:id/versions/:versionId', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const [version] = await ctx.db.select().from(templateVersions).where(and(eq(templateVersions.id, ctx.params.versionId), eq(templateVersions.template_id, ctx.params.id), eq(templateVersions.user_id, ctx.userId))).limit(1);
+    if (!ctx.orgId) return noWorkspace();
+    const [version] = await ctx.db.select().from(templateVersions).where(and(eq(templateVersions.id, ctx.params.versionId), eq(templateVersions.template_id, ctx.params.id), eq(templateVersions.org_id, ctx.orgId))).limit(1);
     if (!version) return notFound('Version not found');
     return json({ version });
   })
@@ -285,7 +302,8 @@ export const templatesRoutes = new Elysia()
   // restore replaces was never that.
   .post('/api/v1/templates/:id/versions/:versionId/restore', async (ctx) => {
     if (!ctx.userId) return unauthorized();
-    const [version] = await ctx.db.select().from(templateVersions).where(and(eq(templateVersions.id, ctx.params.versionId), eq(templateVersions.template_id, ctx.params.id), eq(templateVersions.user_id, ctx.userId))).limit(1);
+    if (!ctx.orgId) return noWorkspace();
+    const [version] = await ctx.db.select().from(templateVersions).where(and(eq(templateVersions.id, ctx.params.versionId), eq(templateVersions.template_id, ctx.params.id), eq(templateVersions.org_id, ctx.orgId))).limit(1);
     if (!version) return notFound('Version not found');
     // A null version theme means "snapshotted before themes were captured" —
     // unknown, not absent — so it must not wipe the template's current theme.
@@ -296,6 +314,6 @@ export const templatesRoutes = new Elysia()
       updated_at: nextStamp(),
     };
     if (version.theme !== null) restorePatch.theme = version.theme;
-    await ctx.db.update(mails).set(restorePatch).where(and(eq(mails.id, ctx.params.id), eq(mails.user_id, ctx.userId)));
+    await ctx.db.update(mails).set(restorePatch).where(and(eq(mails.id, ctx.params.id), eq(mails.org_id, ctx.orgId)));
     return json({ status: 'ok' });
   });

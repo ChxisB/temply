@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { subscriptions } from '@temply/shared/schema';
 import { getStripe } from '../../lib/billing';
 import { json } from '../../lib/errors';
@@ -21,9 +21,17 @@ export const webhookRoutes = new Elysia()
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
+        const orgId = session.metadata?.orgId;
         const userId = session.metadata?.userId;
         const plan = session.metadata?.plan;
-        if (userId && plan) await ctx.db.update(subscriptions).set({ plan, stripe_subscription_id: session.subscription as string, stripe_customer_id: session.customer as string, status: 'active', updated_at: new Date().toISOString() }).where(eq(subscriptions.user_id, userId));
+        // Sessions opened before organizations carry only a userId; their
+        // row is the one still keyed by user.
+        const scope = orgId
+          ? eq(subscriptions.org_id, orgId)
+          : userId
+            ? and(eq(subscriptions.user_id, userId), isNull(subscriptions.org_id))
+            : null;
+        if (scope && plan) await ctx.db.update(subscriptions).set({ plan, stripe_subscription_id: session.subscription as string, stripe_customer_id: session.customer as string, status: 'active', updated_at: new Date().toISOString() }).where(scope);
         break;
       }
       case 'customer.subscription.updated': {
