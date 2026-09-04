@@ -189,7 +189,7 @@ const CommandList = forwardRef<SuggestionListRef, CommandListProps>((props, ref)
 
   return (
     <TooltipProvider>
-      <div className="mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:bg-white mly:shadow-md mly:transition-all">
+      <div className="mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-md mly:border mly:border-gray-200 mly:bg-panel mly:shadow-md mly:transition-all">
         <div
           id="slash-command"
           ref={commandListContainer}

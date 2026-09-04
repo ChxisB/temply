@@ -89,7 +89,7 @@ export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
     }));
 
     return (
-      <div className="mly:z-50 mly:w-64 mly:rounded-lg mly:border mly:border-gray-200 mly:bg-white mly:shadow-md mly:transition-all">
+      <div className="mly:z-50 mly:w-64 mly:rounded-lg mly:border mly:border-gray-200 mly:bg-panel mly:shadow-md mly:transition-all">
         <div className="mly:flex mly:items-center mly:justify-between mly:gap-2 mly:border-b mly:border-gray-200 mly:bg-soft-gray/40 mly:px-1 mly:py-1.5 mly:text-gray-500">
           <span className="mly:text-xs mly:uppercase">Variables</span>
           <VariableIcon>
@@ -114,7 +114,7 @@ export const VariableSuggestionsPopover: VariableSuggestionsPopoverType =
                     'mly:flex mly:w-fit mly:min-w-full mly:items-center mly:gap-2 mly:rounded-md mly:px-2 mly:py-1 mly:text-left mly:font-mono mly:text-sm mly:text-gray-900 mly:transition-colors mly:hover:bg-soft-gray',
                     index === selectedIndex
                       ? 'mly:bg-soft-gray'
-                      : 'mly:bg-white'
+                      : 'mly:bg-panel'
                   )}
                 >
                   <Braces className="mly:size-3 mly:stroke-[2.5] mly:text-rose-600" />
