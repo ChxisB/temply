@@ -1,6 +1,20 @@
 import { describe, expect, test } from 'bun:test';
 import { collectDataKeys } from '@temply/shared/template-data';
 
+describe('collectDataKeys locations', () => {
+  test('names the block a pill sits in and quotes its words', () => {
+    const keys = collectDataKeys({
+      type: 'doc',
+      content: [
+        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Hi ' }, { type: 'variable', attrs: { id: 'firstName' } }] },
+        { type: 'button', attrs: { text: 'Accept invite', url: 'inviteUrl', isUrlVariable: true } },
+      ],
+    });
+    expect(keys.where.firstName).toEqual({ kind: 'heading', text: 'Hi {{firstName}}' });
+    expect(keys.where.inviteUrl).toEqual({ kind: 'button', text: 'Accept invite' });
+  });
+});
+
 describe('collectDataKeys', () => {
   test('finds show-if keys at any depth', () => {
     const doc = {
@@ -53,11 +67,11 @@ describe('collectDataKeys', () => {
   });
 
   test('a document with neither yields empty lists', () => {
-    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({ conditions: [], variables: [], placeholders: {} });
+    expect(collectDataKeys({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
   });
 
   test('survives malformed input', () => {
-    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [], placeholders: {} });
-    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [], placeholders: {} });
+    expect(collectDataKeys(null)).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
+    expect(collectDataKeys('nonsense')).toEqual({ conditions: [], variables: [], placeholders: {}, where: {} });
   });
 });

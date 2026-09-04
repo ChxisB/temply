@@ -325,6 +325,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     conditions: [],
     variables: [],
     placeholders: {},
+    where: {},
   });
   const [previewData, setPreviewData] = useState<PreviewData>({
     conditions: {},
@@ -505,11 +506,18 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     const issues: PreflightIssue[] = [
       ...checkFields(subject, previewText),
       ...collectContentFindings(json),
-      ...unresolvedVariables(keys, previewData.variables).map((key) => ({
-        id: `variable-${key}`,
-        severity: 'warn' as const,
-        message: `The variable {{${key}}} has no placeholder and no preview value — a test send needs one.`,
-      })),
+      ...unresolvedVariables(keys, previewData.variables).map((key) => {
+        // Say where the pill is, or the author is left hunting through the
+        // document for a name that may appear nowhere in the copy.
+        const at = keys.where[key];
+        const place = at ? (at.kind === 'button' ? 'in a button' : `in a ${at.kind}`) : '';
+        return {
+          id: `variable-${key}`,
+          severity: 'warn' as const,
+          message: `{{${key}}} ${place} has no placeholder and no preview value — a test send needs one.`.replace('  ', ' '),
+          detail: at?.text || undefined,
+        };
+      }),
       ...themeWarnings(),
     ];
 
@@ -844,7 +852,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       return;
     }
     const json = editor?.getJSON();
-    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], placeholders: {} };
+    const keys = json ? collectDataKeys(json) : { conditions: [], variables: [], placeholders: {}, where: {} };
     const content = JSON.stringify(json);
     try {
       await httpPost('/api/v1/emails/send', {

@@ -156,10 +156,10 @@ describe('collectContentFindings — images', () => {
 });
 
 describe('unresolvedVariables', () => {
-  const keys = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: {} };
+  const keys = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: {}, where: {} };
 
   it('is quiet about a pill that carries a placeholder', () => {
-    const withPlaceholder = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: { firstName: 'there' } };
+    const withPlaceholder = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: { firstName: 'there' }, where: {} };
     expect(unresolvedVariables(withPlaceholder, {})).toEqual(['orderUrl']);
   });
 
