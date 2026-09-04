@@ -117,34 +117,6 @@ describe('render', () => {
     expect(await engine.render({ plainText: true })).toBe('Buddy');
   });
 
-  it.skip('should replace variables with fallback value', async () => {
-    const content = {
-      type: 'doc',
-      content: [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'variable',
-              attrs: {
-                id: 'name',
-                fallback: 'Buddy',
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    const engine = new Engine(content);
-    engine.setShouldReplaceVariableValues(true);
-    const result = await engine.render({
-      plainText: true,
-    });
-
-    expect(result).toMatchInlineSnapshot(`"Buddy"`);
-  });
-
   it('should replace links with setLinkValue value', async () => {
     const content = {
       type: 'doc',
