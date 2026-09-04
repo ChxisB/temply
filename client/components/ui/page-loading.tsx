@@ -16,14 +16,14 @@ export function PageLoading({
   label = 'Loading…',
   className,
 }: {
-  /** Read to screen readers only; the mark itself carries no text. */
+  /** Shown under the mark, and read by screen readers. */
   label?: string;
   className?: string;
 }) {
   return (
     <div
       role="status"
-      className={cn('page-loading flex items-center justify-center py-16', className)}
+      className={cn('page-loading flex flex-col items-center justify-center gap-3 py-16', className)}
     >
       <svg viewBox="0 0 48 48" className="size-10" aria-hidden="true">
         <rect width="48" height="48" rx="11" className="fill-accent" />
@@ -33,7 +33,7 @@ export function PageLoading({
           <rect className="page-loading-bar" x="19" y="34" width="10" height="9.5" rx="3.5" />
         </g>
       </svg>
-      <span className="sr-only">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
     </div>
   );
 }
