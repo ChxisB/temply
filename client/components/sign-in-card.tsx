@@ -9,7 +9,7 @@ export function SignInCard() {
   return (
     <SignIn
       forceRedirectUrl="/dashboard"
-      signUpForceRedirectUrl="/dashboard/templates"
+      signUpForceRedirectUrl="/dashboard"
       appearance={{
         ...clerkAppearance,
         elements: {
