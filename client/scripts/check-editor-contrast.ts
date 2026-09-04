@@ -163,14 +163,13 @@ for (const theme of ['light', 'dark'] as const) {
 // in nodes/ and extensions/, which the earlier scope never walked.
 const COMPONENTS = join(here, '..', 'core', 'editor');
 /** Files whose colours belong to the email being edited, not to our chrome:
- *  the editor body the canvas paints over, the HTML block's source view, the
- *  link card's badge, and the text-selection highlight — all drawn on the
- *  canvas, which follows the template's theme and ignores app dark mode. */
+ *  the editor body the canvas paints over, the HTML block's source view and
+ *  the link card's badge — all drawn on the canvas, which follows the
+ *  template's theme and ignores app dark mode. */
 const CONTENT_FILES = [
   'core/editor/index.tsx',
   'core/editor/nodes/html/html-view.tsx',
   'core/editor/nodes/link-card.tsx',
-  'core/editor/extensions/selection/selection.ts',
 ];
 
 function walk(dir: string): string[] {

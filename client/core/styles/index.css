@@ -40,6 +40,7 @@
 
   /* For chrome that marks a configured state — a block with a condition on it
      — rather than a problem. */
+  --color-accent: var(--ds-accent);
   --color-accent-wash: var(--ds-accent-wash);
   --color-accent-ink: var(--ds-accent-ink);
 
