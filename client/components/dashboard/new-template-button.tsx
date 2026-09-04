@@ -33,9 +33,15 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   // The starters are written for a sample company; the workspace's own name
-  // goes in before anyone sees them, in the gallery and in the template made.
+  // and logo go in before anyone sees them, in the gallery and in the
+  // template made. Clerk always has an image for an org — initials when
+  // nothing was uploaded — so only a real upload replaces the mark.
   const { organization } = useOrganization();
-  const starters = STARTER_TEMPLATES.map((starter) => personaliseStarter(starter, organization?.name));
+  const workspace = {
+    name: organization?.name,
+    logoUrl: organization?.hasImage ? organization.imageUrl : null,
+  };
+  const starters = STARTER_TEMPLATES.map((starter) => personaliseStarter(starter, workspace));
 
   const { mutateAsync: createTemplate, isPending } = useMutation({
     mutationFn: async (starter: StarterTemplate) => {

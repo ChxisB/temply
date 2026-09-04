@@ -12,7 +12,7 @@ describe('personaliseStarter', () => {
   const welcome = STARTER_TEMPLATES.find((s) => s.id === 'welcome')!;
 
   it('puts the workspace name where the sample company was, everywhere text lives', () => {
-    const mine = personaliseStarter(welcome, 'Acme Corp');
+    const mine = personaliseStarter(welcome, { name: 'Acme Corp' });
     expect(mine.subject).toBe('Welcome to Acme Corp');
     expect(JSON.stringify(mine.content)).not.toContain(SAMPLE_COMPANY);
     expect(JSON.stringify(mine.content)).toContain('Acme Corp');
@@ -20,9 +20,15 @@ describe('personaliseStarter', () => {
     expect(welcome.subject).toBe(`Welcome to ${SAMPLE_COMPANY}`);
   });
 
-  it('leaves the starter alone with no name to use', () => {
-    expect(personaliseStarter(welcome, '')).toBe(welcome);
+  it('leaves the starter alone with nothing to use', () => {
+    expect(personaliseStarter(welcome, { name: '' })).toBe(welcome);
     expect(personaliseStarter(welcome, null)).toBe(welcome);
+  });
+
+  it('puts the workspace logo in the logo slot, and keeps the mark without one', () => {
+    const logo = (s: typeof welcome) => JSON.stringify(s.content).match(/"src":"([^"]+)"/)?.[1];
+    expect(logo(personaliseStarter(welcome, { name: 'Acme', logoUrl: 'https://img.clerk.com/acme.png' }))).toBe('https://img.clerk.com/acme.png');
+    expect(logo(personaliseStarter(welcome, { name: 'Acme' }))).toBe('/brand/mark.png');
   });
 });
 

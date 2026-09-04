@@ -188,18 +188,28 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
   },
 ];
 
+export type Workspace = {
+  name?: string | null;
+  /** The workspace's own logo, when one was uploaded; the Temply mark
+   *  stands in otherwise. */
+  logoUrl?: string | null;
+};
+
 /**
- * The starter with the workspace's name where the sample company was —
- * subject, preview text and every run of text in the document. The logo
- * is left alone: it is an image, and theirs replaces it in the editor.
+ * The starter made the workspace's: its name where the sample company was
+ * — subject, preview text and every run of text — and its logo in the
+ * logo slot when it has one.
  */
-export function personaliseStarter(starter: StarterTemplate, companyName: string | null | undefined): StarterTemplate {
-  const name = companyName?.trim();
-  if (!name || name === SAMPLE_COMPANY) return starter;
-  const swap = (text: string) => text.split(SAMPLE_COMPANY).join(name);
+export function personaliseStarter(starter: StarterTemplate, workspace: Workspace | null | undefined): StarterTemplate {
+  const name = workspace?.name?.trim();
+  const logoUrl = workspace?.logoUrl?.trim();
+  const swapName = name && name !== SAMPLE_COMPANY;
+  if (!swapName && !logoUrl) return starter;
+  const swap = (text: string) => (swapName ? text.split(SAMPLE_COMPANY).join(name) : text);
   const walk = (node: JSONContent): JSONContent => ({
     ...node,
     ...(typeof node.text === 'string' ? { text: swap(node.text) } : {}),
+    ...(node.type === 'logo' && logoUrl ? { attrs: { ...node.attrs, src: logoUrl } } : {}),
     ...(node.content ? { content: node.content.map(walk) } : {}),
   });
   return {
