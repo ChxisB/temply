@@ -1,9 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-
-// The API binds to IPv4 loopback only, so address it explicitly rather than via
-// `localhost`, which resolves to ::1 first on macOS.
-const API_TARGET = 'http://127.0.0.1:3001';
+import { API_TARGET } from '~/lib/api-target';
 
 async function handleRequest(request: NextRequest, { params }: { params: Promise<{ path?: string[] }> }) {
   const { path } = await params;
