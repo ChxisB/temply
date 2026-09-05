@@ -3,7 +3,6 @@
 import type { Editor } from '@tiptap/core';
 import { NodeSelection } from '@tiptap/pm/state';
 import { CheckCircle2Icon, LayoutTemplateIcon, MailIcon, PaletteIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react';
-import { useState } from 'react';
 import { Button, pressable } from '~/components/ui/button';
 import { useKeyboardInset } from '~/hooks/use-keyboard-inset';
 import { isEditingText } from '~/core/editor/plugins/block-selection';
@@ -16,11 +15,13 @@ export type IdleTab = 'details' | 'brand' | 'data' | 'checks';
 
 // Focus, not just selection shape, decides the text face: a NodeSelection
 // left over from a block tap should not flash 'text' before the keyboard
-// has actually come up. Task 14 owns the finer nuance (a `panelOpen` param
-// keeps this face up while the Aa panel has taken the keyboard's place).
-export function bottomBarState(editor: Editor | null): BottomBarState {
+// has actually come up. Opening the Aa panel blurs the editor on purpose
+// (the keyboard drops), so `panelOpen` keeps the text face up on its own —
+// the panel's commands still apply to the selection the SelectionExtension
+// keeps drawn.
+export function bottomBarState(editor: Editor | null, panelOpen: boolean): BottomBarState {
   if (!editor) return 'idle';
-  if (isEditingText(editor) && editor.isFocused) return 'text';
+  if (isEditingText(editor) && (editor.isFocused || panelOpen)) return 'text';
   if (editor.state.selection instanceof NodeSelection) return 'block';
   return 'idle';
 }
@@ -39,18 +40,21 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
  * block states and hides while typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
-  editor, state, checksCount, onOpenTab, onAdd, onStyle, onDone,
+  editor, state, checksCount, panelOpen, onTogglePanel, onOpenTab, onAdd, onStyle, onDone,
 }: {
   editor: Editor | null;
   state: BottomBarState;
   checksCount: { errors: number; warnings: number };
+  // Lifted to the layout: `bottomBarState` there needs to know the panel is
+  // open before the header face (Done vs. Publish) can agree with the bar's.
+  panelOpen: boolean;
+  onTogglePanel: () => void;
   onOpenTab: (tab: IdleTab) => void;
   onAdd: () => void;
   onStyle: () => void;
   onDone: () => void;
 }) {
   const inset = useKeyboardInset();
-  const [panelOpen, setPanelOpen] = useState(false);
   const badge = checksCount.errors > 0 ? { n: checksCount.errors, tone: 'danger' as const } : checksCount.warnings > 0 ? { n: checksCount.warnings, tone: 'warn' as const } : null;
 
   return (
@@ -67,8 +71,12 @@ export function EditorBottomBar({
         </Button>
       </div>
 
-      <div className="pointer-events-auto border-t border-line bg-raised pb-[env(safe-area-inset-bottom)]">
-        <div className="grid h-14 [&>*]:col-start-1 [&>*]:row-start-1">
+      <div data-editor-bottom-bar className="pointer-events-auto border-t border-line bg-raised pb-[env(safe-area-inset-bottom)]">
+        {/* A floor, not a fixed height: idle/block/text agree on 56px when
+            the text face is just its top row, but the Aa panel grows that
+            face taller, and the row this shares has to grow with it or the
+            panel paints past the bar's own box. */}
+        <div className="grid min-h-14 [&>*]:col-start-1 [&>*]:row-start-1">
           {/* idle */}
           <nav
             aria-label="Editor sections"
@@ -109,7 +117,7 @@ export function EditorBottomBar({
             className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'text' ? 'opacity-100' : 'pointer-events-none opacity-0')}
             aria-hidden={state !== 'text'}
           >
-            {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={() => setPanelOpen((v) => !v)} onDone={onDone} /> : null}
+            {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} onDone={onDone} /> : null}
           </div>
         </div>
       </div>

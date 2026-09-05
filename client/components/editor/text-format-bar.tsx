@@ -21,6 +21,16 @@ const SWATCHES = [
   { hex: '#ffffff', name: 'White' },
 ];
 
+// Same trick the desktop bubble menu uses: a mousedown on a button would
+// otherwise steal focus from the ProseMirror before onClick runs. For Bold
+// and its neighbours that just drops the caret and the keyboard; for Aa,
+// Link and Done — which mean to blur, deliberately, from inside their own
+// handler — an unprevented mousedown blurs a tick earlier than that, which
+// flips bottomBarState off 'text' before the click fires and can make the
+// tap land on nothing. Either way the fix is the same: keep focus here, and
+// let the click handler be the only thing that ever moves it.
+const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
+
 function Toggle({ editor, command }: { editor: Editor; command: EditorCommand }) {
   const active = useEditorState({ editor, selector: ({ editor }) => (command.isActive ? command.isActive(editor) : false) });
   return (
@@ -29,6 +39,8 @@ function Toggle({ editor, command }: { editor: Editor; command: EditorCommand })
       aria-label={command.label}
       aria-pressed={active}
       title={command.label}
+      onMouseDown={keepFocus}
+      onPointerDown={keepFocus}
       onClick={() => command.run(editor)}
       className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', active ? 'bg-accent-wash text-accent-ink' : 'text-ink', pressable)}
     >
@@ -96,25 +108,38 @@ export function TextFormatBar({
           aria-label="Link"
           aria-haspopup="dialog"
           aria-expanded={linkOpen}
+          onMouseDown={keepFocus}
+          onPointerDown={keepFocus}
           onClick={openLink}
           className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', linkUrl ? 'bg-accent-wash text-accent-ink' : 'text-ink', pressable)}
         >
           <LinkIcon className="size-5" />
         </button>
-        <button type="button" aria-label="Insert variable" onClick={insertVariable} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
+        <button type="button" aria-label="Insert variable" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={insertVariable} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
           <BracesIcon className="size-5" />
         </button>
         <button
           type="button"
           aria-label="More formatting"
           aria-expanded={panelOpen}
+          // The panel opens by blurring the editor deliberately (see
+          // onTogglePanel) — but that has to be the ONLY blur in play.
+          // Without this, the browser's own mousedown default focuses this
+          // button first, blurring the editor a tick before onClick runs;
+          // bottomBarState then drops to 'block' between the two, the text
+          // face (this button included) goes pointer-events-none, and the
+          // tap's click can land on nothing. Keeping focus here just defers
+          // the blur to togglePanel's own call, in the same turn as
+          // `panelOpen` flips.
+          onMouseDown={keepFocus}
+          onPointerDown={keepFocus}
           onClick={onTogglePanel}
           className={cn('flex h-11 min-w-14 items-center justify-center gap-1 rounded-md border border-line text-sm font-medium', panelOpen ? 'bg-accent-wash text-accent-ink' : 'text-ink', pressable)}
         >
           <TypeIcon className="size-4" />
           Aa
         </button>
-        <button type="button" onClick={onDone} className={cn('h-11 rounded-md px-3 text-sm font-medium text-accent-ink', pressable)}>
+        <button type="button" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={onDone} className={cn('h-11 rounded-md px-3 text-sm font-medium text-accent-ink', pressable)}>
           Done
         </button>
       </div>
@@ -132,6 +157,8 @@ export function TextFormatBar({
                     type="button"
                     aria-label={name}
                     aria-pressed={color.toLowerCase() === hex}
+                    onMouseDown={keepFocus}
+                    onPointerDown={keepFocus}
                     onClick={() => setTextColor(editor, hex)}
                     className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', pressable)}
                   >

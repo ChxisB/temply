@@ -2,6 +2,7 @@
 
 import type { FocusPosition } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
+import { useEffect, useState } from 'react';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -16,7 +17,6 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 import { AssetPickerDialog } from '~/components/assets/asset-picker-dialog';
 import { DeleteEmailDialog } from '~/components/delete-email-dialog';
 import { EmailEditor } from '~/components/email-editor';
@@ -62,10 +62,46 @@ export function MobileEditorLayout({
   const { editor, template } = model;
   const [sheet, setSheet] = useState<SheetId>(null);
   const [styleOpen, setStyleOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   // The bar's face follows the selection; useEditorState re-renders on every
-  // transaction, which is exactly when the face can change.
-  const state = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor) }) ?? 'idle';
+  // transaction, which is exactly when the face can change. panelOpen lives
+  // here, not inside the bar, because the header's own Done/Publish switch
+  // reads `state` too — both faces have to agree the Aa panel is still "text".
+  const state = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor, panelOpen) }) ?? 'idle';
+
+  // Aa takes the keyboard's place: opening it blurs the editor so the
+  // keyboard drops, closing it gives focus back. The SelectionExtension
+  // keeps the selection drawn while unfocused, so the panel's own commands
+  // (colour, align, the link row) still land on it.
+  const togglePanel = () => {
+    setPanelOpen((open) => {
+      if (!open) editor?.commands.blur();
+      else editor?.commands.focus();
+      return !open;
+    });
+  };
+
+  // A stale panelOpen would reopen the panel the next time text is entered
+  // for an unrelated reason (a fresh tap, Done). It only means anything
+  // while the text face is up, so anything that leaves 'text' clears it.
+  useEffect(() => {
+    if (state !== 'text') setPanelOpen(false);
+  }, [state]);
+
+  // The keyboard (or the Aa panel) can cover the block being edited; once
+  // the text face is up, bring the caret back above the bar.
+  useEffect(() => {
+    if (state !== 'text' || !editor) return;
+    const id = window.setTimeout(() => {
+      const { from } = editor.state.selection;
+      const coords = editor.view.coordsAtPos(from);
+      const bar = document.querySelector<HTMLElement>('[data-editor-bottom-bar]');
+      const barTop = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+      if (coords.bottom > barTop - 24) window.scrollBy({ top: coords.bottom - (barTop - 24), behavior: 'smooth' });
+    }, 250); // after the keyboard has settled
+    return () => window.clearTimeout(id);
+  }, [state, editor]);
 
   const closeSheet = () => {
     // The eye sheet drives the model's mode; closing it has to put the
@@ -257,6 +293,8 @@ export function MobileEditorLayout({
         editor={editor}
         state={state}
         checksCount={{ errors, warnings }}
+        panelOpen={panelOpen}
+        onTogglePanel={togglePanel}
         onOpenTab={openTab}
         onAdd={() => setSheet('add')}
         onStyle={() => setStyleOpen(true)}
