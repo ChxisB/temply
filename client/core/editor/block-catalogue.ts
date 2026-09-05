@@ -11,7 +11,7 @@ export type CatalogueGroup = {
 /** The phone's grouping of the same blocks the slash menu offers. Titles
  *  are matched, not ids, because BlockItem has no stable id for leaves. */
 export const CATALOGUE_GROUPS: Array<{ id: CatalogueGroup['id']; title: string; titles: string[] }> = [
-  { id: 'content', title: 'Content', titles: ['Text', 'Heading 1', 'Heading 2', 'Heading 3', 'Bullet List', 'Numbered List', 'Image', 'Logo', 'Inline Image', 'Button', 'Link Card', 'Blockquote', 'Footer', 'Hard Break', 'Clear Line'] },
+  { id: 'content', title: 'Content', titles: ['Text', 'Heading 1', 'Heading 2', 'Heading 3', 'Bullet List', 'Numbered List', 'Image', 'Logo', 'Inline Image', 'Button', 'Link Card', 'Hard Break', 'Blockquote', 'Footer', 'Clear Line'] },
   { id: 'layout', title: 'Layout', titles: ['Columns', 'Section', 'Divider', 'Spacer'] },
   { id: 'logic', title: 'Logic', titles: ['Repeat', 'Custom HTML'] },
   { id: 'components', title: 'Components', titles: ['Headers', 'Footers'] },
