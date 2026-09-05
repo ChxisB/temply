@@ -5,16 +5,40 @@ templates and brands in a workspace, and pull the rendered HTML into your
 own application through an API. Your app sends the mail; Temply hands you
 the markup.
 
-## Stack
+## Tech stack
 
-| Part | What it is |
+Bun 1.3 is the package manager, the test runner and the API runtime.
+Never npm, yarn or pnpm.
+
+**Client** (`client/`)
+
+| | |
 |---|---|
-| `client/` | Next.js 15 (App Router). Marketing site, docs, the editor and the dashboard behind Clerk. Proxies `/api/*` to the API server. |
-| `server/` | Bun + Elysia API on `:3001`. SQLite through Drizzle, the email renderer (`src/render/engine.tsx`), Stripe billing, Resend, ImageKit. |
-| `shared/` | Types, plan limits, theme and contrast maths, preflight checks — imported by both sides. |
+| Framework | Next.js 15.3 (App Router, Turbopack dev), React 19, TypeScript 5.8 |
+| Styling | Tailwind CSS 4 with the design tokens in `app/globals.css` (`--ds-*`), `tailwind-merge`, `class-variance-authority` |
+| UI primitives | Radix UI (dialog, dropdown, popover, tooltip), lucide-react icons, sonner toasts |
+| Editor | tiptap 2 (ProseMirror) in `core/editor`, with custom nodes for the email blocks |
+| Data | TanStack Query 5 over a thin `fetch` wrapper; every call goes through the `/api/[[...path]]` proxy |
+| Auth | Clerk (`@clerk/nextjs` 7): sign-in, organizations, the user and organization profile components |
+| Monitoring | `@sentry/nextjs` 10, initialised only when a DSN is set |
 
-Bun is the package manager and runtime for everything. Never npm, yarn or
-pnpm.
+**API** (`server/`)
+
+| | |
+|---|---|
+| Framework | Elysia 1 on Bun, listening on `127.0.0.1:3001` |
+| Database | SQLite via `bun:sqlite` and Drizzle ORM 0.45; schema in `shared/schema.ts`, boot-time migrations in `src/plugins/db.ts` |
+| Rendering | `@react-email/render` + `juice` turn the editor document into table-based, inlined HTML (`src/render/`) |
+| Auth | `@clerk/backend` 3 verifies sessions and webhooks; proxied requests carry identity in headers proven by `INTERNAL_API_SECRET` |
+| Billing | Stripe SDK 22 (Checkout, Customer Portal, webhooks) |
+| Email | Resend 4 for test sends and the contact form |
+| Images | ImageKit 6 for uploads |
+| Validation | zod 3 and Elysia's `t` schemas |
+| Monitoring | `@sentry/bun` 10 |
+
+**Shared** (`shared/`): the Drizzle schema, plan limits, the renderer
+theme type and contrast maths, the preflight checks, and the public API
+path helpers — one source for both sides.
 
 ## Setup
 
@@ -44,6 +68,34 @@ came from the Next.js proxy. Generate one:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+## Environment variables
+
+`client/.env` and `server/.env` are separate files; `.env.example` shows
+both blocks with comments. "Both" below means the same value must be in
+each file.
+
+| Variable | Side | Required | What it does |
+|---|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | both | yes | Clerk instance; the client mounts the sign-in UI with it, the API needs it to verify a session token presented directly. |
+| `CLERK_SECRET_KEY` | both | yes | Clerk server key. |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | server | for purges | Verifies `organization.deleted` / `user.deleted` webhooks. Without it the endpoint answers 503 and deleted workspaces are never purged. |
+| `INTERNAL_API_SECRET` | both | yes | Random string proving a request came from the Next.js proxy. Without it the API ignores forwarded identities and every dashboard call is signed out. |
+| `NEXT_PUBLIC_APP_URL` | both | yes | The site's own address. Client: metadata, sitemap, docs snippets, legal pages, dev-origin allow-list. Server: absolute image URLs in rendered email, Stripe return URLs. `bun run dev:public` writes it. |
+| `API_URL` | client | production only | Where Next.js reaches the API. Unset in development (defaults to `http://127.0.0.1:3001`). |
+| `SQLITE_DB_PATH` | server | no | Database file, default `maily.db` in `server/`. Created on first run. |
+| `STRIPE_SECRET_KEY` | server | for billing | Checkout, portal and webhook verification. |
+| `STRIPE_PRICE_PRO` | server | for billing | The Pro plan's recurring price id — the only thing Checkout sells. |
+| `STRIPE_WEBHOOK_SECRET` | server | for billing | Signing secret of the `/api/webhooks/stripe` endpoint. |
+| `RESEND_API_KEY` | server | for sending | Test sends from the editor and contact-form delivery. Without it sends are refused and contact messages are stored but not delivered. |
+| `SENDING_FROM_ADDRESS`, `SENDING_FROM_LABEL` | server | no | The verified sender test sends go out from; users set a display name only. Defaults `send@temply.app` / `Temply`. |
+| `CONTACT_EMAIL`, `CONTACT_FROM_EMAIL` | server | for contact form | Where contact-form messages are delivered, and the sender they arrive from. |
+| `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT` | server | for uploads | Image uploads. Unset: the library and uploads are off, pasted image URLs still work. |
+| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | client / both | no | Error reporting. The `NEXT_PUBLIC_` one reaches the browser bundle; server runtimes read `SENTRY_DSN` first. Nothing is reported when unset. |
+| `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_ENVIRONMENT` | client / server | no | Environment tag on reports; defaults to `NODE_ENV`. |
+| `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | client build | no | Source-map upload during `next build`. Without the token the upload is skipped and the build still succeeds. |
+| `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_SALES_EMAIL` | client | no | Addresses printed on the legal and plan pages. Defaults in `client/lib/site.ts`. |
+| `BACKUP_DIR`, `BACKUP_KEEP` | server | no | Where `bun run db:backup` writes snapshots and how many it keeps (defaults `backups`, 48). |
 
 ## Running it
 
