@@ -7,9 +7,14 @@ import { BlockSelection } from '../plugins/block-selection';
 export function makeEditor(content: JSONContent, opts: { touch?: boolean } = {}): Editor {
   const element = document.createElement('div');
   document.body.appendChild(element);
-  return new Editor({
+  const editor = new Editor({
     element,
     content,
     extensions: [...extensions({}), ...(opts.touch ? [BlockSelection] : [])],
   });
+  // EditorView.destroy() only tears down its own contenteditable inside
+  // element, never element itself, which would otherwise pile up orphans on
+  // the one happy-dom document shared by the whole test process.
+  editor.on('destroy', () => element.remove());
+  return editor;
 }
