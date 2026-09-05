@@ -274,9 +274,17 @@ export default function Home() {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-muted">
           <p>&copy; {new Date().getFullYear()} Temply</p>
-          <Link href="/playground" className="text-accent-ink underline-offset-4 hover:underline">
-            Try the editor
-          </Link>
+          <nav aria-label="Legal" className="flex items-center gap-5">
+            <Link href="/terms" className="underline-offset-4 hover:text-ink hover:underline">
+              Terms
+            </Link>
+            <Link href="/privacy" className="underline-offset-4 hover:text-ink hover:underline">
+              Privacy
+            </Link>
+            <Link href="/playground" className="text-accent-ink underline-offset-4 hover:underline">
+              Try the editor
+            </Link>
+          </nav>
         </div>
       </footer>
 

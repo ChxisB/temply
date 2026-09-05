@@ -1,4 +1,9 @@
 User-Agent: *
+Disallow: /dashboard
+Disallow: /templates
+Disallow: /onboarding
+Disallow: /p/
+Disallow: /api/
 
-Host: https://maily.to
-Sitemap: https://maily.to/sitemap.xml
+Host: https://temply.app
+Sitemap: https://temply.app/sitemap.xml
