@@ -957,10 +957,10 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       {/* Toolbar — every control in it acts on a saved template, so on the
           anonymous playground it would render as an empty box. */}
       {template?.id && (
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-raised p-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg border border-line bg-raised p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         {/* The actions sit together; the state of the draft reads as one
             quiet line beside them rather than being threaded between. */}
-        <div className="order-1 flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="primary"
             disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
@@ -981,20 +981,26 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
         {/* On a phone the state takes a row of its own under the buttons so
             delete and send stay up on the first row. The save status fades
             rather than unmounts and so keeps its width while hidden; it comes
-            after the badge so that width never indents it. The row only
-            exists on a phone once there is something to read, and the status
-            never returns to idle, so it never collapses again. */}
+            after the badge so that width never indents it. The row opens on a
+            phone once there is something to read, and the status never
+            returns to idle, so it never closes again. The card is a grid with
+            no row gap so the closed row costs nothing; the padding inside the
+            clipped box is the spacing, and it grows in with the row. */}
         <div
           className={cn(
-            'order-3 basis-full items-center gap-2 sm:order-2 sm:flex sm:basis-auto',
-            unpublished || saveStatus !== 'idle' ? 'flex' : 'hidden',
+            'col-span-2 grid transition-[grid-template-rows,opacity] duration-base ease-out motion-reduce:transition-none sm:row-start-1 sm:grid-rows-[1fr] sm:opacity-100 sm:[grid-column:2/3]',
+            unpublished || saveStatus !== 'idle' ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
           )}
         >
-          {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
-          <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
+          <div className="overflow-hidden">
+            <div className="flex items-center gap-2 pt-3 sm:pt-0">
+              {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
+              <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
+            </div>
+          </div>
         </div>
 
-        <div className="order-2 ml-auto flex items-center gap-2 sm:order-3">
+        <div className="col-start-2 row-start-1 flex items-center gap-2 justify-self-end sm:col-start-3">
           {/* Copying the HTML now lives in the Content section's HTML view,
               beside the source it copies — and it copies what is on screen
               instead of rendering the email a second time. */}

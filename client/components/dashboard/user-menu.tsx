@@ -37,9 +37,12 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
+        {/* With the label the trigger is a rail row: the avatar sits on the
+            same 20px line as the nav icons and the workspace avatar above.
+            Without it the trigger is a plain icon button. */}
         <button
           type="button"
-          className={`flex w-full items-center gap-2 rounded-md p-1.5 text-sm ${pressable} ${
+          className={`flex w-full items-center gap-2 rounded-md text-sm ${showLabel ? 'px-2.5 py-1.5' : 'p-1.5'} ${pressable} ${
             surface === 'rail'
               ? 'text-rail-ink hover:bg-rail-hover'
               : 'text-ink hover:bg-hover'
@@ -49,7 +52,7 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
             {initials}
           </span>
           {showLabel && (
-            <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
+            <span className="flex min-w-0 flex-col items-start text-left">
               <span className="w-full truncate text-sm leading-tight font-medium">
                 {user?.fullName ?? 'User'}
               </span>

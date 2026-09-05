@@ -27,10 +27,11 @@ export function WorkspaceSwitcher() {
         elements: {
           ...(clerkAppearance.elements as Record<string, string>),
           rootBox: 'w-full',
-          // Layout only. The trigger's colours are pinned to the rail palette
-          // in globals.css, where they can outrank Clerk's own stylesheet.
+          // Layout only. The trigger's colours and its padding are pinned to
+          // the rail in globals.css, where they can outrank Clerk's own
+          // stylesheet; a padding class here loses to it.
           organizationSwitcherTrigger:
-            'w-full justify-between rounded-md px-2 py-1.5 hover:bg-rail-hover focus-visible:ring-[3px] focus-visible:ring-accent/25',
+            'w-full justify-between rounded-md hover:bg-rail-hover focus-visible:ring-[3px] focus-visible:ring-accent/25',
         },
       }}
     />
@@ -40,8 +41,10 @@ export function WorkspaceSwitcher() {
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full flex-col bg-rail-bg text-rail-ink">
-      <div className="flex h-12 items-center gap-2 border-b border-rail-line px-4">
-        <BrandMark className="size-6 text-rail-active-ink" />
+      {/* 20px gutter: the same line the nav icons and the workspace avatar
+          sit on, so the mark, the avatar and the icons share one left edge. */}
+      <div className="flex h-12 items-center gap-2 border-b border-rail-line px-5">
+        <BrandMark className="size-4.5 text-rail-active-ink" />
         <Link
           href="/dashboard"
           onClick={onNavigate}

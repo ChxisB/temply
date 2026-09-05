@@ -72,7 +72,7 @@ export function Header() {
       <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-5">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <BrandMark className="size-6 text-accent" />
+            <BrandMark className="size-4.5 text-accent" />
             <span className="font-display text-base font-semibold tracking-tight text-ink">Temply</span>
           </Link>
 

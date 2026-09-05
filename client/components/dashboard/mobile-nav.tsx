@@ -40,9 +40,9 @@ export function MobileNav() {
         <DialogPrimitive.Content className="drawer-left fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden">
           <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
 
-          <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2 pl-4">
+          <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2.5 pl-5">
             <div className="flex items-center gap-2">
-              <BrandMark className="size-6 text-rail-active-ink" />
+              <BrandMark className="size-4.5 text-rail-active-ink" />
               <Link href="/dashboard" className="font-display text-base font-semibold tracking-tight text-rail-ink">
                 Temply
               </Link>
@@ -58,15 +58,15 @@ export function MobileNav() {
             </DialogPrimitive.Close>
           </div>
 
-          <div className="border-b border-rail-line p-2">
+          <div className="border-b border-rail-line p-2.5">
             <WorkspaceSwitcher />
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 overflow-y-auto p-2.5">
             <NavLinks onNavigate={() => setOpen(false)} />
           </div>
 
-          <div className="space-y-2 border-t border-rail-line p-2">
+          <div className="space-y-2 border-t border-rail-line p-2.5">
             <QuotaWidget />
             <UserMenu align="start" />
           </div>

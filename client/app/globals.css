@@ -656,6 +656,16 @@ html {
 .cl-organizationSwitcherTrigger .cl-organizationSwitcherTriggerIcon {
   color: var(--ds-rail-muted);
 }
+/* Clerk pads the trigger 4px; with the rail's 10px inset that put the avatar
+   6px left of the nav icons. Matching the nav link padding lines them up. */
+.cl-organizationSwitcherTrigger {
+  padding-inline: calc(var(--spacing) * 2.5);
+}
+/* The 20px avatar plus Clerk's 12px gap put the workspace name 6px right
+   of the nav labels under it; a 6px gap lands it on the same column. */
+.cl-organizationSwitcherTrigger .cl-organizationPreview {
+  gap: calc(var(--spacing) * 1.5);
+}
 
 /* ---------------------------------------------------------------------------
    Toasts
