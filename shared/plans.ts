@@ -58,3 +58,12 @@ export function isLimitReached(used: number, limit: number | null): boolean {
   if (limit === null || !Number.isFinite(limit)) return false;
   return used >= limit;
 }
+
+/**
+ * Calls a single key may make in one minute, whatever the plan. The monthly
+ * quota above is the budget; this is the fuse for a loop that got away —
+ * a client retrying in a tight loop would otherwise burn a month's quota,
+ * and the server's render time with it, in minutes. Test keys sit lower:
+ * they are for wiring up, not for load.
+ */
+export const API_BURST_PER_MINUTE: Record<'live' | 'test', number> = { live: 120, test: 30 };

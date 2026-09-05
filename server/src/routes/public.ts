@@ -4,9 +4,10 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { mails, apiKeysTable } from '@temply/shared/schema';
 import { hashApiKey } from '../lib/codes';
 import { checkApiQuota, recordApiCall } from '../lib/api-quota';
+import { checkBurst } from '../lib/rate-limit';
 import { render } from '../render/render';
 import { MissingVariablesError } from '../render/engine';
-import { json, notFound, unauthorized, unprocessable } from '../lib/errors';
+import { json, notFound, tooManyRequests, unauthorized, unprocessable } from '../lib/errors';
 import { authPlugin } from '../plugins/auth';
 import { PUBLIC_PREVIEW_ROUTE, PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE } from '@temply/shared/api';
 import { dbPlugin, type Db } from '../plugins/db';
@@ -39,6 +40,18 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
     .where(and(eq(apiKeysTable.key_hash, keyHash), isNull(apiKeysTable.revoked_at)))
     .limit(1);
   if (!key) return { error: unauthorized('Invalid or revoked API key') };
+
+  // The fuse comes before the quota: a runaway loop must not spend the
+  // month's budget while it burns.
+  const burst = checkBurst(key.id, key.mode);
+  if (!burst.allowed) {
+    return {
+      error: tooManyRequests(
+        `This key may make  calls a minute. Try again in s.`,
+        burst.retryAfterSeconds,
+      ),
+    };
+  }
 
   const quota = await checkApiQuota(ctx.db, key.org_id ?? key.user_id, new Date(), key.mode);
   if (!quota.allowed) {

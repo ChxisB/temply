@@ -14,6 +14,7 @@ import { workspaceRoutes } from './routes/workspace';
 import { contactRoutes } from './routes/contact';
 import { webhookRoutes } from './routes/webhooks/stripe';
 import { authRoutes } from './routes/auth/logout';
+import { healthRoutes } from './routes/health';
 
 const app = new Elysia()
   // Registered before the route modules and scoped global: a local onError
@@ -37,6 +38,7 @@ const app = new Elysia()
   .use(contactRoutes)
   .use(webhookRoutes)
   .use(authRoutes)
+  .use(healthRoutes)
   // Bind to loopback only: this service trusts a proxy-forwarded user id and
   // must never be reachable directly from the network.
   // The largest legitimate body is a 5 MB image plus multipart framing;

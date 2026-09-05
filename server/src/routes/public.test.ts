@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { apiKeysTable, orgUsage, mails } from '@temply/shared/schema';
 import { generateApiKey, generateShortCode } from '../lib/codes';
+import { resetBurstWindows } from '../lib/rate-limit';
+import { API_BURST_PER_MINUTE } from '@temply/shared/plans';
 import { createTestApp, createTestDb, get, givePlan, type TestDb } from '../test/helpers';
 import { publicRoutes } from './public';
 
@@ -13,6 +15,7 @@ const OWNER = 'user_owner';
 beforeEach(() => {
   db = createTestDb();
   app = createTestApp(db, publicRoutes);
+  resetBurstWindows();
 });
 
 async function seedKey(userId: string, { revoked = false, mode = 'live' as 'live' | 'test' } = {}) {
@@ -147,6 +150,35 @@ describe('GET /api/public/v1/templates/:shortCode', () => {
 
     const res = await fetchTemplate(shortCode, fullKey);
     expect(res.status).toBe(429);
+  });
+
+  it('returns 429 with Retry-After once a key passes its per-minute burst, and stops counting', async () => {
+    const { fullKey } = await seedKey(OWNER, { mode: 'test' });
+    const shortCode = await seedTemplate(OWNER, undefined, { published: false });
+    const limit = API_BURST_PER_MINUTE.test;
+
+    for (let i = 0; i < limit; i++) {
+      expect((await fetchTemplate(shortCode, fullKey)).status).toBe(200);
+    }
+    const res = await fetchTemplate(shortCode, fullKey);
+    expect(res.status).toBe(429);
+    const retryAfter = Number(res.headers.get('retry-after'));
+    expect(retryAfter).toBeGreaterThan(0);
+    expect(retryAfter).toBeLessThanOrEqual(60);
+    expect((await res.json()).message).toContain(` calls a minute`);
+
+    // A refused call is not a call: the month's counter stops at the fuse.
+    const { getApiUsage } = await import('../lib/api-quota');
+    expect(await getApiUsage(db, OWNER, new Date(), 'test')).toBe(limit);
+  });
+
+  it('keeps burst windows per key', async () => {
+    const first = await seedKey(OWNER, { mode: 'test' });
+    const second = await seedKey(OWNER, { mode: 'test' });
+    const shortCode = await seedTemplate(OWNER, undefined, { published: false });
+    for (let i = 0; i < API_BURST_PER_MINUTE.test; i++) await fetchTemplate(shortCode, first.fullKey);
+    expect((await fetchTemplate(shortCode, first.fullKey)).status).toBe(429);
+    expect((await fetchTemplate(shortCode, second.fullKey)).status).toBe(200);
   });
 
   it('404s for an unknown short code', async () => {

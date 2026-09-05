@@ -1,4 +1,4 @@
-import { PLAN_LIMITS, TEST_API_CALLS_PER_MONTH } from '@temply/shared/plans';
+import { API_BURST_PER_MINUTE, PLAN_LIMITS, TEST_API_CALLS_PER_MONTH } from '@temply/shared/plans';
 import { CodeTabs } from '~/components/docs/code-tabs';
 import { Code, H2, H3, P } from '~/components/docs/docs-content';
 import { API_ORIGIN, metaSnippet, renderSnippets, SNIPPET_LANGUAGES } from '~/lib/api-snippets';
@@ -130,14 +130,17 @@ export function ApiReference() {
             ['401', 'No key, an unknown key, or a revoked one.'],
             ['404', 'No template with that id on this account — or, with a live key, one that has never been published.'],
             ['422', 'Data was sent but a variable has no value. The body lists them under missing.'],
-            ['429', 'The month’s calls are used up. The message says which limit and which plan.'],
+            ['429', 'Either the month’s calls are used up, or the key went past its per-minute burst. The message says which; a burst answer carries a Retry-After header in seconds.'],
             ['500', 'The stored template could not be read. Open it in the editor and save.'],
           ]}
         />
         <P>
           Calls with a live key count toward a monthly total that resets on the first
           of each month, UK time. Test keys have their own{' '}
-          {TEST_API_CALLS_PER_MONTH.toLocaleString('en-GB')} a month on every plan.
+          {TEST_API_CALLS_PER_MONTH.toLocaleString('en-GB')} a month on every plan. On top of
+          the month, one key may make {API_BURST_PER_MINUTE.live} calls a minute
+          ({API_BURST_PER_MINUTE.test} for a test key); past that the call is refused
+          without counting, and Retry-After says how long to wait.
         </P>
         <Fields
           rows={[

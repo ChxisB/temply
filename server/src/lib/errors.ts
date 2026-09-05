@@ -72,3 +72,15 @@ export function errorResponse(code: string | number, error: unknown): Response {
     code === 'NOT_FOUND' ? 404 : code === 'VALIDATION' || code === 'PARSE' ? 400 : 500;
   return json({ status, message, errors: [message] }, status);
 }
+
+/**
+ * A limit that clears by itself. Retry-After is what a well-behaved client
+ * sleeps on; the body says which limit so the integrator knows whether to
+ * back off or upgrade.
+ */
+export function tooManyRequests(message: string, retryAfterSeconds: number) {
+  return new Response(JSON.stringify({ status: 429, message, errors: [message] }), {
+    status: 429,
+    headers: { 'Content-Type': 'application/json', 'Retry-After': String(retryAfterSeconds) },
+  });
+}
