@@ -286,6 +286,12 @@ function PlanContent() {
                     <Button disabled className="w-full">
                       Current plan
                     </Button>
+                  ) : p.id === 'enterprise' ? (
+                    // Enterprise is arranged by hand, never through the portal —
+                    // whatever plan the reader is on, the way in is a conversation.
+                    <Button variant="primary" className="w-full" asChild>
+                      <a href="mailto:sales@temply.app?subject=Temply%20Enterprise">Contact sales</a>
+                    </Button>
                   ) : isDowngrade || isAnotherPaidPlan ? (
                     // Both changes happen in the billing portal. The downgrade
                     // control used to render with no handler at all, so every
@@ -297,10 +303,6 @@ function PlanContent() {
                     >
                       {isPortalLoading ? <Loader2Icon className="animate-spin" /> : null}
                       {isDowngrade ? 'Downgrade' : 'Switch plan'}
-                    </Button>
-                  ) : p.id === 'enterprise' ? (
-                    <Button variant="primary" className="w-full" asChild>
-                      <a href="mailto:sales@temply.app?subject=Temply%20Enterprise">Contact sales</a>
                     </Button>
                   ) : (
                     <Button
