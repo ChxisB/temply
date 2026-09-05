@@ -16,7 +16,7 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { AssetPickerDialog } from '~/components/assets/asset-picker-dialog';
 import { DeleteEmailDialog } from '~/components/delete-email-dialog';
 import { EmailEditor } from '~/components/email-editor';
@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { VersionHistoryDialog } from '~/components/version-history-dialog';
-import { selectBlockAt } from '~/core/editor/commands/block';
+import { selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
@@ -67,17 +67,25 @@ export function MobileEditorLayout({
   // transaction, which is exactly when the face can change.
   const state = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor) }) ?? 'idle';
 
-  const closeSheet = useCallback(() => {
-    setSheet((current) => {
-      // The eye sheet drives the model's mode; closing it has to put the
-      // canvas back or the screen behind the sheet stays hidden.
-      if (current === 'eye') model.changeMode('edit');
-      return null;
-    });
-  }, [model]);
+  const closeSheet = () => {
+    // The eye sheet drives the model's mode; closing it has to put the
+    // canvas back or the screen behind the sheet stays hidden. Read from
+    // the render closure rather than a state updater: the updater is not
+    // the place to change another component's state.
+    if (sheet === 'eye') model.changeMode('edit');
+    setSheet(null);
+  };
 
+  /** Done ends typing, not the selection: the bar drops back to the block
+   *  face. A bare blur would leave a text selection behind and land on idle,
+   *  so the block is re-selected after — after, because a NodeSelection
+   *  dispatched while the editor still has focus would put the caret (and
+   *  the keyboard) straight back. */
   const done = () => {
-    editor?.commands.blur();
+    if (!editor) return;
+    const block = selectedBlock(editor);
+    editor.commands.blur();
+    if (block) selectBlockAt(editor, block.pos);
   };
   const openTab = (tab: IdleTab) => setSheet(tab);
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
@@ -145,13 +153,19 @@ export function MobileEditorLayout({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>
-                <span className="flex items-center justify-between gap-2">
-                  <SaveStatus status={model.saveStatus} onRetry={() => void model.autosave?.flush()} />
-                  {model.unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              {/* The save status fades rather than unmounts, so with nothing
+                  to report the row would open as an empty line above a rule. */}
+              {model.unpublished || model.saveStatus !== 'idle' ? (
+                <>
+                  <DropdownMenuLabel>
+                    <span className="flex items-center justify-between gap-2">
+                      <SaveStatus status={model.saveStatus} onRetry={() => void model.autosave?.flush()} />
+                      {model.unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              ) : null}
               {template.short_code ? (
                 <DropdownMenuItem
                   className={touchTarget}

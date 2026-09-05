@@ -534,8 +534,8 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
    * the draft so restoring feels complete, but a template is not "unsaved"
    * because you typed a sender address into it.
    */
-  const persistedFingerprint = () =>
-    JSON.stringify([subject, previewText, editor?.getJSON() ?? null, theme]);
+  const persistedFingerprint = (json?: JSONContent) =>
+    JSON.stringify([subject, previewText, json ?? editor?.getJSON() ?? null, theme]);
 
   // The baseline: whatever the row held when this editor opened, or was put
   // back to.
@@ -619,15 +619,18 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     if (!editor) return;
 
     const capture = () => {
-      const fingerprint = persistedFingerprint();
+      // One read of the document per tick: the fingerprint, the shell's copy
+      // and the draft body all describe the same moment, so they all come
+      // from this one serialisation.
+      const json = editor.getJSON();
+      const serializedContent = JSON.stringify(json);
+      const fingerprint = persistedFingerprint(json);
 
       // Crossing 640px swaps the shell, which remounts the editor from
       // editorContent — so that has to be the document as it stands, not the
-      // one the page loaded with. Only a changed document is stored: this
-      // runs on every debounce tick, and a state bump per tick would re-render
-      // the whole shell while someone is only typing a subject line.
-      const json = editor.getJSON();
-      const serializedContent = JSON.stringify(json);
+      // one the page loaded with. Only a changed document is stored: a state
+      // bump per tick would re-render the whole shell while someone is only
+      // typing a subject line.
       if (serializedContent !== capturedContent.current) {
         capturedContent.current = serializedContent;
         setEditorContent(json);
@@ -644,7 +647,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
           body: {
             title: subject,
             previewText,
-            content: JSON.stringify(editor.getJSON()),
+            content: serializedContent,
             theme: JSON.stringify(theme),
           },
           fingerprint,
@@ -684,7 +687,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
         previewText,
         fromName,
         replyTo,
-        content: editor.getJSON(),
+        content: json,
         theme,
         savedAt: Date.now(),
       });
