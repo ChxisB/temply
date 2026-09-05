@@ -1,0 +1,55 @@
+import { Elysia } from 'elysia';
+import { verifyWebhook } from '@clerk/backend/webhooks';
+import { getStripe } from '../../lib/billing';
+import { json } from '../../lib/errors';
+import { getImageKit } from '../../lib/imagekit';
+import { purgeLegacyUser, purgeOrganization } from '../../lib/purge';
+import { dbPlugin } from '../../plugins/db';
+
+/**
+ * Clerk tells us when an account goes; nothing else does. Without this a
+ * deleted organization kept its templates, keys and — worst — its Stripe
+ * subscription, so a customer who left kept paying. Register the endpoint
+ * in the Clerk dashboard for organization.deleted and user.deleted.
+ */
+export const clerkWebhookRoutes = new Elysia()
+  .use(dbPlugin)
+  .post('/api/webhooks/clerk', async (ctx) => {
+    const signingSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+    if (!signingSecret) return json({ status: 503, message: 'Clerk webhook secret is not configured' }, 503);
+
+    let event;
+    try {
+      event = await verifyWebhook(ctx.request, { signingSecret });
+    } catch {
+      return json({ status: 400, message: 'Invalid signature' }, 400);
+    }
+
+    const effects = {
+      cancelSubscription: process.env.STRIPE_SECRET_KEY
+        ? async (id: string) => {
+            await getStripe().subscriptions.cancel(id);
+          }
+        : undefined,
+      deleteFile: (() => {
+        const ik = getImageKit();
+        return ik ? async (id: string) => { await ik.deleteFile(id); } : undefined;
+      })(),
+    };
+
+    switch (event.type) {
+      case 'organization.deleted': {
+        if (!event.data.id) break;
+        const report = await purgeOrganization(ctx.db, event.data.id, effects);
+        console.log(`Purged organization ${event.data.id}:`, report);
+        break;
+      }
+      case 'user.deleted': {
+        if (!event.data.id) break;
+        const report = await purgeLegacyUser(ctx.db, event.data.id, effects);
+        console.log(`Purged user ${event.data.id}:`, report);
+        break;
+      }
+    }
+    return json({ received: true });
+  });

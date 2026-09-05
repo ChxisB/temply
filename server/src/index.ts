@@ -13,6 +13,7 @@ import { publicRoutes } from './routes/public';
 import { workspaceRoutes } from './routes/workspace';
 import { contactRoutes } from './routes/contact';
 import { webhookRoutes } from './routes/webhooks/stripe';
+import { clerkWebhookRoutes } from './routes/webhooks/clerk';
 import { authRoutes } from './routes/auth/logout';
 import { healthRoutes } from './routes/health';
 
@@ -37,6 +38,7 @@ const app = new Elysia()
   .use(workspaceRoutes)
   .use(contactRoutes)
   .use(webhookRoutes)
+  .use(clerkWebhookRoutes)
   .use(authRoutes)
   .use(healthRoutes)
   // Bind to loopback only: this service trusts a proxy-forwarded user id and
