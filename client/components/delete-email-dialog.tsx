@@ -46,7 +46,7 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-xs p-4">
+      <DialogContent className="max-w-xs p-4">
         <DialogHeader>
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>

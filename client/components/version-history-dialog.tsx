@@ -103,7 +103,7 @@ export function VersionHistoryDialog({
           <span className="hidden sm:inline">History</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full min-w-0 max-w-lg overflow-hidden p-4">
+      <DialogContent className="min-w-0 max-w-lg overflow-hidden p-4">
         <DialogHeader>
           <DialogTitle>Version history</DialogTitle>
           <DialogDescription>

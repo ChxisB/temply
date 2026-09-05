@@ -35,7 +35,10 @@ const DialogContent = React.forwardRef<
       className={cn(
         // Positioning lives in the .dialog-pop rule so the pop keyframe can
         // carry the centring translate; no Tailwind translate utilities here.
-        'dialog-pop fixed z-50 grid w-full max-w-md gap-4 rounded-lg border border-line bg-raised p-5 shadow-xl',
+        // A phone gets 1rem of margin on every side: the dialog is centred from
+        // its own middle, so the calc width and height leave that much around
+        // it, and a body taller than the viewport scrolls inside.
+        'dialog-pop fixed z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md gap-4 overflow-y-auto rounded-lg border border-line bg-raised p-5 shadow-xl',
         className
       )}
       ref={ref}

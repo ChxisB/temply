@@ -25,7 +25,7 @@ export function AssetPreviewDialog({
 }) {
   return (
     <Dialog open={asset !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full min-w-0 max-w-3xl overflow-hidden p-4">
+      <DialogContent className="min-w-0 max-w-3xl overflow-hidden p-4">
         {asset && (
           <>
             <DialogHeader>

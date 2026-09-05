@@ -66,7 +66,7 @@ export function AssetPickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full min-w-0 max-w-2xl overflow-hidden p-4">
+      <DialogContent className="min-w-0 max-w-2xl overflow-hidden p-4">
         {/* Dropping anywhere in the window while the picker is open uploads
             into it (useFileDrop); this sheet says so over the dialog. */}
         <div
