@@ -15,9 +15,18 @@ export const webhookRoutes = new Elysia()
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!sig || !webhookSecret) return json({ status: 400, message: 'Missing signature or webhook secret' }, 400);
     const rawBody = await ctx.request.text();
+    // The async variant, and only the async variant: under Bun the SDK's
+    // crypto provider is SubtleCrypto, which cannot sign synchronously, so
+    // constructEvent throws before it looks at the signature — and every
+    // webhook read as forged. Log the reason so a real forgery and a broken
+    // setup are told apart in the log.
     let event;
-    try { event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret); }
-    catch { return json({ status: 400, message: 'Invalid signature' }, 400); }
+    try {
+      event = await stripe.webhooks.constructEventAsync(rawBody, sig, webhookSecret);
+    } catch (error) {
+      console.error('Stripe webhook rejected:', error instanceof Error ? error.message : error);
+      return json({ status: 400, message: 'Invalid signature' }, 400);
+    }
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
