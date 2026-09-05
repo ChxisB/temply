@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // A phone on the same Wi-Fi reaches the dev server at the machine's LAN
+  // address; without this Next refuses its requests for /_next assets as
+  // cross-origin. Ignored outside development.
+  allowedDevOrigins: ['192.168.1.192'],
   webpack: (config) => {
     config.resolve.alias['~'] = process.cwd();
     config.resolve.alias['@'] = process.cwd() + '/core';
