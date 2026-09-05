@@ -21,7 +21,10 @@ export const clerkWebhookRoutes = new Elysia()
     let event;
     try {
       event = await verifyWebhook(ctx.request, { signingSecret });
-    } catch {
+    } catch (error) {
+      // Say why: a forged request and a stale secret or a stripped header
+      // read the same to the caller but must not to whoever reads the log.
+      console.error('Clerk webhook rejected:', error instanceof Error ? error.message : error);
       return json({ status: 400, message: 'Invalid signature' }, 400);
     }
 
