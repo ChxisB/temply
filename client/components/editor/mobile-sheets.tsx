@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BracesIcon, ChevronLeftIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
@@ -109,6 +109,16 @@ export function MobileSheets({
     onClose();
   };
 
+  // The tab only re-asks for a render on its own click; reopening the sheet
+  // on whatever tab was last selected, or opening it the first time, would
+  // otherwise show `model.mode` still on 'edit' underneath. changeMode
+  // no-ops when the signature already matches, so this costs nothing on the
+  // path the click already covers.
+  useEffect(() => {
+    if (open === 'eye') model.changeMode(eyeTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, eyeTab]);
+
   return (
     <>
       <BottomSheet open={open === 'details'} onOpenChange={close} title="Email details">
@@ -191,7 +201,13 @@ export function MobileSheets({
               />
             </div>
           ) : (
-            <Button variant="ghost" size="sm" aria-pressed={model.forceDark} onClick={() => model.setForceDark((v) => !v)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-pressed={model.forceDark}
+              onClick={() => model.setForceDark((v) => !v)}
+              className={cn(model.forceDark && 'bg-accent-wash text-accent-ink hover:bg-accent-wash hover:text-accent-ink')}
+            >
               Forced dark
             </Button>
           )}
@@ -199,7 +215,7 @@ export function MobileSheets({
         <div className="-mx-4">
           {eyeTab === 'preview' ? (
             <ContentPreview
-              className="min-h-[60dvh]"
+              className={cn('min-h-[60dvh]', model.paneClass)}
               html={model.previewHtml}
               isPending={model.isPreviewPending}
               forceDark={model.forceDark}
@@ -209,7 +225,7 @@ export function MobileSheets({
             />
           ) : (
             <ContentSource
-              className="min-h-[60dvh]"
+              className={cn('min-h-[60dvh]', model.paneClass)}
               source={eyeTab === 'html' ? model.htmlSource : model.textSource}
               wrap={eyeTab === 'text'}
             />
