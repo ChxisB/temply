@@ -2,6 +2,7 @@
  * The prose, one named export per section, so the page file reads as a table
  * of contents rather than a wall of copy.
  */
+import { PUBLIC_API_URL } from '~/lib/site';
 import {
   ArrowUpRightSquare,
   CodeXmlIcon,
@@ -474,7 +475,7 @@ export function CreatingATemplate() {
   -H "Authorization: Bearer tply_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"data":{"firstName":"Ada","isMember":true}}' \\
-  https://temply.app/api/public/v1/templates/tpl_XXXXXXXX/render`}
+  ${PUBLIC_API_URL}/templates/tpl_XXXXXXXX/render`}
       </pre>
       <P>
         The response carries the rendered <Code>html</Code>, with your data

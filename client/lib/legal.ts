@@ -4,12 +4,14 @@
  * Confirm these before launch: the governing law in particular is a
  * placeholder for the operator's own jurisdiction.
  */
+import { CONTACT_EMAIL, SITE_URL } from './site';
+
 export const LEGAL = {
   /** The name the contract is with. */
   operator: 'Temply',
   product: 'Temply',
-  site: 'https://temply.app',
-  contactEmail: 'hello@temply.app',
+  site: SITE_URL,
+  contactEmail: CONTACT_EMAIL,
   governingLaw: 'England and Wales',
   /** ISO date; shown as "Last updated". Bump it when the text changes. */
   updated: '2026-09-05',

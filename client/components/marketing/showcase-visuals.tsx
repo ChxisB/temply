@@ -10,6 +10,7 @@
  */
 
 import type { ReactNode } from 'react';
+import { PUBLIC_API_URL, SITE_HOST } from '~/lib/site';
 import { GripVerticalIcon } from 'lucide-react';
 
 /* Canvas palette — theme-invariant, matching what a mail client actually paints. */
@@ -190,12 +191,12 @@ export function PreviewMock() {
 
 export function ApiMock() {
   return (
-    <Panel spec="Fetch a template" meta="api.temply.app">
+    <Panel spec="Fetch a template" meta={SITE_HOST}>
       {/* The graphite rail tokens are theme-independent, so a terminal built from
           them reads the same in light and dark — which is what a terminal does. */}
       <div className="overflow-hidden rounded-lg border border-rail-line bg-rail-bg">
         <div className="flex items-center justify-between gap-3 border-b border-rail-line px-4 py-2.5 font-mono text-2xs">
-          <span className="tracking-wide text-rail-faint uppercase">GET /v1/templates/:id</span>
+          <span className="tracking-wide text-rail-faint uppercase">GET /api/public/v1/templates/:id</span>
           <span className="flex items-center gap-1.5" style={{ color: '#5fd3a0' }}>
             <span aria-hidden className="size-1.5 rounded-full bg-current" />
             200 OK
@@ -208,7 +209,7 @@ export function ApiMock() {
           <pre className="whitespace-pre-wrap text-rail-muted [overflow-wrap:anywhere] sm:whitespace-pre">
             <span className="text-rail-faint">$ </span>
             <span className="text-rail-ink">curl </span>
-            <span style={{ color: '#a5b4fc' }}>https://api.temply.app/v1/templates/tpl_welcome_01</span>
+            <span style={{ color: '#a5b4fc' }}>{PUBLIC_API_URL}/templates/tpl_welcome_01</span>
             {' \\\n'}
             <span className="text-rail-faint">    -H </span>
             <span style={{ color: '#a5b4fc' }}>&quot;Authorization: Bearer tply_live_8f2c…9d41&quot;</span>

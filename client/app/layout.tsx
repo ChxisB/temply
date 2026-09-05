@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google';
 import { GoogleAnalytics } from '~/components/google-analytics';
 import { Providers } from './providers';
+import { SITE_URL } from '~/lib/site';
 import '../core/styles/index.css';
 import './globals.css';
 
@@ -28,6 +29,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  // Every relative URL below — the OG image, canonical links — resolves
+  // against this, so the domain lives in one environment variable.
+  metadataBase: new URL(SITE_URL),
   title: 'Temply — write the email, we handle the HTML',
   description:
     'A block editor for transactional email. Build it without code, send it from your own app.',
@@ -36,14 +40,14 @@ export const metadata: Metadata = {
     title: 'Temply — write the email, we handle the HTML',
     description:
       'A block editor for transactional email. Build it without code, send it from your own app.',
-    images: ['https://temply.app/og-image.png'],
+    images: ['/og-image.png'],
   },
   openGraph: {
     siteName: 'Temply',
     title: 'Temply — write the email, we handle the HTML',
     description:
       'A block editor for transactional email. Build it without code, send it from your own app.',
-    images: ['https://temply.app/og-image.png'],
+    images: ['/og-image.png'],
   },
   icons: {
     icon: '/brand/logo.svg',

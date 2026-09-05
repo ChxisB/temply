@@ -1,11 +1,22 @@
 import { withSentryConfig } from '@sentry/nextjs/config';
 
+/** The host of NEXT_PUBLIC_APP_URL when it is not localhost, else nothing. */
+function devOriginFromEnv() {
+  try {
+    const host = new URL(process.env.NEXT_PUBLIC_APP_URL ?? '').host;
+    return host && !host.startsWith('localhost') ? [host] : [];
+  } catch {
+    return [];
+  }
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // A phone on the same Wi-Fi reaches the dev server at the machine's LAN
-  // address; without this Next refuses its requests for /_next assets as
-  // cross-origin. Ignored outside development.
-  allowedDevOrigins: ['192.168.1.192'],
+  // A phone on the Wi-Fi or a tunnel reaches the dev server at an address
+  // that is not localhost; without this Next refuses their requests for
+  // /_next assets as cross-origin. The tunnel host comes from the same
+  // variable the rest of the site reads. Ignored outside development.
+  allowedDevOrigins: ['192.168.1.192', ...devOriginFromEnv()],
   webpack: (config) => {
     config.resolve.alias['~'] = process.cwd();
     config.resolve.alias['@'] = process.cwd() + '/core';

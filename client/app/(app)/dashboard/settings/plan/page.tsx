@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { SALES_EMAIL } from '~/lib/site';
 
 import { Suspense, useEffect } from 'react';
 import { CheckIcon, Loader2Icon, XIcon, LockIcon } from 'lucide-react';
@@ -290,7 +291,7 @@ function PlanContent() {
                     // Enterprise is arranged by hand, never through the portal —
                     // whatever plan the reader is on, the way in is a conversation.
                     <Button variant="primary" className="w-full" asChild>
-                      <a href="mailto:sales@temply.app?subject=Temply%20Enterprise">Contact sales</a>
+                      <a href={`mailto:${SALES_EMAIL}?subject=Temply%20Enterprise`}>Contact sales</a>
                     </Button>
                   ) : isDowngrade || isAnotherPaidPlan ? (
                     // Both changes happen in the billing portal. The downgrade

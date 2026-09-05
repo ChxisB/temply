@@ -1,7 +1,8 @@
 import { publicRenderPath, publicTemplatePath } from '@temply/shared/api';
+import { SITE_URL } from './site';
 
 /** Where the API lives, as integrators will type it. */
-export const API_ORIGIN = 'https://temply.app';
+export const API_ORIGIN = SITE_URL;
 
 export type SnippetLanguage = 'curl' | 'javascript' | 'python' | 'ruby';
 

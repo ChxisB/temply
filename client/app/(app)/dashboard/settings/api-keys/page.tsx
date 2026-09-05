@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { PUBLIC_API_URL } from '~/lib/site';
 
 import { CheckIcon, CopyIcon, KeyIcon, Loader2Icon, LockIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
@@ -286,13 +287,13 @@ export default function ApiKeysPage() {
           <pre className="mt-3 overflow-x-auto rounded-sm border border-line bg-surface p-3 font-mono text-xs text-ink">
             <code>{`# The template's details
 curl -H "Authorization: Bearer tply_live_..." \\
-  https://temply.app/api/public/v1/templates/tpl_abc123
+  ${PUBLIC_API_URL}/templates/tpl_abc123
 
 # The finished email, with your data
 curl -X POST -H "Authorization: Bearer tply_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"data":{"firstName":"Ada","isMember":true}}' \\
-  https://temply.app/api/public/v1/templates/tpl_abc123/render`}</code>
+  ${PUBLIC_API_URL}/templates/tpl_abc123/render`}</code>
           </pre>
         </Card>
       )}
