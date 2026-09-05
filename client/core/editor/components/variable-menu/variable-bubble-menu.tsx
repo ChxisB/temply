@@ -1,8 +1,8 @@
 import { BubbleMenu } from '@tiptap/react';
 import { sticky } from 'tippy.js';
-import { TextBubbleContent } from '../text-menu/text-bubble-content';
 import { EditorBubbleMenuProps } from '../text-menu/text-bubble-menu';
 import { TooltipProvider } from '../ui/tooltip';
+import { VariableMenuContent } from './variable-menu-content';
 
 export function VariableBubbleMenu(props: EditorBubbleMenuProps) {
   const { editor, appendTo } = props;
@@ -34,7 +34,7 @@ export function VariableBubbleMenu(props: EditorBubbleMenuProps) {
       className="mly:flex mly:gap-0.5 mly:rounded-lg mly:border mly:border-slate-200 mly:bg-panel mly:p-0.5 mly:shadow-md"
     >
       <TooltipProvider>
-        <TextBubbleContent showListMenu={false} editor={editor} />
+        <VariableMenuContent editor={editor} />
       </TooltipProvider>
     </BubbleMenu>
   );

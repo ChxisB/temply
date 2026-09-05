@@ -4,7 +4,8 @@ import { getRenderContainer } from '../../utils/get-render-container';
 import { sticky } from 'tippy.js';
 import { EditorBubbleMenuProps } from '../text-menu/text-bubble-menu';
 import { isTextSelected } from '@/editor/utils/is-text-selected';
-import { ColumnsBubbleMenuContent } from './columns-bubble-menu-content';
+import { TooltipProvider } from '../ui/tooltip';
+import { ColumnsMenuContent } from './columns-menu-content';
 
 export function ColumnsBubbleMenu(props: EditorBubbleMenuProps) {
   const { appendTo, editor } = props;
@@ -55,7 +56,9 @@ export function ColumnsBubbleMenu(props: EditorBubbleMenuProps) {
       {...bubbleMenuProps}
       className="mly:rounded-lg mly:border mly:border-gray-200 mly:bg-panel mly:p-0.5 mly:shadow-md"
     >
-      <ColumnsBubbleMenuContent editor={editor} />
+      <TooltipProvider>
+        <ColumnsMenuContent editor={editor} />
+      </TooltipProvider>
     </BubbleMenu>
   );
 }
