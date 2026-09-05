@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk, useUser } from '@clerk/nextjs';
-import { LogOutIcon, SettingsIcon } from 'lucide-react';
+import { LogOutIcon, ScrollTextIcon, SettingsIcon, ShieldIcon } from 'lucide-react';
 import Link from 'next/link';
 import { pressable } from '~/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -80,6 +80,21 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
           <Link href="/dashboard/settings" className="flex cursor-pointer items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
             Settings
+          </Link>
+        </DropdownMenuItem>
+        {/* The one place inside the app the legal pages are reachable from:
+            two quiet items, not a footer on every page. Consent itself is
+            taken at sign-up; these are for reading it again. */}
+        <DropdownMenuItem asChild>
+          <Link href="/terms" className="flex cursor-pointer items-center gap-2 text-muted">
+            <ScrollTextIcon className="h-4 w-4" />
+            Terms
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/privacy" className="flex cursor-pointer items-center gap-2 text-muted">
+            <ShieldIcon className="h-4 w-4" />
+            Privacy
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

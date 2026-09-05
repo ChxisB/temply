@@ -18,6 +18,20 @@ export default async function SignInPage() {
         Temply
       </Link>
       <SignInCard />
+      {/* Consent is collected by Clerk at sign-up; this line makes the terms
+          visible before the button is pressed, which is what the terms
+          themselves say happens. */}
+      <p className="max-w-xs text-center text-xs text-muted">
+        By continuing you agree to the{' '}
+        <Link href="/terms" className="text-accent-ink underline-offset-4 hover:underline">
+          terms
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="text-accent-ink underline-offset-4 hover:underline">
+          privacy policy
+        </Link>
+        .
+      </p>
     </main>
   );
 }
