@@ -957,35 +957,44 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
       {/* Toolbar — every control in it acts on a saved template, so on the
           anonymous playground it would render as an empty box. */}
       {template?.id && (
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* The actions sit together; the state of the draft reads as one
-              quiet line beside them rather than being threaded between. */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
-              onClick={handlePublish}
-              title={publishedLabel ?? undefined}
-            >
-              {isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
-              {publishArmed ? 'Publish anyway' : 'Publish'}
-            </Button>
-            {/* Preview lives in the Content header now, beside what it shows. */}
-            <VersionHistoryDialog
-              templateId={template.id}
-              hasUnpublishedChanges={unpublished}
-              onDiscarded={handleDiscarded}
-            />
-            <ShareLinkPopover templateId={template.id} initialToken={template.share_token ?? null} />
-          </div>
-          <div className="flex items-center gap-2">
-            <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
-            {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
-          </div>
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-raised p-3">
+        {/* The actions sit together; the state of the draft reads as one
+            quiet line beside them rather than being threaded between. */}
+        <div className="order-1 flex items-center gap-2">
+          <Button
+            variant="primary"
+            disabled={isPublishing || (!unpublished && publishedAt !== null && !publishArmed)}
+            onClick={handlePublish}
+            title={publishedLabel ?? undefined}
+          >
+            {isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
+            {publishArmed ? 'Publish anyway' : 'Publish'}
+          </Button>
+          {/* Preview lives in the Content header now, beside what it shows. */}
+          <VersionHistoryDialog
+            templateId={template.id}
+            hasUnpublishedChanges={unpublished}
+            onDiscarded={handleDiscarded}
+          />
+          <ShareLinkPopover templateId={template.id} initialToken={template.share_token ?? null} />
+        </div>
+        {/* On a phone the state takes a row of its own under the buttons so
+            delete and send stay up on the first row. The save status fades
+            rather than unmounts and so keeps its width while hidden; it comes
+            after the badge so that width never indents it. The row only
+            exists on a phone once there is something to read, and the status
+            never returns to idle, so it never collapses again. */}
+        <div
+          className={cn(
+            'order-3 basis-full items-center gap-2 sm:order-2 sm:flex sm:basis-auto',
+            unpublished || saveStatus !== 'idle' ? 'flex' : 'hidden',
+          )}
+        >
+          {unpublished ? <Badge tone="warn">Unpublished changes</Badge> : null}
+          <SaveStatus status={saveStatus} onRetry={() => void autosave?.flush()} />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="order-2 ml-auto flex items-center gap-2 sm:order-3">
           {/* Copying the HTML now lives in the Content section's HTML view,
               beside the source it copies — and it copies what is on screen
               instead of rendering the email a second time. */}

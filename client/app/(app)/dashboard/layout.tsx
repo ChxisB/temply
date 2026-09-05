@@ -25,8 +25,9 @@ export default async function DashboardLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Carries the drawer trigger on narrow viewports; on wide ones the
             sidebar owns navigation and this bar only holds the account
-            shortcuts. */}
-        <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-line px-3 md:justify-end md:px-4">
+            shortcuts. The gutter matches the main column below so the
+            trigger glyph lines up with the page title. */}
+        <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-line px-4 md:justify-end">
           <MobileNav />
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="icon" asChild>

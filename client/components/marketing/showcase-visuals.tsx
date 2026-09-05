@@ -202,8 +202,10 @@ export function ApiMock() {
           </span>
         </div>
 
+        {/* A phone is narrower than the curl line. Wrapping anywhere beats a
+            hidden horizontal scroll on a block that only exists to be read. */}
         <div className="overflow-x-auto px-4 py-4 font-mono text-xs leading-relaxed">
-          <pre className="text-rail-muted">
+          <pre className="whitespace-pre-wrap text-rail-muted [overflow-wrap:anywhere] sm:whitespace-pre">
             <span className="text-rail-faint">$ </span>
             <span className="text-rail-ink">curl </span>
             <span style={{ color: '#a5b4fc' }}>https://api.temply.app/v1/templates/tpl_welcome_01</span>

@@ -134,13 +134,17 @@ export default function ApiKeysPage() {
   return (
     <div className="space-y-5">
       {/* The layout's header carries the title now, so the one action the page
-          owns sits on its own row rather than being dropped with it. */}
-      <div className="flex justify-end">
-        <Button variant="primary" onClick={openCreate}>
-          <PlusIcon />
-          Create key
-        </Button>
-      </div>
+          owns sits on its own row rather than being dropped with it. The empty
+          states below carry their own call to action, so the row only appears
+          once there is a list for it to sit above. */}
+      {keys.length > 0 ? (
+        <div className="flex justify-end">
+          <Button variant="primary" onClick={openCreate}>
+            <PlusIcon />
+            Create key
+          </Button>
+        </div>
+      ) : null}
 
       {atLimit && !featureLocked ? (
         <PlanLimitBanner

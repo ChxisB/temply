@@ -28,7 +28,9 @@ export function MobileNav() {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Open navigation" className="md:hidden">
+        {/* The button box is wider than its glyph; pulling it back by the
+            box padding puts the glyph on the page gutter, not 8px inside it. */}
+        <Button variant="ghost" size="icon" aria-label="Open navigation" className="-ml-2 md:hidden">
           <MenuIcon />
         </Button>
       </DialogPrimitive.Trigger>
