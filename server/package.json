@@ -5,13 +5,15 @@
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist",
     "start": "bun src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:backup": "bun run scripts/backup-db.ts"
   },
   "dependencies": {
     "@antfu/utils": "^9.2.0",
     "@clerk/backend": "^3.12.0",
     "@react-email/components": "^0.5.1",
     "@react-email/render": "^1.2.1",
+    "@sentry/bun": "^10.73.0",
     "@temply/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.2.0",

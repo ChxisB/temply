@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/bun';
 import { Elysia } from 'elysia';
 import { errorResponse } from './lib/errors';
 import { authPlugin } from './plugins/auth';
@@ -17,12 +18,27 @@ import { clerkWebhookRoutes } from './routes/webhooks/clerk';
 import { authRoutes } from './routes/auth/logout';
 import { healthRoutes } from './routes/health';
 
+// Error monitoring, off without a DSN so a checkout reports nothing by
+// accident. Only errors: no tracing, and nothing about the user beyond what
+// the error carries.
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV ?? 'development',
+    tracesSampleRate: 0,
+    sendDefaultPii: false,
+  });
+}
+
 const app = new Elysia()
   // Registered before the route modules and scoped global: a local onError
   // added after .use() never sees errors raised inside the mounted modules,
   // so validation failures would fall back to Elysia's own 422.
   .onError({ as: 'global' }, ({ error, code }) => {
     console.error(`Error [${code}]:`, error);
+    // A miss, a bad body or a failed schema is the caller's doing and
+    // already answered; anything else is ours to know about.
+    if (code !== 'NOT_FOUND' && code !== 'VALIDATION' && code !== 'PARSE') Sentry.captureException(error);
     return errorResponse(code, error);
   })
   .use(authPlugin)

@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs/config';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // A phone on the same Wi-Fi reaches the dev server at the machine's LAN
@@ -46,4 +48,15 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry wraps the build to upload source maps when SENTRY_AUTH_TOKEN is
+// present (CI and the deploy), and otherwise stays out of the way: a local
+// build must not need a Sentry account. Errors are reported by the runtime
+// configs regardless of whether maps were uploaded.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  telemetry: false,
+  webpack: { treeshake: { removeDebugLogging: true } },
+});
