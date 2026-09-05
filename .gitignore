@@ -61,3 +61,6 @@ server/*.db-wal
 # excludes, so the utilities used only in those files stopped being generated
 # and the documentation page lost its layout.
 /docs/
+
+# Database snapshots from `bun run db:backup`
+server/backups/
