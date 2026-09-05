@@ -30,12 +30,17 @@ export function PreflightPanel({
   bytes,
   expanded,
   onToggle,
+  onSelect,
 }: {
   issues: PreflightIssue[];
   /** Byte size of the as-sent render, or null while it is stale or unknown. */
   bytes: number | null;
   expanded: boolean;
   onToggle: () => void;
+  /** Jumps to the finding's spot in the document. Only issues carrying a
+   *  `pos` render as a button — a theme or size finding has nowhere to
+   *  jump to, so it stays a plain row. */
+  onSelect?: (pos: number) => void;
 }) {
   const shown = issues.length > 0;
   const lastIssues = useRef(issues);
@@ -114,24 +119,47 @@ export function PreflightPanel({
               <div className="overflow-hidden" aria-hidden={!expanded}>
                 <div className="border-t border-line">
                   <ul className="divide-y divide-line">
-                    {ordered.map((issue) => (
-                      <li key={issue.id} className="flex items-baseline gap-3 px-3.5 py-2">
-                        <span
-                          className={cn(
-                            'w-14 shrink-0 text-2xs font-medium tracking-wide uppercase',
-                            issue.severity === 'error' ? 'text-danger-ink' : 'text-warn-ink',
-                          )}
-                        >
-                          {issue.severity === 'error' ? 'Error' : 'Warning'}
-                        </span>
-                        <span className="text-sm text-ink">
-                          {issue.message}
-                          {issue.detail ? (
-                            <span className="text-muted"> — “{issue.detail}”</span>
-                          ) : null}
-                        </span>
-                      </li>
-                    ))}
+                    {ordered.map((issue) => {
+                      const label = (
+                        <>
+                          <span
+                            className={cn(
+                              'w-14 shrink-0 text-2xs font-medium tracking-wide uppercase',
+                              issue.severity === 'error' ? 'text-danger-ink' : 'text-warn-ink',
+                            )}
+                          >
+                            {issue.severity === 'error' ? 'Error' : 'Warning'}
+                          </span>
+                          <span className="text-sm text-ink">
+                            {issue.message}
+                            {issue.detail ? (
+                              <span className="text-muted"> — “{issue.detail}”</span>
+                            ) : null}
+                          </span>
+                        </>
+                      );
+                      // Only a finding with a document position can be jumped
+                      // to; the rest (theme, size) render as a plain row.
+                      if (onSelect && issue.pos !== undefined) {
+                        const pos = issue.pos;
+                        return (
+                          <li key={issue.id}>
+                            <button
+                              type="button"
+                              onClick={() => onSelect(pos)}
+                              className="flex min-h-11 w-full items-baseline gap-3 px-3.5 py-2 text-left transition-colors hover:bg-hover active:bg-active focus-visible:-outline-offset-2 motion-reduce:transition-none"
+                            >
+                              {label}
+                            </button>
+                          </li>
+                        );
+                      }
+                      return (
+                        <li key={issue.id} className="flex items-baseline gap-3 px-3.5 py-2">
+                          {label}
+                        </li>
+                      );
+                    })}
                   </ul>
 
                   {bytes != null && kb != null && (

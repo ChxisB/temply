@@ -14,6 +14,11 @@ export type PreflightIssue = {
   severity: 'error' | 'warn';
   message: string;
   detail?: string;
+  /** The ProseMirror position of the offending node, for a finding that
+   *  comes from walking the document — lets a caller select and scroll to
+   *  it. Absent for findings with no single spot in the document (subject,
+   *  preview text, unresolved variables, size, theme contrast). */
+  pos?: number;
 };
 
 /** Gmail clips messages whose HTML exceeds ~102KB; warn while approaching. */
@@ -76,6 +81,32 @@ function urlProblem(url: string): 'empty' | 'invalid' | null {
   }
 }
 
+/** Node types whose schema allows no content of their own — a document
+ *  position walk has to know this to size them right, and the JSON walked
+ *  here carries no schema to ask, so the names are listed by hand. */
+const LEAF_NODE_TYPES = new Set([
+  'button',
+  'image',
+  'inlineImage',
+  'logo',
+  'linkCard',
+  'spacer',
+  'variable',
+  'hardBreak',
+  'horizontalRule',
+]);
+
+/** A node's footprint in document positions, counted the way ProseMirror
+ *  counts it: text by its length, a leaf as one slot, anything else
+ *  bracketed by an open and a close token around its children's footprint. */
+function nodeSize(node: Node | null | undefined): number {
+  if (!node || typeof node !== 'object') return 0;
+  if (node.type === 'text') return node.text?.length ?? 0;
+  if (node.type && LEAF_NODE_TYPES.has(node.type)) return 1;
+  const children = node.content ?? [];
+  return 2 + children.reduce((sum, child) => sum + nodeSize(child), 0);
+}
+
 /**
  * One walk over the document for everything content-shaped: link
  * destinations and image alt text. Variable URLs ({{url}} pills) are exempt
@@ -97,6 +128,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
     subject: string,
     emptyMessage: string,
     detail?: string,
+    pos?: number,
   ) => {
     issues.push({
       id: `${kind}-${counter++}`,
@@ -104,10 +136,14 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
       message:
         problem === 'empty' ? emptyMessage : `${subject} URL doesn't parse: "${url.trim()}"`,
       detail,
+      pos,
     });
   };
 
-  const walk = (node: Node | null | undefined) => {
+  // `pos` is this node's own document position — where a selection would
+  // land to reach it. The doc's own children start at 0; every other
+  // node's children start one slot in, past its own open token.
+  const walk = (node: Node | null | undefined, pos: number, isRoot = false) => {
     if (!node || typeof node !== 'object') return;
     const attrs = node.attrs ?? {};
 
@@ -126,6 +162,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
               "A link's",
               'A link in the text has no destination yet.',
               node.text,
+              pos,
             );
           }
         }
@@ -145,6 +182,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           "A button's",
           'A button has no URL yet.',
           typeof attrs.text === 'string' ? attrs.text : undefined,
+          pos,
         );
       }
     }
@@ -160,6 +198,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           "A link card's",
           'A link card has no URL yet.',
           typeof attrs.title === 'string' ? attrs.title : undefined,
+          pos,
         );
       }
     }
@@ -169,7 +208,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
       // one that fails to parse is a mistake.
       const externalLink = typeof attrs.externalLink === 'string' ? attrs.externalLink : '';
       if (externalLink.trim() && !attrs.isExternalLinkVariable && urlProblem(externalLink) === 'invalid') {
-        linkIssue('image-link', 'invalid', externalLink, "An image link's", '');
+        linkIssue('image-link', 'invalid', externalLink, "An image link's", '', undefined, pos);
       }
 
       // The renderer falls back alt || title, so either one covers screen
@@ -181,14 +220,20 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           id: `image-alt-${counter++}`,
           severity: 'warn',
           message: 'An image has no alt text — clients that block images show nothing in its place.',
+          pos,
         });
       }
     }
 
-    for (const child of node.content ?? []) walk(child);
+    const children = node.content ?? [];
+    let childPos = isRoot ? 0 : pos + 1;
+    for (const child of children) {
+      walk(child, childPos);
+      childPos += nodeSize(child);
+    }
   };
 
-  walk(content as Node);
+  walk(content as Node, 0, true);
   return issues;
 }
 
