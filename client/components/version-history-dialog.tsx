@@ -37,12 +37,16 @@ type VersionHistoryDialogProps = {
   hasUnpublishedChanges?: boolean;
   /** The draft was replaced by the published copy; the editor should show it. */
   onDiscarded?: (template: Mail) => void;
+  /** Replaces the default button — the phone opens this from a menu item, and
+   *  a dialog trigger has to be the item itself or the menu eats the tap. */
+  trigger?: React.ReactElement;
 };
 
 export function VersionHistoryDialog({
   templateId,
   hasUnpublishedChanges = false,
   onDiscarded,
+  trigger,
 }: VersionHistoryDialogProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -98,10 +102,12 @@ export function VersionHistoryDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); setPreviewVersion(null); }}>
       <DialogTrigger asChild>
-        <Button type="button">
-          <HistoryIcon />
-          <span className="hidden sm:inline">History</span>
-        </Button>
+        {trigger ?? (
+          <Button type="button">
+            <HistoryIcon />
+            <span className="hidden sm:inline">History</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="min-w-0 max-w-lg overflow-hidden p-4">
         <DialogHeader>

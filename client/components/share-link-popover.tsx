@@ -19,9 +19,13 @@ import { httpDelete, httpPost } from '~/lib/http';
 export function ShareLinkPopover({
   templateId,
   initialToken,
+  trigger,
 }: {
   templateId: string;
   initialToken: string | null;
+  /** Replaces the default button — the phone opens this from a menu item, and
+   *  a popover trigger has to be the item itself or it has nothing to anchor to. */
+  trigger?: React.ReactElement;
 }) {
   const [token, setToken] = useState<string | null>(initialToken);
   const [copied, setCopied] = useState(false);
@@ -60,10 +64,12 @@ export function ShareLinkPopover({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button aria-label="Share a review link">
-          <Link2Icon />
-          <span className="hidden sm:inline">Share</span>
-        </Button>
+        {trigger ?? (
+          <Button aria-label="Share a review link">
+            <Link2Icon />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
+        )}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
         <p className="text-sm font-medium text-ink">Review link</p>

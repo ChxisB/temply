@@ -1,7 +1,8 @@
 import { Link, LinkIcon, LucideIcon, Pencil } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { BaseButton } from '../base-button';
-import { useRef, useState } from 'react';
+import { cn } from '@/editor/utils/classname';
+import { useRef, useState, type ComponentPropsWithoutRef } from 'react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip';
 import { DEFAULT_PLACEHOLDER_URL, useMailyContext } from '@/editor/provider';
 import { InputAutocomplete } from './input-autocomplete';
@@ -27,6 +28,15 @@ type LinkInputPopoverProps = {
   showImageStatus?: boolean;
 
   editor: Editor;
+
+  /** Opened from somewhere other than its own button — the phone's format bar
+   *  has a Link key that has to land in this field. Left out, the button is
+   *  the only way in and the popover keeps its own state. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Spread onto the trigger button — the phone needs a 44px target and an
+   *  accessible name on what is otherwise a bare icon. */
+  triggerProps?: ComponentPropsWithoutRef<'button'>;
 };
 
 export function LinkInputPopover(props: LinkInputPopoverProps) {
@@ -37,11 +47,19 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
     icon: Icon = Link,
     editor,
     showImageStatus = false,
+    open,
+    onOpenChange,
+    triggerProps,
 
     isVariable,
   } = props;
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isOpen = open ?? uncontrolledOpen;
+  const setIsOpen = (next: boolean) => {
+    setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [isEditing, setIsEditing] = useState(!isVariable);
   const linkInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,8 +124,9 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       <BaseButton
         variant="ghost"
         size="sm"
+        {...triggerProps}
         type="button"
-        className="mly:h-7! mly:w-7!"
+        className={cn('mly:h-7! mly:w-7!', triggerProps?.className)}
         data-state={!!defaultValue}
       >
         <Icon className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5] mly:text-midnight-gray" />

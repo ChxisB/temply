@@ -17,10 +17,13 @@ import {
 
 type DeleteEmailDialogProps = {
   templateId?: string;
+  /** Replaces the default button — the phone opens this from a menu item, and
+   *  a dialog trigger has to be the item itself or the menu eats the tap. */
+  trigger?: React.ReactElement;
 };
 
 export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
-  const { templateId } = props;
+  const { templateId, trigger } = props;
 
   const router = useRouter();
 
@@ -40,10 +43,12 @@ export function DeleteEmailDialog(props: DeleteEmailDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="danger-quiet" disabled={isDeleteTemplatePending || !templateId}>
-          {isDeleteTemplatePending ? <Loader2Icon className="animate-spin" /> : <Trash2Icon />}
-          <span className="hidden lg:inline-block">Delete</span>
-        </Button>
+        {trigger ?? (
+          <Button variant="danger-quiet" disabled={isDeleteTemplatePending || !templateId}>
+            {isDeleteTemplatePending ? <Loader2Icon className="animate-spin" /> : <Trash2Icon />}
+            <span className="hidden lg:inline-block">Delete</span>
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="max-w-xs p-4">

@@ -11,6 +11,7 @@ import { cn } from '~/lib/classname';
 import { Button } from './ui/button';
 import { useMediaQuery } from '~/hooks/use-media-query';
 import { DesktopEditorLayout } from './editor/desktop-layout';
+import { MobileEditorLayout } from './editor/mobile-layout';
 import { useTemplateEditor, type EmailEditorSandboxProps } from './editor/use-template-editor';
 
 export type { EmailEditorSandboxProps };
@@ -116,7 +117,13 @@ export function CopyHtmlButton({ html }: { html: string }) {
 export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const { imageUploads = true, autofocus } = props;
   const model = useTemplateEditor(props);
-  // Phase 1 swaps in the phone shell here; until then every width is desktop.
-  void useMediaQuery;
-  return <DesktopEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />;
+  // Width chooses the shell. The server and the first client render pick
+  // desktop, so the markup agrees during hydration; a phone switches on its
+  // first effect, before the editor has mounted.
+  const phone = useMediaQuery('(max-width: 639px)');
+  return phone ? (
+    <MobileEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
+  ) : (
+    <DesktopEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
+  );
 }

@@ -579,6 +579,9 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     setDraftFound(null);
   };
 
+  /** The document editorContent was last set from, so an unchanged one costs
+   *  no render. */
+  const capturedContent = useRef<string | null>(null);
   const [editorContent, setEditorContent] = useState(() => {
     if (template?.content) {
       return typeof template.content === 'string'
@@ -617,6 +620,18 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
     const capture = () => {
       const fingerprint = persistedFingerprint();
+
+      // Crossing 640px swaps the shell, which remounts the editor from
+      // editorContent — so that has to be the document as it stands, not the
+      // one the page loaded with. Only a changed document is stored: this
+      // runs on every debounce tick, and a state bump per tick would re-render
+      // the whole shell while someone is only typing a subject line.
+      const json = editor.getJSON();
+      const serializedContent = JSON.stringify(json);
+      if (serializedContent !== capturedContent.current) {
+        capturedContent.current = serializedContent;
+        setEditorContent(json);
+      }
 
       if (!usesLocalDraft && autosave) {
         if (fingerprint === savedFingerprint.current) {

@@ -2,9 +2,12 @@
 
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
-import { BracesIcon, LinkIcon, TypeIcon } from 'lucide-react';
+import { BracesIcon, LinkIcon, TypeIcon, Link2OffIcon } from 'lucide-react';
+import { useState } from 'react';
 import { alignCommands, currentTextColor, PRIMARY_TEXT_COMMANDS, setTextColor, textCommands } from '~/core/editor/commands/text';
 import type { EditorCommand } from '~/core/editor/commands/types';
+import { LinkInputPopover } from '~/core/editor/components/ui/link-input-popover';
+import { useTextMenuState } from '~/core/editor/components/text-menu/use-text-menu-state';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
@@ -52,12 +55,34 @@ export function TextFormatBar({
   onDone: () => void;
 }) {
   const color = useEditorState({ editor, selector: ({ editor }) => currentTextColor(editor) });
+  const { linkUrl, isUrlVariable } = useTextMenuState(editor);
+  const [linkOpen, setLinkOpen] = useState(false);
   const insertVariable = () => {
     editor.chain().focus().insertContent('{{').run(); // the variable suggestion opens on "{{"
   };
-  const setLink = () => {
-    const href = window.prompt('Link address'); // replaced by LinkInputPopover in Task 13; the row keeps a one-tap path
-    if (href) editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
+
+  /** The same set the desktop bubble menu applies, minus the focus call: the
+   *  destination is typed in the panel, and pulling focus back to the canvas
+   *  there would throw the keyboard up over the answer. */
+  const applyLink = (value: string, isVariable?: boolean) => {
+    if (!value) {
+      editor.chain().extendMarkRange('link').unsetLink().unsetUnderline().run();
+      return;
+    }
+    editor
+      .chain()
+      .extendMarkRange('link')
+      .setLink({ href: value })
+      .setIsUrlVariable(isVariable ?? false)
+      .setUnderline()
+      .run();
+  };
+
+  // The link key is a shortcut to the panel's Link row: the row is where the
+  // address is typed, and there is only one of it.
+  const openLink = () => {
+    if (!panelOpen) onTogglePanel();
+    setLinkOpen(true);
   };
 
   return (
@@ -66,7 +91,14 @@ export function TextFormatBar({
         {PRIMARY_TEXT_COMMANDS.map((c) => (
           <Toggle key={c.id} editor={editor} command={c} />
         ))}
-        <button type="button" aria-label="Link" onClick={setLink} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
+        <button
+          type="button"
+          aria-label="Link"
+          aria-haspopup="dialog"
+          aria-expanded={linkOpen}
+          onClick={openLink}
+          className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', linkUrl ? 'bg-accent-wash text-accent-ink' : 'text-ink', pressable)}
+        >
           <LinkIcon className="size-5" />
         </button>
         <button type="button" aria-label="Insert variable" onClick={insertVariable} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
@@ -110,6 +142,36 @@ export function TextFormatBar({
                     />
                   </button>
                 ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-16 shrink-0 text-xs text-muted">Link</span>
+              {/* The editor's own link popover, so the destination can be a
+                  {{variable}} here exactly as it can in the desktop bubble
+                  menu — one field, one set of rules. */}
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                <LinkInputPopover
+                  editor={editor}
+                  defaultValue={linkUrl ?? ''}
+                  isVariable={isUrlVariable}
+                  open={linkOpen}
+                  onOpenChange={setLinkOpen}
+                  onValueChange={applyLink}
+                  triggerProps={{ 'aria-label': 'Link address', className: 'mly:h-11! mly:w-11!' }}
+                />
+                <span className={cn('min-w-0 flex-1 truncate text-xs', linkUrl ? 'text-ink' : 'text-faint')}>
+                  {linkUrl ? (isUrlVariable ? `{{${linkUrl}}}` : linkUrl) : 'No link'}
+                </span>
+                {linkUrl ? (
+                  <button
+                    type="button"
+                    aria-label="Remove link"
+                    onClick={() => applyLink('')}
+                    className={cn('flex h-11 min-w-11 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-ink', pressable)}
+                  >
+                    <Link2OffIcon className="size-5" />
+                  </button>
+                ) : null}
               </div>
             </div>
             <div className="flex items-center gap-2">
