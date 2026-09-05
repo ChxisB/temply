@@ -18,6 +18,7 @@ import { EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
 import { assetUsage, toastUploaded, UPLOAD_MIME_TYPES, type Asset } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { errorMessage } from '~/lib/http';
+import { localId } from '~/lib/id';
 import { useMinimumDisplay } from '~/hooks/use-minimum-display';
 
 const inputClass =
@@ -58,7 +59,7 @@ export default function AssetsPage() {
     // shows the whole queue rather than one card at a time.
     const queue = accepted.map((file) => ({
       file,
-      pending: { id: crypto.randomUUID(), name: file.name, bytes: file.size },
+      pending: { id: localId(), name: file.name, bytes: file.size },
     }));
     setPendingUploads((current) => [...current, ...queue.map((entry) => entry.pending)]);
     const settle = (ids: string[]) =>

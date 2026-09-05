@@ -13,6 +13,7 @@ import { useAssets } from './use-assets';
 import { useDuplicateNameGuard } from './duplicate-name-dialog';
 import { useFileDrop } from './use-file-drop';
 import { cn } from '~/lib/classname';
+import { localId } from '~/lib/id';
 
 const inputClass =
   'h-9 w-full rounded-md border border-line bg-raised px-3 text-sm text-ink placeholder:text-faint';
@@ -49,7 +50,7 @@ export function AssetPickerDialog({
     const file = files?.[0];
     if (!file) return;
     if (!(await duplicates.check(file))) return;
-    setPendingUpload({ id: crypto.randomUUID(), name: file.name, bytes: file.size });
+    setPendingUpload({ id: localId(), name: file.name, bytes: file.size });
     try {
       const result = await uploadOne(file);
       toastUploaded(result);
