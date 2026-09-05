@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/**]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, test, design gates, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+      # The design gates: colours stay in the token layer and every motion
+      # sits on a duration token. They fail the build the same way a type
+      # error does.
+      - name: Contrast
+        run: bun run check:contrast
+        working-directory: client
+      - name: Editor contrast
+        run: bun run check:editor-contrast
+        working-directory: client
+      - name: Email dark mode
+        run: bun run check:email-dark
+        working-directory: client
+      - name: Motion tokens
+        run: bun run check:motion
+        working-directory: client
+
+      # A production build with placeholder keys: Clerk validates the shape
+      # of its publishable key at build time but does not call home, and no
+      # other secret is read until a request arrives.
+      - name: Build client
+        run: bun run build
+        working-directory: client
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk
+          CLERK_SECRET_KEY: sk_test_placeholder
+          NEXT_TELEMETRY_DISABLED: '1'
+
+      - name: Build server
+        run: bun run build
+        working-directory: server
