@@ -97,7 +97,7 @@ const plans = [
   {
     id: 'free' as const,
     name: 'Free',
-    price: '$0',
+    price: '£0',
     period: '/month',
     features: [
       { text: '2 templates', included: true },
@@ -110,7 +110,7 @@ const plans = [
   {
     id: 'pro' as const,
     name: 'Pro',
-    price: '$12',
+    price: '£12',
     period: '/month',
     features: [
       { text: '10 templates', included: true },
