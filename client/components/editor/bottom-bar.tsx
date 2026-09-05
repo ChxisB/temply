@@ -57,8 +57,8 @@ export function EditorBottomBar({
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ paddingBottom: inset }}>
       <div
         className={cn(
-          'pointer-events-auto absolute right-4 transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
-          state === 'text' ? 'translate-y-2 opacity-0' : 'opacity-100',
+          'absolute right-4 transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
+          state === 'text' ? 'pointer-events-none translate-y-2 opacity-0' : 'pointer-events-auto opacity-100',
         )}
         style={{ bottom: `calc(100% + 0.75rem)` }}
       >

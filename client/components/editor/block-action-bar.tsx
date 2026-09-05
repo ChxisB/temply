@@ -10,7 +10,11 @@ import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
 function BarButton({ editor, command }: { editor: Editor; command: EditorCommand }) {
-  const enabled = command.isEnabled ? command.isEnabled(editor) : true;
+  // Own subscription, not a value read in the render body: moving a block
+  // up/down changes nothing `BlockActionBar`'s `typeName` selector watches,
+  // so without this the greyed-out state at an edge would only catch up on
+  // some unrelated re-render.
+  const enabled = useEditorState({ editor, selector: ({ editor }) => (command.isEnabled ? command.isEnabled(editor) : true) });
   return (
     <button
       type="button"
