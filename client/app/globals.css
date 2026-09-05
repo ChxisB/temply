@@ -642,6 +642,21 @@ html {
   min-width: 0;
 }
 
+/* The workspace switcher's trigger sits on the graphite rail, which does not
+   follow the theme, but Clerk colours its text from the appearance palette,
+   which does — and Clerk's own stylesheet outranks the utility classes handed
+   to its elements, so in light mode the name went ink-on-graphite. Pin the
+   trigger to the rail palette. The menu it opens is portalled outside the
+   trigger and keeps the theme. */
+.cl-organizationSwitcherTrigger,
+.cl-organizationSwitcherTrigger .cl-organizationPreviewMainIdentifier {
+  color: var(--ds-rail-ink);
+}
+.cl-organizationSwitcherTrigger .cl-organizationPreviewSecondaryIdentifier,
+.cl-organizationSwitcherTrigger .cl-organizationSwitcherTriggerIcon {
+  color: var(--ds-rail-muted);
+}
+
 /* ---------------------------------------------------------------------------
    Toasts
 

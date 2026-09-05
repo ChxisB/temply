@@ -27,10 +27,10 @@ export function WorkspaceSwitcher() {
         elements: {
           ...(clerkAppearance.elements as Record<string, string>),
           rootBox: 'w-full',
+          // Layout only. The trigger's colours are pinned to the rail palette
+          // in globals.css, where they can outrank Clerk's own stylesheet.
           organizationSwitcherTrigger:
-            'w-full justify-between rounded-md px-2 py-1.5 text-rail-ink hover:bg-rail-hover focus-visible:ring-[3px] focus-visible:ring-accent/25',
-          organizationPreviewMainIdentifier: 'text-rail-ink',
-          organizationPreviewSecondaryIdentifier: 'text-rail-muted',
+            'w-full justify-between rounded-md px-2 py-1.5 hover:bg-rail-hover focus-visible:ring-[3px] focus-visible:ring-accent/25',
         },
       }}
     />
