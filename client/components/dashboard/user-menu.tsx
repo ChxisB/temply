@@ -84,15 +84,16 @@ export function UserMenu({ align = 'end', showLabel = true, surface = 'rail' }: 
         </DropdownMenuItem>
         {/* The one place inside the app the legal pages are reachable from:
             two quiet items, not a footer on every page. Consent itself is
-            taken at sign-up; these are for reading it again. */}
+            taken at sign-up; these are for reading it again, in a new tab so
+            the work on screen stays where it is. */}
         <DropdownMenuItem asChild>
-          <Link href="/terms" className="flex cursor-pointer items-center gap-2 text-muted">
+          <Link href="/terms" target="_blank" rel="noreferrer" className="flex cursor-pointer items-center gap-2 text-muted">
             <ScrollTextIcon className="h-4 w-4" />
             Terms
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/privacy" className="flex cursor-pointer items-center gap-2 text-muted">
+          <Link href="/privacy" target="_blank" rel="noreferrer" className="flex cursor-pointer items-center gap-2 text-muted">
             <ShieldIcon className="h-4 w-4" />
             Privacy
           </Link>
