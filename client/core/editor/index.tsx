@@ -51,6 +51,8 @@ export type EditorProps = {
   editable?: boolean;
   scrollThreshold?: number;
   scrollMargin?: number;
+  /** A finger, not a mouse: no bubble menus, no hover drag handle, tap-to-select. */
+  touch?: boolean;
 } & ParitialMailContextType;
 
 export function Editor(props: EditorProps) {
@@ -79,6 +81,7 @@ export function Editor(props: EditorProps) {
     isLibraryImage,
     scrollThreshold = 40,
     scrollMargin = 40,
+    touch = false,
   } = props;
 
   const formattedContent = useMemo(() => {
@@ -131,6 +134,7 @@ export function Editor(props: EditorProps) {
       allowedMimeTypes,
       onPickImage,
       isLibraryImage,
+      touch,
     }),
     content: formattedContent,
     autofocus,
@@ -159,17 +163,17 @@ export function Editor(props: EditorProps) {
             bodyClassName
           )}
         >
-          <TextBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <ImageBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <SpacerBubbleMenu editor={editor} appendTo={menuContainerRef} />
+          {!touch && <TextBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <ImageBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <SpacerBubbleMenu editor={editor} appendTo={menuContainerRef} />}
           <EditorContent editor={editor} />
-          <SectionBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <ColumnsBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          {!hideContextMenu && <ContentMenu editor={editor} />}
-          <VariableBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <RepeatBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <HTMLBubbleMenu editor={editor} appendTo={menuContainerRef} />
-          <InlineImageBubbleMenu editor={editor} appendTo={menuContainerRef} />
+          {!touch && <SectionBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <ColumnsBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!hideContextMenu && !touch && <ContentMenu editor={editor} />}
+          {!touch && <VariableBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <RepeatBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <HTMLBubbleMenu editor={editor} appendTo={menuContainerRef} />}
+          {!touch && <InlineImageBubbleMenu editor={editor} appendTo={menuContainerRef} />}
         </div>
       </div>
     </MailyProvider>

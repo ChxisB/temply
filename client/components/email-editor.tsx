@@ -18,6 +18,7 @@ type EmailEditorProps = {
   allowedMimeTypes?: string[];
   onPickImage?: () => Promise<string | null>;
   isLibraryImage?: (src: string) => boolean;
+  touch?: boolean;
 };
 
 export function EmailEditor(props: EmailEditorProps) {
@@ -29,6 +30,7 @@ export function EmailEditor(props: EmailEditorProps) {
     allowedMimeTypes,
     onPickImage,
     isLibraryImage,
+    touch,
   } = props;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +45,7 @@ export function EmailEditor(props: EmailEditorProps) {
           allowedMimeTypes={allowedMimeTypes}
           onPickImage={onPickImage}
           isLibraryImage={isLibraryImage}
+          touch={touch}
           config={{
             hasMenuBar: false,
             wrapClassName: cn('editor-wrap', isLoading && 'hidden'),

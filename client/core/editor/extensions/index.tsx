@@ -10,9 +10,11 @@ import { PlaceholderExtension } from './placeholder';
 import { SlashCommandExtension } from './slash-command/slash-command';
 import { getSlashCommandSuggestions } from './slash-command/slash-command-view';
 import { SelectionExtension } from './selection/selection';
+import { BlockSelection } from '../plugins/block-selection';
 
 type ExtensionsProps = Partial<MailyContextType> & {
   extensions?: AnyExtension[];
+  touch?: boolean;
 };
 
 export function extensions(props: ExtensionsProps) {
@@ -23,6 +25,7 @@ export function extensions(props: ExtensionsProps) {
     allowedMimeTypes,
     onPickImage,
     isLibraryImage,
+    touch = false,
   } = props;
 
   const defaultExtensions = [
@@ -43,6 +46,7 @@ export function extensions(props: ExtensionsProps) {
     InlineImageExtension,
     PlaceholderExtension,
     SelectionExtension,
+    ...(touch ? [BlockSelection] : []),
   ].filter((ext) => {
     return !extensions.some((e) => e.name === ext.name);
   });
