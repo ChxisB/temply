@@ -1,16 +1,15 @@
 'use client';
 
-import { SignIn } from '@clerk/nextjs';
+import { SignUp } from '@clerk/nextjs';
 import { useTheme } from '~/components/theme-provider';
 
-export function SignInCard() {
+export function SignUpCard() {
   const { clerkAppearance } = useTheme();
 
   return (
-    <SignIn
-      signUpUrl="/sign-up"
-      forceRedirectUrl="/dashboard"
-      signUpForceRedirectUrl="/onboarding"
+    <SignUp
+      signInUrl="/login"
+      forceRedirectUrl="/onboarding"
       appearance={{
         ...clerkAppearance,
         elements: {
