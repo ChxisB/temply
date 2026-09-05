@@ -7,6 +7,7 @@ import { httpGet } from '~/lib/http';
 
 type Quota = {
   plan: 'free' | 'pro' | 'enterprise';
+  cancelAt: string | null;
   api: { used: number; limit: number | null; remaining: number | null };
   resetsOn: string;
 };
@@ -33,7 +34,14 @@ export function QuotaWidget() {
   return (
     <div className="rounded-md border border-rail-line bg-rail-raised p-2.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-rail-ink capitalize">{data.plan} plan</span>
+        <span className="text-xs font-medium text-rail-ink">
+          <span className="capitalize">{data.plan} plan</span>
+          {/* A scheduled cancellation is worth a glance from anywhere in the
+              app, not only on the plan page. */}
+          {data.cancelAt ? (
+            <span className="font-normal text-rail-muted"> · ends {formatReset(data.cancelAt.slice(0, 10))}</span>
+          ) : null}
+        </span>
         {/* A percentage answers the question this widget exists for — how
             close am I? — in a glance. The exact counts are a click away on the
             plan page, and the progress bar's label carries them for anyone

@@ -98,6 +98,8 @@ export function initTables(sqlite: Database) {
     published_preview_text = preview_text, published_at = updated_at
     WHERE published_at IS NULL`);
 
+  addColumnIfMissing(sqlite, 'subscriptions', 'cancel_at', 'TEXT');
+
   // One-time migration: the top plan was renamed from `scale` to `enterprise`.
   sqlite.run(`UPDATE subscriptions SET plan = 'enterprise' WHERE plan = 'scale'`);
 

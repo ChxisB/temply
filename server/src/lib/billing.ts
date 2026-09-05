@@ -18,7 +18,7 @@ export function getStripe(): Stripe {
  * still carries. Both are answered here so a legacy API key keeps its plan
  * until its owner's next visit moves everything across.
  */
-export async function getPlan(db: Db, orgId: string): Promise<{ plan: Plan; status: string }> {
+export async function getPlan(db: Db, orgId: string): Promise<{ plan: Plan; status: string; cancelAt: string | null }> {
   const [sub] = await db
     .select()
     .from(subscriptions)
@@ -26,9 +26,9 @@ export async function getPlan(db: Db, orgId: string): Promise<{ plan: Plan; stat
     .limit(1);
 
   if (!sub || sub.plan === 'free' || sub.status !== 'active') {
-    return { plan: 'free', status: 'active' };
+    return { plan: 'free', status: 'active', cancelAt: null };
   }
-  return { plan: sub.plan as Plan, status: sub.status };
+  return { plan: sub.plan as Plan, status: sub.status, cancelAt: sub.cancel_at ?? null };
 }
 
 export async function getUsage(db: Db, orgId: string) {

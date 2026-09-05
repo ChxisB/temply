@@ -60,6 +60,23 @@ describe('POST /api/webhooks/stripe', () => {
     expect(sub.stripe_subscription_id).toBe('sub_a');
   });
 
+  it('records a scheduled cancellation and clears it on resume', async () => {
+    await app.handle(signed(checkoutCompleted));
+    const ends = 1_790_000_000;
+    const updated = (cancel_at: number | null) =>
+      JSON.stringify({ id: 'evt_u', object: 'event', type: 'customer.subscription.updated', data: { object: { id: 'sub_a', object: 'subscription', customer: 'cus_a', status: 'active', cancel_at, cancel_at_period_end: false, items: { data: [{ current_period_end: ends }] } } } });
+
+    expect((await app.handle(signed(updated(ends)))).status).toBe(200);
+    let [sub] = await db.select().from(subscriptions).where(eq(subscriptions.org_id, ORG));
+    expect(sub.plan).toBe('pro');
+    expect(sub.cancel_at).toBe(new Date(ends * 1000).toISOString());
+    expect(sub.current_period_end).toBe(new Date(ends * 1000).toISOString());
+
+    expect((await app.handle(signed(updated(null)))).status).toBe(200);
+    [sub] = await db.select().from(subscriptions).where(eq(subscriptions.org_id, ORG));
+    expect(sub.cancel_at).toBeNull();
+  });
+
   it('drops the workspace back to free when the subscription is deleted', async () => {
     await app.handle(signed(checkoutCompleted));
     const deleted = JSON.stringify({ id: 'evt_2', object: 'event', type: 'customer.subscription.deleted', data: { object: { id: 'sub_a', object: 'subscription', customer: 'cus_a' } } });

@@ -40,7 +40,7 @@ export const webhookRoutes = new Elysia()
           : userId
             ? and(eq(subscriptions.user_id, userId), isNull(subscriptions.org_id))
             : null;
-        if (scope && plan) await ctx.db.update(subscriptions).set({ plan, stripe_subscription_id: session.subscription as string, stripe_customer_id: session.customer as string, status: 'active', updated_at: new Date().toISOString() }).where(scope);
+        if (scope && plan) await ctx.db.update(subscriptions).set({ plan, stripe_subscription_id: session.subscription as string, stripe_customer_id: session.customer as string, status: 'active', cancel_at: null, updated_at: new Date().toISOString() }).where(scope);
         break;
       }
       case 'customer.subscription.updated': {
@@ -54,19 +54,29 @@ export const webhookRoutes = new Elysia()
           // subscription onto each item, so the SDK types no longer declare it —
           // the pinned API version still sends the old spot, but read both so an
           // API upgrade shifts the source instead of silently writing null.
+          // The portal schedules a cancellation as cancel_at; older API versions
+          // and the dashboard set cancel_at_period_end instead. Read both so
+          // "ends on" is right whichever way it was cancelled, and clear it
+          // when the customer resumes.
+          const cancelAt =
+            typeof stripeSub.cancel_at === 'number'
+              ? stripeSub.cancel_at
+              : stripeSub.cancel_at_period_end
+                ? (typeof stripeSub.items?.data?.[0]?.current_period_end === 'number' ? stripeSub.items.data[0].current_period_end : undefined)
+                : undefined;
           const periodEnd =
             'current_period_end' in stripeSub && typeof stripeSub.current_period_end === 'number'
               ? stripeSub.current_period_end
               : typeof stripeSub.items?.data?.[0]?.current_period_end === 'number'
                 ? stripeSub.items.data[0].current_period_end
                 : undefined;
-          await ctx.db.update(subscriptions).set({ plan: status === 'active' ? plan : 'free', status, current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, customerId));
+          await ctx.db.update(subscriptions).set({ plan: status === 'active' ? plan : 'free', status, current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null, cancel_at: cancelAt ? new Date(cancelAt * 1000).toISOString() : null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, customerId));
         }
         break;
       }
       case 'customer.subscription.deleted': {
         const deletedSub = event.data.object;
-        await ctx.db.update(subscriptions).set({ plan: 'free', status: 'canceled', stripe_subscription_id: null, current_period_end: null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, deletedSub.customer as string));
+        await ctx.db.update(subscriptions).set({ plan: 'free', status: 'canceled', stripe_subscription_id: null, current_period_end: null, cancel_at: null, updated_at: new Date().toISOString() }).where(eq(subscriptions.stripe_customer_id, deletedSub.customer as string));
         break;
       }
     }

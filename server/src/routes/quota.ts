@@ -13,12 +13,13 @@ export const quotaRoutes = new Elysia()
   .get('/api/v1/quota', async (ctx) => {
   if (!ctx.userId) return unauthorized();
   if (!ctx.orgId) return noWorkspace();
-  const { plan } = await getPlan(ctx.db, ctx.orgId);
+  const { plan, cancelAt } = await getPlan(ctx.db, ctx.orgId);
   const rawLimit = PLAN_LIMITS[plan].maxApiCalls;
   const limit = Number.isFinite(rawLimit) ? rawLimit : null; // null = unlimited over the wire
   const used = await getApiUsage(ctx.db, ctx.orgId);
   return json({
     plan,
+    cancelAt,
     api: { used, limit, remaining: limit === null ? null : Math.max(0, limit - used) },
     resetsOn: nextResetDate(),
   });

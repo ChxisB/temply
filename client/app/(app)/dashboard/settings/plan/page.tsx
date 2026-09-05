@@ -21,6 +21,8 @@ type PlanInfo = {
     templates: number;
     apiKeys: number;
   };
+  /** ISO date a portal cancellation takes effect; null while the plan renews. */
+  cancelAt: string | null;
 };
 
 type CheckoutResponse = {
@@ -36,6 +38,11 @@ type Quota = {
 function formatReset(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
+/** "5 Oct" for a cancellation date — the same shape the reset date uses. */
+function formatEnds(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
 
 /** The month's API consumption with a progress bar — the same numbers the
@@ -202,6 +209,9 @@ function PlanContent() {
   const plan = data.plan;
   const usage = data.usage;
   const hasSubscription = plan !== 'free';
+  // A cancelled-but-not-yet-ended plan is still the current plan; the card
+  // says when it stops and offers the way back, which is the portal.
+  const endsOn = hasSubscription && data.cancelAt ? formatEnds(data.cancelAt) : null;
 
   return (
     <div className="space-y-5">
@@ -240,7 +250,9 @@ function PlanContent() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-ink">{p.name}</h3>
-                  {isCurrentPlan ? <Badge tone="accent">Current plan</Badge> : null}
+                  {isCurrentPlan ? (
+                    endsOn ? <Badge tone="warn">Ends {endsOn}</Badge> : <Badge tone="accent">Current plan</Badge>
+                  ) : null}
                 </div>
 
                 <p className="mt-1.5 flex items-baseline gap-0.5">
@@ -265,7 +277,12 @@ function PlanContent() {
                 </ul>
 
                 <div className="mt-5">
-                  {isCurrentPlan ? (
+                  {isCurrentPlan && endsOn ? (
+                    <Button variant="primary" className="w-full" onClick={() => createPortal()} disabled={isPortalLoading}>
+                      {isPortalLoading ? <Loader2Icon className="animate-spin" /> : null}
+                      Resume plan
+                    </Button>
+                  ) : isCurrentPlan ? (
                     <Button disabled className="w-full">
                       Current plan
                     </Button>

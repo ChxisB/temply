@@ -45,22 +45,22 @@ async function addApiKeys(userId: string, count: number) {
 
 describe('getPlan', () => {
   it('falls back to free when the user has no subscription row', async () => {
-    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'free', status: 'active' });
+    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'free', status: 'active', cancelAt: null });
   });
 
   it('returns the paid plan when the subscription is active', async () => {
     await givePlan(db, 'user_1', 'pro');
-    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'pro', status: 'active' });
+    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'pro', status: 'active', cancelAt: null });
   });
 
   it('downgrades to free when a paid subscription is no longer active', async () => {
     await givePlan(db, 'user_1', 'enterprise', 'past_due');
-    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'free', status: 'active' });
+    expect(await getPlan(db, 'user_1')).toEqual({ plan: 'free', status: 'active', cancelAt: null });
   });
 
   it('does not leak another user’s plan', async () => {
     await givePlan(db, 'user_1', 'enterprise');
-    expect(await getPlan(db, 'user_2')).toEqual({ plan: 'free', status: 'active' });
+    expect(await getPlan(db, 'user_2')).toEqual({ plan: 'free', status: 'active', cancelAt: null });
   });
 });
 

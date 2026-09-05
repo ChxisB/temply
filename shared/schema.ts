@@ -89,6 +89,10 @@ export const subscriptions = sqliteTable('subscriptions', {
   plan: text('plan').notNull().default('free'),
   status: text('status').notNull().default('active'),
   current_period_end: text('current_period_end'),
+  /** When a cancellation scheduled in the portal takes effect; null while
+   *  the plan simply renews. The plan stays paid until this passes, so the
+   *  page can say "ends 5 Oct" instead of pretending nothing happened. */
+  cancel_at: text('cancel_at'),
   created_at: text('created_at').default(now),
   updated_at: text('updated_at').default(now),
 });
