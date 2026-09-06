@@ -175,6 +175,15 @@ export function MobileEditorLayout({
     if (model.publishArmed || model.sendArmed) setSheet('checks');
   }, [model.publishArmed, model.sendArmed]);
 
+  // Read-only under a sheet. Every menu control the Style sheet reuses ends
+  // its command with focus(), which the desktop needs to keep its caret and
+  // which here would raise the keyboard under the sheet; ProseMirror only
+  // gives DOM focus to an editable view, so the flag is what stops it. The
+  // commands themselves still dispatch.
+  useEffect(() => {
+    editor?.setEditable(!(sheet || styleOpen));
+  }, [editor, sheet, styleOpen]);
+
   const closeSheet = () => {
     // The eye sheet drives the model's mode; closing it has to put the
     // canvas back or the screen behind the sheet stays hidden. Read from
@@ -233,10 +242,14 @@ export function MobileEditorLayout({
     // to reposition when the keyboard opens or the page is scrolled under it;
     // a fixed bar that chased the keyboard with a measured inset painted in
     // one place and answered taps in another mid-scroll. Until the viewport
-    // is measured the frame is the dynamic viewport height. */}
+    // is measured the frame is the dynamic viewport height. `overflow-clip`,
+    // not hidden: a hidden overflow can still be scrolled by script, and
+    // ProseMirror scrolls every ancestor to keep the caret in view — which
+    // walked the frame up by the keyboard's height a few pixels at a time,
+    // with the bars bouncing on it and a bare strip left under them. */}
     <div
       ref={setFrameEl}
-      className={cn('fixed inset-x-0 z-30 flex flex-col overflow-hidden bg-surface', frame ? '' : 'top-0 h-dvh')}
+      className={cn('fixed inset-x-0 z-30 flex flex-col overflow-clip bg-surface', frame ? '' : 'top-0 h-dvh')}
       style={frame ? { top: frame.top, height: frame.height } : undefined}
     >
       <header className="z-40 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-raised px-2">

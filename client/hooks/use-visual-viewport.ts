@@ -25,11 +25,19 @@ export function useVisualViewport(): ViewportFrame | null {
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const update = () => setFrame(viewportFrame(vv));
-    update();
+    // One state write per animation frame: iOS fires resize and scroll many
+    // times while the keyboard animates, and a frame that re-laid out on
+    // each of them stuttered up the screen.
+    let raf = 0;
+    const update = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setFrame(viewportFrame(vv)));
+    };
+    setFrame(viewportFrame(vv));
     vv.addEventListener('resize', update);
     vv.addEventListener('scroll', update);
     return () => {
+      cancelAnimationFrame(raf);
       vv.removeEventListener('resize', update);
       vv.removeEventListener('scroll', update);
     };
