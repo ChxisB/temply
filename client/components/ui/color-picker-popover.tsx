@@ -4,6 +4,7 @@ import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { COLOR_PRESETS } from '~/lib/color-presets';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { pressable } from '~/components/ui/button';
+import { cn } from '~/lib/classname';
 
 /**
  * The app's colour control: a swatch-plus-hex trigger opening a popover that
@@ -17,6 +18,7 @@ export function ColorPickerPopover({
   onChange,
   swatchClassName = 'size-6',
   hexClassName = 'text-2xs text-faint',
+  touch = false,
 }: {
   id?: string;
   /** Names the control for the hex input's aria-label. */
@@ -25,6 +27,11 @@ export function ColorPickerPopover({
   onChange: (next: string) => void;
   swatchClassName?: string;
   hexClassName?: string;
+  /** Sizes the popover's own controls for a thumb. The popover body renders in
+   *  a portal, so a sheet cannot reach it with a wrapper class — it has to be
+   *  asked for here. Off by default: every desktop popover keeps the sizes it
+   *  has, and only the phone's Brand sheet passes it. */
+  touch?: boolean;
 }) {
   return (
     <Popover>
@@ -38,8 +45,10 @@ export function ColorPickerPopover({
           <span className={`font-mono uppercase ${hexClassName}`}>{value}</span>
         </button>
       </PopoverTrigger>
-      {/* w-56 minus p-3 leaves exactly the 200px react-colorful renders at. */}
-      <PopoverContent align="start" className="w-56 p-3">
+      {/* w-56 minus p-3 leaves exactly the 200px react-colorful renders at; the
+          touch popover is widened to fit a row of five 44px targets instead,
+          and stretches the picker to match. */}
+      <PopoverContent align="start" className={cn('p-3', touch ? 'w-[17rem]' : 'w-56')}>
         <div className="grid grid-cols-5 gap-1.5">
           {COLOR_PRESETS.map((preset) => {
             const active = value.toUpperCase() === preset;
@@ -50,22 +59,37 @@ export function ColorPickerPopover({
                 aria-label={`Use ${preset}`}
                 aria-pressed={active}
                 onClick={() => onChange(preset)}
-                className={`size-8 rounded-sm border ${pressable} ${
-                  active ? 'border-accent ring-2 ring-accent/40' : 'border-line'
-                }`}
-                style={{ backgroundColor: preset }}
-              />
+                className={cn('grid place-items-center rounded-sm', pressable, touch ? 'size-11' : 'size-8')}
+              >
+                {/* The disc keeps its 32px whatever the target around it is. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    'block rounded-sm border',
+                    touch ? 'size-8' : 'size-full',
+                    active ? 'border-accent ring-2 ring-accent/40' : 'border-line',
+                  )}
+                  style={{ backgroundColor: preset }}
+                />
+              </button>
             );
           })}
         </div>
         <div className="my-3 h-px bg-line" />
-        <HexColorPicker color={value} onChange={(next) => onChange(next.toUpperCase())} />
+        <HexColorPicker
+          color={value}
+          onChange={(next) => onChange(next.toUpperCase())}
+          style={touch ? { width: '100%' } : undefined}
+        />
         <HexColorInput
           prefixed
           color={value}
           onChange={(next) => onChange(next.toUpperCase())}
           aria-label={`${label} hex value`}
-          className="mt-3 h-7 w-full rounded-xs border border-line bg-raised px-2 font-mono text-xs text-ink uppercase"
+          className={cn(
+            'mt-3 w-full rounded-xs border border-line bg-raised px-2 font-mono text-ink uppercase',
+            touch ? 'h-11 text-sm' : 'h-7 text-xs',
+          )}
         />
       </PopoverContent>
     </Popover>

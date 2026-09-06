@@ -10,7 +10,7 @@ const DENSITIES: { v: BrandKnobs['density']; label: string }[] = [
   { v: 'compact', label: 'Compact' }, { v: 'comfortable', label: 'Comfortable' },
 ];
 
-export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onChange: (k: BrandKnobs) => void }) {
+export function BrandKnobsControl({ value, onChange, touch }: { value: BrandKnobs; onChange: (k: BrandKnobs) => void; /** Passed to the colour popover, which is portalled out of any sheet. */ touch?: boolean }) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <div className="space-y-1.5">
@@ -21,6 +21,7 @@ export function BrandKnobsControl({ value, onChange }: { value: BrandKnobs; onCh
           onChange={(accent) => onChange({ ...value, accent })}
           swatchClassName="size-8"
           hexClassName="text-xs text-muted"
+          touch={touch}
         />
       </div>
       <div className="space-y-1.5">

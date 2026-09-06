@@ -42,6 +42,7 @@ export function BrandSelect({
   brands,
   theme,
   className,
+  touch,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -49,6 +50,8 @@ export function BrandSelect({
   /** The live theme, so the Custom row shows what the template looks like now. */
   theme: Theme;
   className?: string;
+  /** Passed straight to the dropdown: its rows are portalled out of any sheet. */
+  touch?: boolean;
 }) {
   const options: DropdownOption[] = [
     // Custom is a state, not a choice: it only appears once this template's
@@ -85,6 +88,7 @@ export function BrandSelect({
       value={value}
       onValueChange={onValueChange}
       className={className}
+      touch={touch}
     />
   );
 }

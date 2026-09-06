@@ -40,6 +40,7 @@ export function DropdownSelect({
   iconClassName,
   className,
   align = 'start',
+  touch = false,
 }: {
   /** Accessible name; the trigger has no visible label of its own. */
   label: string;
@@ -57,6 +58,10 @@ export function DropdownSelect({
   iconClassName?: string;
   className?: string;
   align?: 'start' | 'end';
+  /** Sizes the trigger and the rows for a thumb. The menu renders in a portal,
+   *  so a sheet cannot reach the rows with a wrapper class — it has to be asked
+   *  for here. Off by default: every desktop dropdown keeps its `size`. */
+  touch?: boolean;
 }) {
   const selected = options.find((option) => option.value === value);
 
@@ -69,7 +74,7 @@ export function DropdownSelect({
           className={cn(
             'flex max-w-full items-center gap-1.5 rounded-sm text-ink hover:bg-hover',
             variant === 'bordered' ? 'border border-line bg-raised' : 'bg-transparent',
-            size === 'sm' ? 'h-7 px-1.5 text-sm' : 'h-8 px-2.5 text-sm',
+            touch ? 'h-11 px-2.5 text-sm' : size === 'sm' ? 'h-7 px-1.5 text-sm' : 'h-8 px-2.5 text-sm',
             pressable,
             className
           )}
@@ -95,7 +100,8 @@ export function DropdownSelect({
               <DropdownMenuPrimitive.RadioItem
                 value={option.value}
                 className={cn(
-                  'flex h-8 cursor-pointer items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors',
+                  'flex cursor-pointer items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors',
+                  touch ? 'h-11' : 'h-8',
                   option.value === value
                     ? 'bg-accent-wash text-accent-ink'
                     : 'text-ink hover:bg-hover focus:bg-hover'

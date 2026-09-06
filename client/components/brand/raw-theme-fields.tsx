@@ -16,6 +16,7 @@ function ColorField({
   fallback,
   onChange,
   hint,
+  touch,
 }: {
   label: string;
   value?: string;
@@ -24,6 +25,8 @@ function ColorField({
   /** A warning icon rendered beside the label when this colour causes a
    *  readability problem. */
   hint?: ReactNode;
+  /** Passed to the colour popover, which is portalled out of any sheet. */
+  touch?: boolean;
 }) {
   const current = value ?? fallback;
   const id = `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
@@ -36,7 +39,7 @@ function ColorField({
         </label>
         {hint}
       </span>
-      <ColorPickerPopover id={id} label={label} value={current} onChange={onChange} />
+      <ColorPickerPopover id={id} label={label} value={current} onChange={onChange} touch={touch} />
     </div>
   );
 }
@@ -99,9 +102,12 @@ function NumberField({
 export function RawThemeFields({
   theme,
   onChange,
+  touch,
 }: {
   theme: Theme;
   onChange: (next: Theme) => void;
+  /** Passed to every colour popover here; they are portalled out of any sheet. */
+  touch?: boolean;
 }) {
   const d = DEFAULT_RENDERER_THEME;
 
@@ -112,6 +118,7 @@ export function RawThemeFields({
       <div className="space-y-2.5">
         <p className="text-2xs font-medium tracking-wide text-faint uppercase">Page</p>
         <ColorField
+          touch={touch}
           label="Background"
           value={theme.body?.backgroundColor}
           fallback={d.body?.backgroundColor ?? '#F4F4F5'}
@@ -130,6 +137,7 @@ export function RawThemeFields({
       <div className="space-y-2.5">
         <p className="text-2xs font-medium tracking-wide text-faint uppercase">Card</p>
         <ColorField
+          touch={touch}
           label="Background"
           value={theme.container?.backgroundColor}
           fallback={d.container?.backgroundColor ?? '#FFFFFF'}
@@ -169,6 +177,7 @@ export function RawThemeFields({
       <div className="space-y-2.5">
         <p className="text-2xs font-medium tracking-wide text-faint uppercase">Buttons & links</p>
         <ColorField
+          touch={touch}
           label="Button"
           value={theme.button?.backgroundColor}
           fallback={d.button?.backgroundColor ?? '#000000'}
@@ -177,6 +186,7 @@ export function RawThemeFields({
           }
         />
         <ColorField
+          touch={touch}
           label="Button text"
           value={theme.button?.color}
           fallback={d.button?.color ?? '#FFFFFF'}
@@ -194,6 +204,7 @@ export function RawThemeFields({
           }
         />
         <ColorField
+          touch={touch}
           label="Link"
           value={theme.link?.color}
           fallback={d.link?.color ?? '#346FE4'}

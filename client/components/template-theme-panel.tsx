@@ -39,10 +39,16 @@ export function TemplateThemePanel({
   theme,
   onChange,
   className,
+  touch,
 }: {
   theme: Theme;
   onChange: (next: Theme) => void;
   className?: string;
+  /** Sizes the controls that render in a portal — the brand dropdown's rows and
+   *  every colour popover — for a thumb. The phone's Brand sheet sets it; a
+   *  wrapper class cannot reach past a portal. Everything else the panel draws
+   *  is in the sheet's own subtree and is grown there. */
+  touch?: boolean;
 }) {
   const { data, isError } = useQuery(brandsQueryOptions());
   const brands = data?.brands ?? [];
@@ -151,12 +157,14 @@ export function TemplateThemePanel({
             brands={brands}
             theme={theme}
             className="w-full"
+            touch={touch}
           />
         </div>
 
         <BrandKnobsControl
           value={knobsFromTheme(theme)}
           onChange={(knobs) => handleEdit(applyKnobs(theme, knobs))}
+          touch={touch}
         />
 
         <div>
@@ -184,7 +192,7 @@ export function TemplateThemePanel({
           >
             <div className="overflow-hidden">
               <div className="mt-3">
-                <RawThemeFields theme={theme} onChange={handleEdit} />
+                <RawThemeFields theme={theme} onChange={handleEdit} touch={touch} />
               </div>
             </div>
           </div>
