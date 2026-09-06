@@ -8,7 +8,7 @@ export default function PlaygroundClient() {
           the page frame steps out of the way: no gutter, no padding, no page
           title above it. Above `sm` the title sits under the marketing
           header's brand mark, so the gutter matches that header's. */}
-      <div className="mx-auto max-w-5xl px-0 py-0 sm:px-5 sm:py-8">
+      <div className="mx-auto max-w-5xl sm:px-5 sm:py-8">
         <div className="mb-6 hidden sm:block">
           <h1 className="text-xl font-semibold tracking-tight text-ink">
             Email Editor

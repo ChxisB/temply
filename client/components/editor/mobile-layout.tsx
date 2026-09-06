@@ -151,9 +151,9 @@ export function MobileEditorLayout({
 
   /** Done ends typing, not the selection: the bar drops back to the block
    *  face. A bare blur would leave a text selection behind and land on idle,
-   *  so the block is re-selected after — after, because a NodeSelection
-   *  dispatched while the editor still has focus would put the caret (and
-   *  the keyboard) straight back. */
+   *  so the block is re-selected. The order reads backwards but is not:
+   *  tiptap defers its blur to a rAF, so the NodeSelection dispatched on the
+   *  next line lands first and the blur then arrives on top of it. */
   const done = () => {
     if (!editor) return;
     const block = selectedBlock(editor);

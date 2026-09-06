@@ -5,13 +5,15 @@ import { ArrowDownIcon, ArrowUpIcon, CopyIcon, Trash2Icon } from 'lucide-react';
 import type { EditorCommand } from './types';
 
 /**
- * The block the phone's action bar acts on: the innermost textblock or leaf
- * block containing the cursor. Inside a column or a section the inner block
- * is what the person tapped, never the wrapping column/section/columns/
- * repeat node, so the walk starts at the deepest resolved depth (which is
- * already the block that directly holds the cursor's inline content) and
- * only climbs past a node that is itself not block-level content. For a
- * NodeSelection the selected node is already the answer.
+ * The block the phone's action bar acts on. For a NodeSelection the selected
+ * node is already the answer — and it is the only route a leaf block (a
+ * spacer, a divider, a button) ever arrives by, since a cursor cannot sit
+ * inside one. Otherwise the walk starts at the deepest resolved depth, which
+ * is already the textblock directly holding the cursor's inline content:
+ * inside a column or a section the inner block is what the person tapped,
+ * never the wrapping column/section/columns/repeat node. The `isLeaf` test in
+ * the walk is unreachable today and kept as the correct guard for a future
+ * block-level atom.
  */
 export function selectedBlock(editor: Editor): { node: Node; pos: number; depth: number } | null {
   const { selection, doc } = editor.state;
@@ -101,7 +103,9 @@ export function deleteBlock(editor: Editor): boolean {
   return true;
 }
 
-function siblingIndex(editor: Editor, pos: number): { index: number; count: number } | null {
+/** Where a block sits among its siblings, and how many there are. A resolved
+ *  position always has a parent, so there is no "no answer" case. */
+function siblingIndex(editor: Editor, pos: number): { index: number; count: number } {
   const $pos = editor.state.doc.resolve(pos);
   return { index: $pos.index(), count: $pos.parent.childCount };
 }
@@ -114,8 +118,7 @@ export const blockCommands = {
     isEnabled: (editor: Editor) => {
       const block = selectedBlock(editor);
       if (!block) return false;
-      const sibling = siblingIndex(editor, block.pos);
-      return !!sibling && sibling.index > 0;
+      return siblingIndex(editor, block.pos).index > 0;
     },
     run: (editor: Editor) => {
       moveBlock(editor, 'up');
@@ -129,7 +132,7 @@ export const blockCommands = {
       const block = selectedBlock(editor);
       if (!block) return false;
       const sibling = siblingIndex(editor, block.pos);
-      return !!sibling && sibling.index < sibling.count - 1;
+      return sibling.index < sibling.count - 1;
     },
     run: (editor: Editor) => {
       moveBlock(editor, 'down');

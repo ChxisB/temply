@@ -69,6 +69,10 @@ export function insertBlock(editor: Editor, item: BlockItem): void {
   // command that follows it is adjacent and in the same tick, so the history
   // groups the two into the one undo step. Skipping it would leave the empty
   // paragraph behind when that step is undone.
+  // A parent that rejects a paragraph — a `column` inside `columns` — makes
+  // tr.insert a silent no-op, and the selection below would then land at a
+  // position the anchor never opened.
+  if (!tr.docChanged) return;
   editor.view.dispatch(tr);
 
   const { from } = editor.state.selection;

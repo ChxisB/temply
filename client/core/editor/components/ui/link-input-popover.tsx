@@ -57,7 +57,10 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isOpen = open ?? uncontrolledOpen;
   const setIsOpen = (next: boolean) => {
-    setUncontrolledOpen(next);
+    // Only the uncontrolled path owns this state. Writing it while a consumer
+    // passes `open` leaves a stale `true` behind that would pop the popover
+    // open the moment that consumer stops passing it.
+    if (open === undefined) setUncontrolledOpen(next);
     onOpenChange?.(next);
   };
   const [isEditing, setIsEditing] = useState(!isVariable);
