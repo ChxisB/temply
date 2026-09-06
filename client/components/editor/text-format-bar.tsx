@@ -34,6 +34,35 @@ const SWATCHES = [
 // the click handler be the only thing that ever moves it.
 export const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
 
+/** Stands in for a leaf node when all we are asking is whether the slot before
+ *  the caret holds a space. U+FFFC, the object replacement character. */
+const LEAF_PLACEHOLDER = '\uFFFC';
+
+/**
+ * What the `{}` key does: put the character the variable suggestion listens
+ * for at the caret, so the list opens.
+ *
+ * The suggestion only opens at the start of a word, so a space goes in ahead
+ * of the character when the caret is mid-sentence — exactly what typing it
+ * would need. Reading what is already there needs the placeholder: textBetween
+ * returns '' for a leaf unless it is told what a leaf should read as, and a
+ * variable pill is a leaf, so without it a caret sitting right after a pill
+ * looks like the start of a line and loses the space.
+ *
+ * A selected run is what the variable goes next to, not instead of, so with a
+ * range selected the insert happens at the end of it.
+ */
+export function insertVariableTrigger(editor: Editor, char: string): void {
+  const { $from, $to, empty } = editor.state.selection;
+  const at = empty ? $from : $to;
+  const before =
+    at.parentOffset > 0
+      ? at.parent.textBetween(at.parentOffset - 1, at.parentOffset, undefined, LEAF_PLACEHOLDER)
+      : ' ';
+  const prefix = before && before !== ' ' ? ' ' : '';
+  editor.chain().focus().setTextSelection(at.pos).insertContent(`${prefix}${char}`).run();
+}
+
 function Toggle({ editor, command }: { editor: Editor; command: EditorCommand }) {
   const active = useEditorState({ editor, selector: ({ editor }) => (command.isActive ? command.isActive(editor) : false) });
   return (
@@ -72,28 +101,8 @@ export function TextFormatBar({
   const color = useEditorState({ editor, selector: ({ editor }) => currentTextColor(editor) });
   const { linkUrl, isUrlVariable } = useTextMenuState(editor);
   const [linkOpen, setLinkOpen] = useState(false);
-  // The suggestion only opens on the character it is configured with, and it
-  // only opens at the start of a word — so a space is placed ahead of it when
-  // the caret is mid-sentence, exactly as typing it would need.
   const variableChar = useVariableOptions(editor)?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
-  const insertVariable = () => {
-    const { $from, $to, empty } = editor.state.selection;
-    // A selected run is what the variable goes next to, not instead of, so the
-    // insert happens at the end of it.
-    const at = empty ? $from : $to;
-    // textBetween, not nodeBefore.text: the node before may be a leaf — a
-    // variable pill — which has no text of its own, and reading it as "no
-    // character before" would drop the space the suggestion needs.
-    const before =
-      at.parentOffset > 0 ? at.parent.textBetween(at.parentOffset - 1, at.parentOffset) : ' ';
-    const prefix = before && before !== ' ' ? ' ' : '';
-    editor
-      .chain()
-      .focus()
-      .setTextSelection(at.pos)
-      .insertContent(`${prefix}${variableChar}`)
-      .run();
-  };
+  const insertVariable = () => insertVariableTrigger(editor, variableChar);
 
   /** The same set the desktop bubble menu applies, minus the focus call: the
    *  destination is typed in the panel, and pulling focus back to the canvas
