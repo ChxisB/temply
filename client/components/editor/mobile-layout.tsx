@@ -12,7 +12,9 @@ import {
   HistoryIcon,
   Loader2Icon,
   MoreHorizontalIcon,
+  PencilLineIcon,
   SendIcon,
+  Undo2Icon,
   Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
@@ -22,7 +24,7 @@ import { DeleteEmailDialog } from '~/components/delete-email-dialog';
 import { EmailEditor } from '~/components/email-editor';
 import { ShareLinkPopover } from '~/components/share-link-popover';
 import { Badge } from '~/components/ui/surfaces';
-import { Button } from '~/components/ui/button';
+import { Button, pressable } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -117,6 +119,7 @@ export function MobileEditorLayout({
   // here, not inside the bar, because the header's own Done/Publish switch
   // reads `state` too — both faces have to agree the Aa panel is still "text".
   const state = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor, panelOpen) }) ?? 'idle';
+  const canUndo = useEditorState({ editor, selector: ({ editor }) => editor?.can().undo() ?? false }) ?? false;
 
   // Aa takes the keyboard's place: opening it blurs the editor so the
   // keyboard drops, closing it gives focus back. The SelectionExtension
@@ -246,25 +249,32 @@ export function MobileEditorLayout({
             </Link>
           </Button>
         ) : null}
+        {/* The subject is the way into the details sheet, and a pencil says
+            so: a bare title reads as a label, not a control. */}
         <button
           type="button"
           aria-haspopup="dialog"
           aria-expanded={sheet === 'details'}
+          aria-label={`Edit details: ${model.subject || 'Untitled'}`}
           onClick={() => setSheet('details')}
-          className="min-w-0 flex-1 truncate px-1 text-left text-sm font-medium text-ink"
+          className={cn('flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 text-left text-sm font-medium text-ink hover:bg-hover', pressable)}
         >
-          {model.subject || 'Untitled'}
+          <span className="truncate">{model.subject || 'Untitled'}</span>
+          <PencilLineIcon className="size-3.5 shrink-0 text-muted" aria-hidden />
         </button>
+        {/* Undo without focusing: while typing the keyboard stays where it
+            is (keepFocus), and from a block selection it must not come up. */}
         <Button
           variant="ghost"
           size="icon"
           className={touchTarget}
-          aria-label="Preview"
-          aria-haspopup="dialog"
-          aria-expanded={sheet === 'eye'}
-          onClick={() => setSheet('eye')}
+          aria-label="Undo"
+          disabled={!canUndo}
+          onMouseDown={keepFocus}
+          onPointerDown={keepFocus}
+          onClick={() => editor?.commands.undo()}
         >
-          <EyeIcon />
+          <Undo2Icon />
         </Button>
         {state === 'text' ? (
           // Same race the bar's own Aa and Link buttons guard against: an
@@ -274,18 +284,7 @@ export function MobileEditorLayout({
           <Button variant="primary" className="h-11 px-3" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={done}>
             Done
           </Button>
-        ) : template?.id ? (
-          <Button
-            variant="primary"
-            className="h-11 px-3"
-            disabled={model.isPublishing || (!model.unpublished && model.publishedAt !== null && !model.publishArmed)}
-            onClick={model.handlePublish}
-          >
-            {model.isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
-            {model.publishArmed ? 'Publish anyway' : 'Publish'}
-          </Button>
-        ) : null}
-        {template?.id ? (
+        ) : (
           // Not modal: Share, History and Delete open their own layer from
           // inside this menu, and a modal menu would leave those layers
           // unclickable behind its pointer-event guard.
@@ -298,7 +297,7 @@ export function MobileEditorLayout({
             <DropdownMenuContent align="end" className="w-64">
               {/* The save status fades rather than unmounts, so with nothing
                   to report the row would open as an empty line above a rule. */}
-              {model.unpublished || model.saveStatus !== 'idle' ? (
+              {template?.id && (model.unpublished || model.saveStatus !== 'idle') ? (
                 <>
                   <DropdownMenuLabel>
                     <span className="flex items-center justify-between gap-2">
@@ -309,61 +308,78 @@ export function MobileEditorLayout({
                   <DropdownMenuSeparator />
                 </>
               ) : null}
-              {template.short_code ? (
-                <DropdownMenuItem
-                  className={touchTarget}
-                  onSelect={(event) => {
-                    // The menu stays open so the tick that replaces the copy
-                    // icon is seen; copying is not leaving the menu.
-                    event.preventDefault();
-                    void model.copyShortCode();
-                  }}
-                >
-                  {model.shortCodeCopied ? <CheckIcon /> : <CopyIcon />}
-                  <span className="font-mono text-xs">{template.short_code}</span>
-                </DropdownMenuItem>
-              ) : null}
-              <ShareLinkPopover
-                templateId={template.id}
-                initialToken={template.share_token ?? null}
-                trigger={
-                  <DropdownMenuItem className={touchTarget} onSelect={(event) => event.preventDefault()}>
-                    <Share2Icon />
-                    Share link
-                  </DropdownMenuItem>
-                }
-              />
-              <DropdownMenuItem className={touchTarget} onSelect={() => void model.handleSend()}>
-                <SendIcon />
-                {model.sendArmed ? 'Send anyway' : 'Send test'}
+              <DropdownMenuItem className={touchTarget} onSelect={() => setSheet('eye')}>
+                <EyeIcon />
+                Preview
               </DropdownMenuItem>
-              <VersionHistoryDialog
-                templateId={template.id}
-                hasUnpublishedChanges={model.unpublished}
-                onDiscarded={model.handleDiscarded}
-                trigger={
-                  <DropdownMenuItem className={touchTarget} onSelect={(event) => event.preventDefault()}>
-                    <HistoryIcon />
-                    History
-                  </DropdownMenuItem>
-                }
-              />
-              <DropdownMenuSeparator />
-              <DeleteEmailDialog
-                templateId={template.id}
-                trigger={
+              {template?.id ? (
+                <>
                   <DropdownMenuItem
-                    className={cn(touchTarget, 'text-danger-ink [&_svg]:text-danger-ink')}
-                    onSelect={(event) => event.preventDefault()}
+                    className={touchTarget}
+                    disabled={model.isPublishing || (!model.unpublished && model.publishedAt !== null && !model.publishArmed)}
+                    onSelect={model.handlePublish}
                   >
-                    <Trash2Icon />
-                    Delete
+                    {model.isPublishing ? <Loader2Icon className="animate-spin" /> : <GlobeIcon />}
+                    {model.publishArmed ? 'Publish anyway' : 'Publish'}
                   </DropdownMenuItem>
-                }
-              />
+                  <DropdownMenuSeparator />
+                  {template.short_code ? (
+                    <DropdownMenuItem
+                      className={touchTarget}
+                      onSelect={(event) => {
+                        // The menu stays open so the tick that replaces the copy
+                        // icon is seen; copying is not leaving the menu.
+                        event.preventDefault();
+                        void model.copyShortCode();
+                      }}
+                    >
+                      {model.shortCodeCopied ? <CheckIcon /> : <CopyIcon />}
+                      <span className="font-mono text-xs">{template.short_code}</span>
+                    </DropdownMenuItem>
+                  ) : null}
+                  <ShareLinkPopover
+                    templateId={template.id}
+                    initialToken={template.share_token ?? null}
+                    trigger={
+                      <DropdownMenuItem className={touchTarget} onSelect={(event) => event.preventDefault()}>
+                        <Share2Icon />
+                        Share link
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <DropdownMenuItem className={touchTarget} onSelect={() => void model.handleSend()}>
+                    <SendIcon />
+                    {model.sendArmed ? 'Send anyway' : 'Send test'}
+                  </DropdownMenuItem>
+                  <VersionHistoryDialog
+                    templateId={template.id}
+                    hasUnpublishedChanges={model.unpublished}
+                    onDiscarded={model.handleDiscarded}
+                    trigger={
+                      <DropdownMenuItem className={touchTarget} onSelect={(event) => event.preventDefault()}>
+                        <HistoryIcon />
+                        History
+                      </DropdownMenuItem>
+                    }
+                  />
+                  <DropdownMenuSeparator />
+                  <DeleteEmailDialog
+                    templateId={template.id}
+                    trigger={
+                      <DropdownMenuItem
+                        className={cn(touchTarget, 'text-danger-ink [&_svg]:text-danger-ink')}
+                        onSelect={(event) => event.preventDefault()}
+                      >
+                        <Trash2Icon />
+                        Delete
+                      </DropdownMenuItem>
+                    }
+                  />
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : null}
+        )}
       </header>
 
       {model.draftFound ? (

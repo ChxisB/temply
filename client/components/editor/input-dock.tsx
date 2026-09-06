@@ -66,8 +66,10 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
             </label>
             {view.hint ? <span className="truncate text-2xs text-muted">{view.hint}</span> : null}
           </div>
-          {/* The chip row keeps its height with nothing to show, so the field
-              does not hop when the first suggestion arrives. */}
+          {/* A field that takes suggestions keeps the chip row's height even
+              with none to show, so it does not hop when the first arrives;
+              a plain field (alt text) has no row at all. */}
+          {view.options ? (
           <div className="mt-1 flex h-9 items-center gap-1 overflow-x-auto">
             {chips.map((name) => (
               <button
@@ -80,6 +82,7 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
               </button>
             ))}
           </div>
+          ) : null}
           <div className="mt-1 flex items-center gap-2">
             <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label="Cancel" onClick={onClose}>
               <XIcon />
