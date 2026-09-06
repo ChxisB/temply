@@ -4,10 +4,12 @@ import { EmailEditorSandbox } from '~/components/email-editor-sandbox';
 export default function PlaygroundClient() {
   return (
     <main className="min-h-screen bg-raised">
-      {/* Same gutter as the marketing header above it, so the title sits
-          under the brand mark at every width. */}
-      <div className="mx-auto max-w-5xl px-5 py-8">
-        <div className="mb-6">
+      {/* On a phone the shell brings its own top bar and fills the screen, so
+          the page frame steps out of the way: no gutter, no padding, no page
+          title above it. Above `sm` the title sits under the marketing
+          header's brand mark, so the gutter matches that header's. */}
+      <div className="mx-auto max-w-5xl px-0 py-0 sm:px-5 sm:py-8">
+        <div className="mb-6 hidden sm:block">
           <h1 className="text-xl font-semibold tracking-tight text-ink">
             Email Editor
           </h1>
