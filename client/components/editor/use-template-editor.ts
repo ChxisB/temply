@@ -284,7 +284,9 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     previewKeys.conditions.length > 0 || previewKeys.variables.length > 0;
 
   /** Values for the keys the document has now, keeping anything already typed:
-   *  only keys new to the document are seeded, and a key it has lost drops out. */
+   *  only keys new to the document are seeded, and a key it has lost drops out.
+   *  Empty is a value here, not a gap — a variable cleared on purpose is
+   *  omitted from the payload so the pill passes through — so it survives too. */
   const mergePreviewData = (keys: TemplateDataKeys, current: PreviewData): PreviewData => {
     const seeded = initialPreviewData(keys);
     return {
@@ -292,7 +294,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
         Object.entries(seeded.conditions).map(([key, value]) => [key, current.conditions[key] ?? value]),
       ),
       variables: Object.fromEntries(
-        Object.entries(seeded.variables).map(([key, value]) => [key, current.variables[key] || value]),
+        Object.entries(seeded.variables).map(([key, value]) => [key, current.variables[key] ?? value]),
       ),
     };
   };
