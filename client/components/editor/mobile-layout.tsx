@@ -130,6 +130,16 @@ export function MobileEditorLayout({
     return () => window.clearTimeout(id);
   }, [state, panelOpen, editor]);
 
+  // Arming is the whole explanation on desktop, where it expands the
+  // preflight panel beside the button. Nothing on the phone reads
+  // `preflightExpanded`, so the first Publish tap only relabelled a button
+  // under the thumb and the first "Send test" tap closed the ⋯ menu and said
+  // nothing at all. The sheet is the feedback — its badge already carries the
+  // count, so no toast repeats it.
+  useEffect(() => {
+    if (model.publishArmed || model.sendArmed) setSheet('checks');
+  }, [model.publishArmed, model.sendArmed]);
+
   const closeSheet = () => {
     // The eye sheet drives the model's mode; closing it has to put the
     // canvas back or the screen behind the sheet stays hidden. Read from
