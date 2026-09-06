@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { NodeSelection } from '@tiptap/pm/state';
 import './test/dom';
-import { blockCatalogue, CATALOGUE_GROUPS, insertBlock } from './block-catalogue';
+import { blockCatalogue, CATALOGUE_GROUPS, insertBlock, PHONE_EXCLUDED_TITLES } from './block-catalogue';
 import { makeEditor } from './test/make-editor';
 import { DEFAULT_SLASH_COMMANDS } from './extensions/slash-command/default-slash-commands';
 
@@ -17,9 +17,11 @@ describe('blockCatalogue', () => {
     }
   });
 
-  it('accounts for every slash command without duplication or silent fallback', () => {
+  it('accounts for every slash command but the excluded ones, without duplication or silent fallback', () => {
     const groups = blockCatalogue();
-    const allRealTitles = DEFAULT_SLASH_COMMANDS.flatMap(g => g.commands).map(item => item.title);
+    const allRealTitles = DEFAULT_SLASH_COMMANDS.flatMap(g => g.commands)
+      .map(item => item.title)
+      .filter(title => !PHONE_EXCLUDED_TITLES.has(title));
     const cataloguedTitles = groups.flatMap(g => g.items.map(i => i.title));
 
     // Every real command is catalogued, sorted to verify exact match
@@ -27,6 +29,15 @@ describe('blockCatalogue', () => {
 
     // No duplicates
     expect(cataloguedTitles.length).toBe(new Set(cataloguedTitles).size);
+  });
+
+  it('leaves the excluded blocks out of the sheet but not out of the slash menu', () => {
+    const cataloguedTitles = blockCatalogue().flatMap(g => g.items.map(i => i.title));
+    const slashTitles = DEFAULT_SLASH_COMMANDS.flatMap(g => g.commands).map(i => i.title);
+    for (const title of PHONE_EXCLUDED_TITLES) {
+      expect(slashTitles).toContain(title);
+      expect(cataloguedTitles).not.toContain(title);
+    }
   });
 
   it('prevents title duplication across group definitions', () => {
