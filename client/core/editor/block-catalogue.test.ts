@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test';
-import { blockCatalogue, CATALOGUE_GROUPS } from './block-catalogue';
+import { NodeSelection } from '@tiptap/pm/state';
+import './test/dom';
+import { blockCatalogue, CATALOGUE_GROUPS, insertBlock } from './block-catalogue';
+import { makeEditor } from './test/make-editor';
 import { DEFAULT_SLASH_COMMANDS } from './extensions/slash-command/default-slash-commands';
 
 describe('blockCatalogue', () => {
@@ -37,5 +40,42 @@ describe('blockCatalogue', () => {
     expect(byId.layout).toEqual(expect.arrayContaining(['Columns', 'Section', 'Divider', 'Spacer']));
     expect(byId.logic).toEqual(expect.arrayContaining(['Repeat']));
     expect(byId.components).toEqual(expect.arrayContaining(['Headers', 'Footers']));
+  });
+});
+
+describe('insertBlock', () => {
+  const doc = {
+    type: 'doc',
+    content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'first' }] },
+      { type: 'paragraph', content: [{ type: 'text', text: 'second' }] },
+    ],
+  };
+  const divider = blockCatalogue().flatMap((g) => g.items).find((i) => i.title === 'Divider')!;
+
+  it('inserts below the selected block instead of replacing it', () => {
+    const editor = makeEditor(doc, { touch: true });
+    editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, 0)));
+
+    insertBlock(editor, divider);
+
+    const kinds = editor.state.doc.children.map((node) => node.type.name);
+    expect(kinds[0]).toBe('paragraph');
+    expect(editor.state.doc.child(0).textContent).toBe('first');
+    expect(kinds).toContain('horizontalRule');
+    expect(kinds.indexOf('horizontalRule')).toBe(1);
+    editor.destroy();
+  });
+
+  it('inserts at the cursor when no block is selected', () => {
+    const editor = makeEditor(doc, { touch: true });
+    editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+
+    insertBlock(editor, divider);
+
+    const kinds = editor.state.doc.children.map((node) => node.type.name);
+    expect(editor.state.doc.child(0).textContent).toBe('first');
+    expect(kinds).toContain('horizontalRule');
+    editor.destroy();
   });
 });
