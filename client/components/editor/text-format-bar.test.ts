@@ -6,11 +6,8 @@ import { insertVariableTrigger } from './text-format-bar';
 
 const CHAR = '@';
 
-// A document holding a variable node renders that node through React, and the
-// trigger this inserts opens the suggestion over it. Under happy-dom the pair
-// leaves tiptap's teardown short, and the host div of every editor built after
-// it survives destroy() — on the one document the whole test process shares.
-// So the editors are tracked and their hosts taken out by hand.
+// Every editor a test builds, destroyed on the way out so nothing is left on
+// the one happy-dom document the whole test process shares.
 const editors: Editor[] = [];
 const editorFor = (content: object) => {
   const editor = makeEditor(content as Parameters<typeof makeEditor>[0], { touch: true });
@@ -18,10 +15,7 @@ const editorFor = (content: object) => {
   return editor;
 };
 afterEach(() => {
-  for (const editor of editors.splice(0)) {
-    if (!editor.isDestroyed) editor.destroy();
-    (editor.options.element as HTMLElement | undefined)?.remove();
-  }
+  for (const editor of editors.splice(0)) editor.destroy();
 });
 
 /** The paragraph's content with the pill written out — textContent drops a
