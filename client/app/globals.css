@@ -730,14 +730,3 @@ html [data-sonner-toast][data-type='warning'] [data-icon] {
   color: var(--ds-warn-ink);
 }
 
-/* On a phone the selected block wears its outline so the action bar has a
-   visible subject — a mouse gets the hover-revealed drag handle instead, so
-   this stays out of its way entirely. `--ds-accent` is the same fill the
-   SelectionExtension already uses for the text-selection highlight. */
-@media (pointer: coarse) {
-  .mly-editor .ProseMirror-selectednode {
-    outline: 2px solid var(--ds-accent);
-    outline-offset: 4px;
-    border-radius: 4px;
-  }
-}

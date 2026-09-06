@@ -193,6 +193,25 @@
   background: rgba(35, 131, 226, 0.14);
 }
 
+/* On a phone the selected block wears an outline instead, so the action bar
+   has a visible subject; a mouse gets the hover-revealed drag handle and
+   keeps the wash. One treatment at a time — a blue fill inside an indigo
+   ring is the state every single tap would draw — so the wash goes here,
+   and there is no radius of its own: an outline follows the element's, and
+   a 4px one reshaped sections and buttons while they were selected.
+   `--ds-accent` is the one app token this canvas reads; it is the same
+   value in both app themes, so no dark-mode bleed reaches the email. */
+@media (pointer: coarse) {
+  .mly-editable .ProseMirror-selectednode::after {
+    content: none;
+  }
+
+  .mly-editor .ProseMirror-selectednode {
+    outline: 2px solid var(--ds-accent);
+    outline-offset: 4px;
+  }
+}
+
 #mly-editor .ProseMirror {
   position: relative;
   word-wrap: break-word;
