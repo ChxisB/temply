@@ -283,25 +283,28 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   const hasPreviewData =
     previewKeys.conditions.length > 0 || previewKeys.variables.length > 0;
 
+  /** Values for the keys the document has now, keeping anything already typed:
+   *  only keys new to the document are seeded, and a key it has lost drops out. */
+  const mergePreviewData = (keys: TemplateDataKeys, current: PreviewData): PreviewData => {
+    const seeded = initialPreviewData(keys);
+    return {
+      conditions: Object.fromEntries(
+        Object.entries(seeded.conditions).map(([key, value]) => [key, current.conditions[key] ?? value]),
+      ),
+      variables: Object.fromEntries(
+        Object.entries(seeded.variables).map(([key, value]) => [key, current.variables[key] || value]),
+      ),
+    };
+  };
+
   /** Re-read the document's data keys. Entering a rendered view does this on
    *  the way in, which is the only route the desktop offers; the phone reaches
-   *  the sample-data sheet straight from the bar, so it asks for itself.
-   *  Values already typed survive — only keys new to the document are seeded. */
+   *  the sample-data sheet straight from the bar, so it asks for itself. */
   const refreshPreviewKeys = () => {
     if (!editor) return;
     const keys = collectDataKeys(editor.getJSON());
     setPreviewKeys(keys);
-    setPreviewData((current) => {
-      const seeded = initialPreviewData(keys);
-      return {
-        conditions: Object.fromEntries(
-          Object.entries(seeded.conditions).map(([key, value]) => [key, current.conditions[key] ?? value]),
-        ),
-        variables: Object.fromEntries(
-          Object.entries(seeded.variables).map(([key, value]) => [key, current.variables[key] || value]),
-        ),
-      };
-    });
+    setPreviewData((current) => mergePreviewData(keys, current));
   };
 
   const { mutate: renderPreview, isPending: isPreviewPending } = useMutation({
@@ -351,8 +354,9 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
     const keys = collectDataKeys(editor.getJSON());
     setPreviewKeys(keys);
-    // Seed fresh each time: the document may have gained or lost keys.
-    const data = initialPreviewData(keys);
+    // Merged, not seeded fresh: the phone types its sample values in a sheet
+    // reached before the preview, and re-seeding here would throw them away.
+    const data = mergePreviewData(keys, previewData);
     setPreviewData(data);
 
     const payload = hasKeys(keys) ? toPayload(data) : undefined;
