@@ -119,6 +119,14 @@ export function MobileSheets({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, eyeTab]);
 
+  // The keys are collected on the way into a rendered view. This sheet is not
+  // one, so it asks for them itself — otherwise a variable added since the
+  // last preview leaves the sheet claiming the email has none.
+  useEffect(() => {
+    if (open === 'data') model.refreshPreviewKeys();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   return (
     <>
       <BottomSheet open={open === 'details'} onOpenChange={close} title="Email details">

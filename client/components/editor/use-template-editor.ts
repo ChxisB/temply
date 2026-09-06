@@ -91,6 +91,7 @@ export type TemplateEditorModel = {
   mode: ContentMode; changeMode: (next: ContentMode) => void; pendingMode: ContentMode | null;
   forceDark: boolean; setForceDark: Dispatch<SetStateAction<boolean>>;
   previewKeys: TemplateDataKeys; previewData: PreviewData; setPreviewData: (d: PreviewData) => void;
+  refreshPreviewKeys: () => void;
   hasPreviewData: boolean;
   previewHtml: string; isPreviewPending: boolean; htmlSource: string; textSource: string;
   // preflight
@@ -281,6 +282,27 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   const textSignature = useRef('');
   const hasPreviewData =
     previewKeys.conditions.length > 0 || previewKeys.variables.length > 0;
+
+  /** Re-read the document's data keys. Entering a rendered view does this on
+   *  the way in, which is the only route the desktop offers; the phone reaches
+   *  the sample-data sheet straight from the bar, so it asks for itself.
+   *  Values already typed survive — only keys new to the document are seeded. */
+  const refreshPreviewKeys = () => {
+    if (!editor) return;
+    const keys = collectDataKeys(editor.getJSON());
+    setPreviewKeys(keys);
+    setPreviewData((current) => {
+      const seeded = initialPreviewData(keys);
+      return {
+        conditions: Object.fromEntries(
+          Object.entries(seeded.conditions).map(([key, value]) => [key, current.conditions[key] ?? value]),
+        ),
+        variables: Object.fromEntries(
+          Object.entries(seeded.variables).map(([key, value]) => [key, current.variables[key] || value]),
+        ),
+      };
+    });
+  };
 
   const { mutate: renderPreview, isPending: isPreviewPending } = useMutation({
     mutationFn: async ({ signature, payload, variant }: { signature: string; payload?: Record<string, unknown>; enter?: ContentMode; variant: RenderVariant }) => {
@@ -867,7 +889,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     editor, setEditor, editorContent, editorPaneRef, paneClass, paneHeight,
     imageUploader, pickFromLibrary, pickerOpen, settlePick,
     mode, changeMode, pendingMode, forceDark, setForceDark,
-    previewKeys, previewData, setPreviewData, hasPreviewData,
+    previewKeys, previewData, setPreviewData, hasPreviewData, refreshPreviewKeys,
     previewHtml, isPreviewPending, htmlSource, textSource,
     preflight, preflightExpanded, setPreflightExpanded,
     saveStatus, autosave, unpublished, publishedAt, publishedLabel,
