@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { alignCommands, currentTextColor, PRIMARY_TEXT_COMMANDS, setTextColor, textCommands } from '~/core/editor/commands/text';
 import type { EditorCommand } from '~/core/editor/commands/types';
 import { LinkInputPopover } from '~/core/editor/components/ui/link-input-popover';
+import { DEFAULT_VARIABLE_TRIGGER_CHAR } from '~/core/editor/nodes/variable/variable';
+import { useVariableOptions } from '~/core/editor/utils/node-options';
 import { useTextMenuState } from '~/core/editor/components/text-menu/use-text-menu-state';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
@@ -70,8 +72,15 @@ export function TextFormatBar({
   const color = useEditorState({ editor, selector: ({ editor }) => currentTextColor(editor) });
   const { linkUrl, isUrlVariable } = useTextMenuState(editor);
   const [linkOpen, setLinkOpen] = useState(false);
+  // The suggestion only opens on the character it is configured with, and it
+  // only opens at the start of a word — so a space is placed ahead of it when
+  // the caret is mid-sentence, exactly as typing it would need.
+  const variableChar = useVariableOptions(editor)?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
   const insertVariable = () => {
-    editor.chain().focus().insertContent('{{').run(); // the variable suggestion opens on "{{"
+    const { $from, empty } = editor.state.selection;
+    const before = empty ? $from.nodeBefore?.text?.slice(-1) : undefined;
+    const prefix = before && before !== ' ' ? ' ' : '';
+    editor.chain().focus().insertContent(`${prefix}${variableChar}`).run();
   };
 
   /** The same set the desktop bubble menu applies, minus the focus call: the
