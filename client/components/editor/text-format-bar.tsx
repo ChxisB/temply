@@ -26,7 +26,7 @@ const SWATCHES = [
 // Same trick the desktop bubble menu uses: a mousedown on a button would
 // otherwise steal focus from the ProseMirror before onClick runs. For Bold
 // and its neighbours that just drops the caret and the keyboard; for Aa,
-// Link and Done (here and the header's own Done, in mobile-layout.tsx) —
+// Link and the header's Done (in mobile-layout.tsx) —
 // which mean to blur, deliberately, from inside their own handler — an
 // unprevented mousedown blurs a tick earlier than that, which flips
 // bottomBarState off 'text' before the click fires and can make the tap
@@ -173,7 +173,7 @@ export function TextFormatBar({
       </div>
       {/* The panel replaces the keyboard: the editor is blurred when it opens,
           so the keyboard goes and this takes the space. */}
-      <div className={cn('grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none', panelOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')} aria-hidden={!panelOpen}>
+      <div className={cn('grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none', panelOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')} inert={!panelOpen}>
         <div className="overflow-hidden">
           <div className="space-y-3 border-t border-line px-3 py-3">
             <div className="flex items-center gap-2">

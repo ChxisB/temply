@@ -222,7 +222,7 @@ export function MobileEditorLayout({
           <EyeIcon />
         </Button>
         {state === 'text' ? (
-          // Same race the bar's own Aa/Link/Done buttons guard against: an
+          // Same race the bar's own Aa and Link buttons guard against: an
           // unprevented mousedown here would focus this button and blur the
           // ProseMirror before onClick runs, dropping `state` out of 'text'
           // (and this button with it) a beat before the click fires.
