@@ -61,4 +61,10 @@ export const BlockSelection = Extension.create({
   },
 });
 
+/** Whether this editor runs the touch selection model — the one place a node
+ *  view can ask, since the `touch` prop stops at the extension list. */
+export function isTouchEditor(editor: Editor): boolean {
+  return editor.extensionManager.extensions.some((extension) => extension.name === BlockSelection.name);
+}
+
 export { clearBlockSelection, selectBlockAt, selectedBlock };

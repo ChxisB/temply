@@ -14,12 +14,16 @@ import { TooltipProvider } from '@/editor/components/ui/tooltip';
 import { cn } from '@/editor/utils/classname';
 import { useVariableOptions } from '@/editor/utils/node-options';
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
-import { CSSProperties, useMemo } from 'react';
+import { CSSProperties } from 'react';
+import { isTouchEditor } from '@/editor/plugins/block-selection';
 import {
   allowedButtonBorderRadius,
   AllowedButtonVariant,
   allowedButtonVariant,
+  BUTTON_SIZES,
   ButtonAttributes,
+  buttonSizeOf,
+  type ButtonSize,
 } from './button';
 import { ButtonLabelInput } from './button-label-input';
 
@@ -45,30 +49,7 @@ export function ButtonView(props: NodeViewProps) {
   const opts = useVariableOptions(editor);
   const renderVariable = opts?.renderVariable;
 
-  const sizes = useMemo(
-    () => ({
-      small: {
-        paddingX: 24,
-        paddingY: 6,
-      },
-      medium: {
-        paddingX: 32,
-        paddingY: 10,
-      },
-      large: {
-        paddingX: 40,
-        paddingY: 14,
-      },
-    }),
-    []
-  );
-
-  const size = useMemo(() => {
-    return Object.entries(sizes).find(
-      ([, { paddingX, paddingY }]) =>
-        paddingRight === paddingX && paddingTop === paddingY
-    )?.[0] as 'small' | 'medium' | 'large';
-  }, [paddingRight, paddingTop, sizes]);
+  const size = buttonSizeOf({ paddingTop, paddingRight });
 
   return (
     <NodeViewWrapper
@@ -79,7 +60,10 @@ export function ButtonView(props: NodeViewProps) {
         textAlign: alignment,
       }}
     >
-      <Popover open={props.selected && editor.isEditable}>
+      {/* On touch the block's controls are the Style sheet's, fed by
+          ButtonMenuContent; this popover was laid out for a mouse and is
+          wider than a phone. */}
+      <Popover open={props.selected && editor.isEditable && !isTouchEditor(editor)}>
         <PopoverTrigger asChild>
           <div>
             <button
@@ -204,15 +188,14 @@ export function ButtonView(props: NodeViewProps) {
 
                 <Select
                   label="Size"
-                  value={size}
+                  value={size ?? ''}
                   options={[
                     { value: 'small', label: 'Small' },
                     { value: 'medium', label: 'Medium' },
                     { value: 'large', label: 'Large' },
                   ]}
                   onValueChange={(value) => {
-                    const { paddingX, paddingY } =
-                      sizes[value as 'small' | 'medium' | 'large'];
+                    const { paddingX, paddingY } = BUTTON_SIZES[value as ButtonSize];
 
                     updateAttributes({
                       paddingTop: paddingY,
@@ -300,7 +283,7 @@ type ColorPickerProps = {
   onChange: (color: string) => void;
 };
 
-function BackgroundColorPickerPopup(props: ColorPickerProps) {
+export function BackgroundColorPickerPopup(props: ColorPickerProps) {
   const { color, onChange, variant } = props;
 
   return (
@@ -329,7 +312,7 @@ function BackgroundColorPickerPopup(props: ColorPickerProps) {
   );
 }
 
-function TextColorPickerPopup(props: ColorPickerProps) {
+export function TextColorPickerPopup(props: ColorPickerProps) {
   const { color, onChange } = props;
 
   return (

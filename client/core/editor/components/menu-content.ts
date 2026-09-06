@@ -9,16 +9,13 @@ import { VariableMenuContent } from './variable-menu/variable-menu-content';
 import { RepeatMenuContent } from './repeat-menu/repeat-menu-content';
 import { HTMLMenuContent } from './html-menu/html-menu-content';
 import { InlineImageMenuContent } from './inline-image-menu/inline-image-menu-content';
+import { ButtonMenuContent } from './button-menu/button-menu-content';
 
 /** Which controls a block type has. The Style panel looks up the selected
  *  node's type here; the desktop bubble menus keep their own show/hide logic.
- *
- *  Button has no entry: its URL/style controls live in a Popover owned by
- *  ButtonView's node view (button-view.tsx), bound to that node instance's
- *  own `updateAttributes`/`getPos` rather than the editor-wide pattern every
- *  other menu here follows, so it cannot be lifted to a `{ editor }`-only
- *  component without also reworking the node view. Left for whoever wires
- *  the Style sheet to buttons. */
+ *  Button's desktop controls live in a Popover its node view opens on itself;
+ *  the entry here is a second reading of the same attributes for touch, where
+ *  that popover is never opened. */
 export const MENU_CONTENT: Record<string, ComponentType<{ editor: Editor }>> = {
   image: ImageMenuContent,
   logo: ImageMenuContent,
@@ -30,6 +27,7 @@ export const MENU_CONTENT: Record<string, ComponentType<{ editor: Editor }>> = {
   repeat: RepeatMenuContent,
   htmlCodeBlock: HTMLMenuContent,
   inlineImage: InlineImageMenuContent,
+  button: ButtonMenuContent,
   paragraph: TextBubbleContent,
   heading: TextBubbleContent,
   footer: TextBubbleContent,
