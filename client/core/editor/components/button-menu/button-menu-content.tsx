@@ -27,14 +27,19 @@ import { useEditorState } from '@tiptap/react';
  * it needs only the editor — the shape every other menu here has.
  */
 export function ButtonMenuContent({ editor }: { editor: Editor }) {
-  const attrs = useEditorState({
+  // The node, compared by identity — not its attrs: tiptap's default
+  // equality walks the object and calls valueOf on each value, and a null
+  // colour throws inside it. A new node object arrives on every change.
+  const node = useEditorState({
     editor,
     selector: ({ editor }) => {
       const block = selectedBlock(editor);
-      return block?.node.type.name === 'button' ? (block.node.attrs as ButtonAttributes) : null;
+      return block?.node.type.name === 'button' ? block.node : null;
     },
+    equalityFn: (a, b) => a === b,
   });
-  if (!attrs) return null;
+  if (!node) return null;
+  const attrs = node.attrs as ButtonAttributes;
   // No focus call: the sheet is where the typing happens, and pulling focus
   // back to the canvas would raise the keyboard over it.
   const update = (next: Partial<ButtonAttributes>) => {

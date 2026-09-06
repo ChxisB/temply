@@ -47,4 +47,20 @@ describe('BlockSelection (touch)', () => {
     expect(tap(editor, 7)).toBeFalsy();
     editor.destroy();
   });
+
+  it('a tap on a variable pill selects the pill, not the paragraph around it', () => {
+    const editor = makeEditor(
+      { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi ' }, { type: 'variable', attrs: { id: 'firstName' } }] }] },
+      { touch: true },
+    );
+    const { view } = editor;
+    const pillPos = 4; // after "Hi " inside the paragraph
+    const pill = view.state.doc.nodeAt(pillPos)!;
+    expect(pill.type.name).toBe('variable');
+    const handled = view.someProp('handleClickOn', (f) => f(view, pillPos, pill, pillPos, new MouseEvent('click'), true));
+    expect(handled).toBe(true);
+    expect(selectedBlock(editor)!.node.type.name).toBe('variable');
+    expect(isEditingText(editor)).toBe(false);
+    editor.destroy();
+  });
 });

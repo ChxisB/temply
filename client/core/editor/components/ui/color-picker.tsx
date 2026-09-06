@@ -92,7 +92,7 @@ export function ColorPicker(props: ColorPickerProps) {
       )}
 
       <PopoverContent
-        className="mly:w-full mly:rounded-none mly:border-0 mly:bg-transparent! mly:p-0! mly:shadow-none mly:drop-shadow-md"
+        className="mly:w-max mly:max-w-[calc(100vw-2rem)] mly:rounded-none mly:border-0 mly:bg-transparent! mly:p-0! mly:shadow-none mly:drop-shadow-md"
         sideOffset={8}
       >
         <div className="mly:min-w-[260px] mly:rounded-xl mly:border mly:border-gray-200 mly:bg-panel mly:p-4">

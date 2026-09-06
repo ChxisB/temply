@@ -1,15 +1,19 @@
 'use client';
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { XIcon } from 'lucide-react';
 import { useContext } from 'react';
+import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 import { ShellFrameContext } from './shell-context';
 
 /**
  * A panel that rises from the bottom of a phone screen. Radix Dialog does
  * the focus trap, the escape key and the overlay; the sheet adds the
- * slide, a grab handle and two heights. Half leaves the canvas visible
- * above it so a colour change is seen as it is made.
+ * slide, a close button and two heights. Half leaves the canvas visible
+ * above it so a colour change is seen as it is made. No grab handle: a
+ * handle promises drag-to-dismiss, which is phase 2, and a promise the
+ * sheet cannot keep is worse than a button that can.
  */
 export function BottomSheet({
   open,
@@ -65,12 +69,16 @@ export function BottomSheet({
             height === 'half' ? (frame ? 'max-h-[55%]' : 'max-h-[55dvh]') : frame ? 'max-h-[92%]' : 'max-h-[92dvh]',
           )}
         >
-          <div className="flex shrink-0 justify-center pt-2 pb-1" aria-hidden>
-            <span className="h-1 w-9 rounded-full bg-line" />
+          <div className="flex shrink-0 items-center justify-between gap-2 pt-1 pr-1 pl-4">
+            <DialogPrimitive.Title className={cn('py-2 text-sm font-medium text-ink', !showTitle && 'sr-only')}>
+              {title}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Close asChild>
+              <Button variant="ghost" size="icon" className="ml-auto size-11" aria-label="Close">
+                <XIcon />
+              </Button>
+            </DialogPrimitive.Close>
           </div>
-          <DialogPrimitive.Title className={cn('px-4 pb-2 text-sm font-medium text-ink', !showTitle && 'sr-only')}>
-            {title}
-          </DialogPrimitive.Title>
           {/* 16px in every field: smaller text makes iOS zoom the page on focus. */}
           <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] [&_input]:text-lg [&_textarea]:text-lg">{children}</div>
         </DialogPrimitive.Content>

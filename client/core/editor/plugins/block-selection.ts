@@ -42,6 +42,14 @@ export const BlockSelection = Extension.create({
             if (!direct) return false;
             const state = view.state;
             const current = state.selection instanceof NodeSelection ? state.selection.from : null;
+            // A selectable inline atom — a variable pill — is its own target:
+            // it has controls of its own, and the walk below would land on
+            // the paragraph around it.
+            if (node.isInline && node.isAtom && node.type.spec.selectable !== false) {
+              if (current === nodePos) return true;
+              view.dispatch(state.tr.setSelection(NodeSelection.create(state.doc, nodePos)));
+              return true;
+            }
             const $pos = state.doc.resolve(pos);
             // The block to select is the innermost textblock or leaf at the tap,
             // never a wrapper like a column or section.
