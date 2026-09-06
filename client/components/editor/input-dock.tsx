@@ -1,10 +1,11 @@
 'use client';
 
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, CircleXIcon, XIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { InputDockSpec } from '~/core/editor/components/ui/input-dock';
 import { Button, pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
+import { keepFocus } from './text-format-bar';
 
 /**
  * The field a Link, Show-if or Alt-text control opens on the phone: one
@@ -42,6 +43,10 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
     onClose();
   };
   const trigger = view?.triggerChar ?? '';
+  // Every button here keeps the input's focus (see keepFocus): a tap that
+  // blurred it first would drop the keyboard, shrink the frame and move this
+  // dock before the click is delivered — and iOS delivers the click to
+  // whatever is under the finger by then, which is the canvas.
   const chips = view?.options && (draft === '' || draft.startsWith(trigger)) ? view.options(draft).slice(0, 8) : [];
 
   return (
@@ -76,6 +81,8 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
               <button
                 key={name}
                 type="button"
+                onMouseDown={keepFocus}
+                onPointerDown={keepFocus}
                 onClick={() => commit(`${trigger}${name}`)}
                 className={cn('h-8 shrink-0 rounded-full border border-line bg-surface px-3 font-mono text-xs text-ink hover:bg-hover', pressable)}
               >
@@ -85,24 +92,47 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
           </div>
           ) : null}
           <div className="mt-1 flex items-center gap-2">
-            <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label="Cancel" onClick={onClose}>
+            <Button type="button" variant="ghost" size="icon" className="size-11 shrink-0" aria-label="Cancel" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={onClose}>
               <XIcon />
             </Button>
-            {/* 16px text: anything smaller makes iOS zoom the page on focus. */}
-            <input
-              id="editor-input-dock"
-              ref={inputRef}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder={view.placeholder}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              enterKeyHint="done"
-              className="h-11 min-w-0 flex-1 rounded-md border border-line bg-surface px-3 text-lg text-ink placeholder:text-faint"
-            />
-            <Button type="submit" variant="primary" size="icon" className="size-11 shrink-0" aria-label="Done">
+            <div className="relative min-w-0 flex-1">
+              {/* 16px text: anything smaller makes iOS zoom the page on focus. */}
+              <input
+                id="editor-input-dock"
+                ref={inputRef}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder={view.placeholder}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                enterKeyHint="done"
+                className="h-11 w-full rounded-md border border-line bg-surface pr-11 pl-3 text-lg text-ink placeholder:text-faint"
+              />
+              {/* Emptying the field is how a link, a condition or an alt text
+                  is removed: Done with nothing in it commits "none". The
+                  button fades rather than appears, so the field's edge is
+                  steady while typing. */}
+              <button
+                type="button"
+                aria-label="Clear"
+                onMouseDown={keepFocus}
+                onPointerDown={keepFocus}
+                onClick={() => {
+                  setDraft('');
+                  inputRef.current?.focus();
+                }}
+                className={cn(
+                  'absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition-opacity duration-fast ease-out hover:text-ink motion-reduce:transition-none',
+                  draft ? 'opacity-100' : 'pointer-events-none opacity-0',
+                )}
+                inert={!draft}
+              >
+                <CircleXIcon className="size-5" />
+              </button>
+            </div>
+            <Button type="submit" variant="primary" size="icon" className="size-11 shrink-0" aria-label="Done" onMouseDown={keepFocus} onPointerDown={keepFocus}>
               <CheckIcon />
             </Button>
           </div>
