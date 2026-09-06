@@ -31,16 +31,21 @@ export function PreflightPanel({
   expanded,
   onToggle,
   onSelect,
+  collapsible = true,
 }: {
   issues: PreflightIssue[];
   /** Byte size of the as-sent render, or null while it is stale or unknown. */
   bytes: number | null;
   expanded: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   /** Jumps to the finding's spot in the document. Only issues carrying a
    *  `pos` render as a button — a theme or size finding has nowhere to
    *  jump to, so it stays a plain row. */
   onSelect?: (pos: number) => void;
+  /** False where the findings are already the whole of what is on screen —
+   *  the phone's Checks sheet — so the header is a heading rather than a
+   *  control that advertises itself and does nothing. */
+  collapsible?: boolean;
 }) {
   const shown = issues.length > 0;
   const lastIssues = useRef(issues);
@@ -49,6 +54,7 @@ export function PreflightPanel({
   // Never had a finding: nothing to collapse, so nothing is mounted.
   if (display.length === 0) return null;
 
+  const Header = collapsible ? 'button' : 'div';
   const errors = display.filter((issue) => issue.severity === 'error');
   const warnings = display.filter((issue) => issue.severity === 'warn');
   // Findings arrive in check order; the reader wants blockers first.
@@ -69,12 +75,16 @@ export function PreflightPanel({
         <div className="border-b border-line p-3">
           <div className="item-motion overflow-hidden rounded-lg border border-line bg-raised shadow-sm">
             {/* The header is the disclosure's whole target, so it answers the
-                pointer the way a Row does: a tint, a press, an inset ring. */}
-            <button
-              type="button"
-              aria-expanded={expanded}
-              onClick={onToggle}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-hover active:bg-active focus-visible:-outline-offset-2 motion-reduce:transition-none"
+                pointer the way a Row does: a tint, a press, an inset ring.
+                Where it toggles nothing it is a plain row instead — the
+                summary still belongs above the list. */}
+            <Header
+              {...(collapsible ? { type: 'button' as const, 'aria-expanded': expanded, onClick: onToggle } : {})}
+              className={
+                collapsible
+                  ? 'flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-hover active:bg-active focus-visible:-outline-offset-2 motion-reduce:transition-none'
+                  : 'flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left'
+              }
             >
               <span className="flex min-w-0 items-center gap-2.5">
                 <AlertTriangleIcon
@@ -99,14 +109,16 @@ export function PreflightPanel({
                 {kb != null && (
                   <span className="text-2xs text-muted tabular-nums">~{kb} KB</span>
                 )}
-                <ChevronDownIcon
-                  className={cn(
-                    'size-4 text-muted transition-transform duration-base ease-out motion-reduce:transition-none',
-                    expanded && 'rotate-180',
-                  )}
-                />
+                {collapsible ? (
+                  <ChevronDownIcon
+                    className={cn(
+                      'size-4 text-muted transition-transform duration-base ease-out motion-reduce:transition-none',
+                      expanded && 'rotate-180',
+                    )}
+                  />
+                ) : null}
               </span>
-            </button>
+            </Header>
 
             {/* The 0fr→1fr grid row is the one way to animate to a height the
                 content decides; `overflow-hidden` clips the list while it grows. */}

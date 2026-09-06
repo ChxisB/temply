@@ -190,7 +190,7 @@ export function MobileSheets({
             issues={model.preflight.issues}
             bytes={model.preflight.bytes}
             expanded
-            onToggle={() => {}}
+            collapsible={false}
             onSelect={(pos) => {
               onSelectBlockAt(pos);
               onClose();
