@@ -150,7 +150,11 @@ export function MobileSheets({
 
       <BottomSheet open={open === 'data'} onOpenChange={close} title="Sample data">
         {model.hasPreviewData ? (
-          <PreviewDataPanel keys={model.previewKeys} data={model.previewData} onChange={model.setPreviewData} />
+          /* The panel is the desktop popover's: 28px fields, a 14px checkbox.
+             Grown to the shell's 44px row here, not in the shared panel. */
+          <div className="[&_input[type=checkbox]]:size-6 [&_input[type=text]]:min-h-11 [&_label]:min-h-11">
+            <PreviewDataPanel keys={model.previewKeys} data={model.previewData} onChange={model.setPreviewData} />
+          </div>
         ) : (
           <EmptyState
             icon={BracesIcon}
@@ -204,7 +208,8 @@ export function MobileSheets({
             ))}
           </div>
           {eyeTab !== 'preview' ? (
-            <div className="flex items-center gap-1">
+            /* Copy and download arrive as the desktop's 28px icon squares. */
+            <div className="flex items-center gap-1 [&_button]:size-11">
               <CopyHtmlButton
                 html={eyeTab === 'html' ? model.htmlSource : model.textSource}
                 label={eyeTab === 'html' ? 'Copy HTML' : 'Copy text'}
@@ -222,7 +227,7 @@ export function MobileSheets({
               size="sm"
               aria-pressed={model.forceDark}
               onClick={() => model.setForceDark((v) => !v)}
-              className={cn(model.forceDark && 'bg-accent-wash text-accent-ink hover:bg-accent-wash hover:text-accent-ink')}
+              className={cn('h-11', model.forceDark && 'bg-accent-wash text-accent-ink hover:bg-accent-wash hover:text-accent-ink')}
             >
               Forced dark
             </Button>
