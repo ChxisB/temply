@@ -268,6 +268,10 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
   const showPane = (next: ContentMode) => {
     setPendingMode(null);
+    // A pane that shows is a pane that rendered — cached or fresh — so a
+    // failure left by another view must not sit over it with a Retry that
+    // finds the cache and does nothing.
+    setPreviewError(null);
     setMode(next);
     setSwitching(true);
   };
