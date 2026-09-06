@@ -92,6 +92,9 @@ export function EditorBottomBar({
               <button
                 key={tab.id}
                 type="button"
+                // Without this the badge's bare number joins the label and
+                // the tab is announced as "Checks1".
+                aria-label={tab.id === 'checks' && badge ? `${tab.label}, ${badge.n} ${badge.tone === 'danger' ? (badge.n === 1 ? 'error' : 'errors') : badge.n === 1 ? 'warning' : 'warnings'}` : undefined}
                 onClick={() => onOpenTab(tab.id)}
                 className={cn('relative flex min-w-16 flex-col items-center justify-center gap-0.5 text-2xs text-muted hover:text-ink', pressable)}
                 tabIndex={state === 'idle' ? 0 : -1}
