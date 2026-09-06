@@ -63,7 +63,7 @@ export function insertVariableTrigger(editor: Editor, char: string): void {
   editor.chain().focus().setTextSelection(at.pos).insertContent(`${prefix}${char}`).run();
 }
 
-function Toggle({ editor, command }: { editor: Editor; command: EditorCommand }) {
+function Toggle({ editor, command, focus = true }: { editor: Editor; command: EditorCommand; focus?: boolean }) {
   const active = useEditorState({ editor, selector: ({ editor }) => (command.isActive ? command.isActive(editor) : false) });
   return (
     <button
@@ -73,7 +73,7 @@ function Toggle({ editor, command }: { editor: Editor; command: EditorCommand })
       title={command.label}
       onMouseDown={keepFocus}
       onPointerDown={keepFocus}
-      onClick={() => command.run(editor)}
+      onClick={() => command.run(editor, { focus })}
       className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', active ? 'bg-accent-wash text-accent-ink' : 'text-ink', pressable)}
     >
       <command.icon className="size-5" />
@@ -172,7 +172,9 @@ export function TextFormatBar({
         </button>
       </div>
       {/* The panel replaces the keyboard: the editor is blurred when it opens,
-          so the keyboard goes and this takes the space. */}
+          so the keyboard goes and this takes the space. Every command in here
+          runs with focus: false for the same reason — refocusing would raise
+          the keyboard over the panel it was opened to replace. */}
       <div className={cn('grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none', panelOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')} inert={!panelOpen}>
         <div className="overflow-hidden">
           <div className="space-y-3 border-t border-line px-3 py-3">
@@ -190,7 +192,7 @@ export function TextFormatBar({
                     aria-pressed={color.toLowerCase() === hex}
                     onMouseDown={keepFocus}
                     onPointerDown={keepFocus}
-                    onClick={() => setTextColor(editor, hex)}
+                    onClick={() => setTextColor(editor, hex, { focus: false })}
                     className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', pressable)}
                   >
                     <span
@@ -236,18 +238,18 @@ export function TextFormatBar({
               <span className="w-16 text-xs text-muted">Align</span>
               <div className="flex flex-1 gap-1">
                 {alignCommands.map((c) => (
-                  <Toggle key={c.id} editor={editor} command={c} />
+                  <Toggle key={c.id} editor={editor} command={c} focus={false} />
                 ))}
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-16 text-xs text-muted">More</span>
               <div className="flex flex-1 gap-1">
-                <Toggle editor={editor} command={textCommands.strike} />
-                <Toggle editor={editor} command={textCommands.code} />
-                <Toggle editor={editor} command={textCommands.bulletList} />
-                <Toggle editor={editor} command={textCommands.orderedList} />
-                <Toggle editor={editor} command={textCommands.clearFormatting} />
+                <Toggle editor={editor} command={textCommands.strike} focus={false} />
+                <Toggle editor={editor} command={textCommands.code} focus={false} />
+                <Toggle editor={editor} command={textCommands.bulletList} focus={false} />
+                <Toggle editor={editor} command={textCommands.orderedList} focus={false} />
+                <Toggle editor={editor} command={textCommands.clearFormatting} focus={false} />
               </div>
             </div>
           </div>

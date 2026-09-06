@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import '../test/dom';
 import { makeEditor } from '../test/make-editor';
-import { currentTextColor, setTextColor, textCommands } from './text';
+import { alignCommands, currentTextColor, setTextColor, textCommands } from './text';
 
 describe('text commands', () => {
   it('toggles bold on the selection and reports it active', () => {
@@ -19,6 +19,23 @@ describe('text commands', () => {
     editor.commands.setTextSelection({ from: 1, to: 6 });
     setTextColor(editor, '#dc2626');
     expect(currentTextColor(editor).toLowerCase()).toBe('#dc2626');
+    editor.destroy();
+  });
+
+  it('runs without refocusing when told to', () => {
+    const editor = makeEditor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] });
+    editor.commands.setTextSelection({ from: 1, to: 6 });
+    let focusCalls = 0;
+    const focus = editor.view.focus.bind(editor.view);
+    editor.view.focus = () => { focusCalls++; focus(); };
+
+    alignCommands[1]!.run(editor, { focus: false });
+    setTextColor(editor, '#059669', { focus: false });
+    textCommands.strike.run(editor, { focus: false });
+    expect(focusCalls).toBe(0);
+    expect(editor.isActive({ textAlign: 'center' })).toBe(true);
+    expect(currentTextColor(editor).toLowerCase()).toBe('#059669');
+    expect(textCommands.strike.isActive!(editor)).toBe(true);
     editor.destroy();
   });
 });
