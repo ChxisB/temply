@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import type { BlockItem } from '@/blocks/types';
 import { DEFAULT_SLASH_COMMANDS } from './extensions/slash-command/default-slash-commands';
+import { selectBlockAt } from './commands/block';
 
 export type CatalogueGroup = {
   id: 'content' | 'layout' | 'logic' | 'components';
@@ -33,23 +34,36 @@ export function blockCatalogue(): CatalogueGroup[] {
 }
 
 /**
- * Runs a block's slash command at the current selection. The slash menu
- * passes the range of the typed "/query"; here there is none, so the range
- * is the empty range at the cursor and the command inserts in place.
+ * Runs a block's slash command for the `+` sheet. The slash menu passes the
+ * range of the typed "/query"; here there is none, so the range is the empty
+ * range at a caret we open first.
  *
- * A selected block is an anchor, not a target: the `+` sheet is reached with
- * a block selected, and a command run at a NodeSelection would replace it.
- * An empty paragraph opened below the block gives the command a caret to
- * insert at, which is what every slash command expects.
+ * A selected block is an anchor, not a target: a command run at a
+ * NodeSelection would replace it. With nothing selected the caret is wherever
+ * the last tap left it — a tap on the page margin parks it at the top of the
+ * document — so the block goes to the end instead, which is where an author
+ * adding to an email expects it. Either way an empty paragraph opens at that
+ * spot to give the command the caret every slash command expects, and the new
+ * block ends up selected so the action bar has a subject.
  */
 export function insertBlock(editor: Editor, item: BlockItem): void {
   if (!item.command) return;
-  if (editor.state.selection instanceof NodeSelection) {
-    const end = editor.state.selection.to;
-    const tr = editor.state.tr.insert(end, editor.state.schema.nodes.paragraph.create());
-    tr.setSelection(TextSelection.create(tr.doc, end + 1));
-    editor.view.dispatch(tr);
-  }
+  const { selection, doc } = editor.state;
+  const at = selection instanceof NodeSelection ? selection.to : doc.content.size;
+  const tr = editor.state.tr.insert(at, editor.state.schema.nodes.paragraph.create());
+  tr.setSelection(TextSelection.create(tr.doc, at + 1));
+  // Recorded in history, not skipped: the anchor is a content change, and the
+  // command that follows it is adjacent and in the same tick, so the history
+  // groups the two into the one undo step. Skipping it would leave the empty
+  // paragraph behind when that step is undone.
+  editor.view.dispatch(tr);
+
   const { from } = editor.state.selection;
   item.command({ editor, range: { from, to: from } });
+
+  // The command replaced the anchor paragraph, so the block it made starts
+  // where the anchor did. A command that inserted nothing leaves the caret.
+  if (at < editor.state.doc.content.size && editor.state.doc.resolve(at).nodeAfter) {
+    selectBlockAt(editor, at);
+  }
 }

@@ -60,22 +60,49 @@ describe('insertBlock', () => {
     insertBlock(editor, divider);
 
     const kinds = editor.state.doc.children.map((node) => node.type.name);
-    expect(kinds[0]).toBe('paragraph');
     expect(editor.state.doc.child(0).textContent).toBe('first');
-    expect(kinds).toContain('horizontalRule');
     expect(kinds.indexOf('horizontalRule')).toBe(1);
+    // The anchor paragraph is the command's target, not a leftover beside it.
+    expect(kinds).toEqual(['paragraph', 'horizontalRule', 'paragraph']);
     editor.destroy();
   });
 
-  it('inserts at the cursor when no block is selected', () => {
+  it('inserts at the end when no block is selected', () => {
     const editor = makeEditor(doc, { touch: true });
-    editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+    // What the tap-off-the-page clear leaves: a caret at the top, no block.
+    editor.commands.setTextSelection(1);
 
     insertBlock(editor, divider);
 
     const kinds = editor.state.doc.children.map((node) => node.type.name);
+    // The trailing paragraph is tiptap's own: a rule at the very end of a
+    // document gets one so there is somewhere to type after it.
+    expect(kinds).toEqual(['paragraph', 'paragraph', 'horizontalRule', 'paragraph']);
     expect(editor.state.doc.child(0).textContent).toBe('first');
-    expect(kinds).toContain('horizontalRule');
+    expect(editor.state.doc.child(1).textContent).toBe('second');
+    editor.destroy();
+  });
+
+  it('selects the block it inserted, so the action bar has a subject', () => {
+    const editor = makeEditor(doc, { touch: true });
+    editor.commands.setTextSelection(1);
+
+    insertBlock(editor, divider);
+
+    const selection = editor.state.selection;
+    expect(selection).toBeInstanceOf(NodeSelection);
+    expect((selection as NodeSelection).node.type.name).toBe('horizontalRule');
+    editor.destroy();
+  });
+
+  it('undoes in one step, leaving no anchor paragraph behind', () => {
+    const editor = makeEditor(doc, { touch: true });
+    editor.view.dispatch(editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, 0)));
+
+    insertBlock(editor, divider);
+    editor.commands.undo();
+
+    expect(editor.state.doc.children.map((node) => node.type.name)).toEqual(['paragraph', 'paragraph']);
     editor.destroy();
   });
 });

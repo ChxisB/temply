@@ -104,9 +104,20 @@ export function MobileSheets({
       setSub(item);
       return;
     }
-    if (model.editor) insertBlock(model.editor, item);
+    const editor = model.editor;
+    if (editor) insertBlock(editor, item);
     setSub(null);
     onClose();
+    // A block appended to the end lands below the fold, and the sheet's own
+    // scroll lock swallows any scroll asked for while it is still up — so the
+    // canvas is brought to the new block on the frame after it closes.
+    // Centred, not ProseMirror's own scrollIntoView: that stops as soon as the
+    // block is inside the window, which is under the bottom bar.
+    if (editor) {
+      requestAnimationFrame(() =>
+        editor.view.dom.querySelector('.ProseMirror-selectednode')?.scrollIntoView({ block: 'center' }),
+      );
+    }
   };
 
   // The tab only re-asks for a render on its own click; reopening the sheet
@@ -141,10 +152,12 @@ export function MobileSheets({
 
       <BottomSheet open={open === 'brand'} onOpenChange={close} title="Brand" height="full">
         {/* The brand card comes across from the desktop as it is, controls
-            sized for a mouse — 32px buttons, a 16px slider. They are grown to
-            a thumb's 44px here rather than in the card the desktop draws. */}
+            sized for a mouse — 32px buttons, a 16px slider. The ones it draws
+            inline are grown here; the brand dropdown's rows and the colour
+            popovers render in portals no wrapper class can reach, so they take
+            `touch` instead. */}
         <div className="[&_button]:min-h-11 [&_input]:min-h-11">
-          <TemplateThemePanel theme={model.theme} onChange={model.setTheme} className="border-0 bg-transparent shadow-none" />
+          <TemplateThemePanel theme={model.theme} onChange={model.setTheme} touch className="border-0 bg-transparent shadow-none" />
         </div>
       </BottomSheet>
 
