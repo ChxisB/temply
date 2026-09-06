@@ -205,7 +205,10 @@ export function MobileSheets({
           </div>
           {eyeTab !== 'preview' ? (
             <div className="flex items-center gap-1">
-              <CopyHtmlButton html={eyeTab === 'html' ? model.htmlSource : model.textSource} />
+              <CopyHtmlButton
+                html={eyeTab === 'html' ? model.htmlSource : model.textSource}
+                label={eyeTab === 'html' ? 'Copy HTML' : 'Copy text'}
+              />
               <DownloadButton
                 content={eyeTab === 'html' ? model.htmlSource : model.textSource}
                 filename={`${fileSlug(model.subject)}.${eyeTab === 'html' ? 'html' : 'txt'}`}

@@ -92,16 +92,17 @@ export function DownloadButton({ content, filename, mimeType, label }: { content
   );
 }
 
-/** Copies the HTML already on screen — no second render to fetch it. */
-export function CopyHtmlButton({ html }: { html: string }) {
+/** Copies the source already on screen — no second render to fetch it. The
+ *  label names what is being copied: the same pane serves HTML and text. */
+export function CopyHtmlButton({ html, label = 'Copy HTML' }: { html: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
     <Button
       variant="ghost"
       size="icon-sm"
-      aria-label={copied ? 'Copied' : 'Copy HTML'}
-      title={copied ? 'Copied' : 'Copy HTML'}
+      aria-label={copied ? 'Copied' : label}
+      title={copied ? 'Copied' : label}
       onClick={async () => {
         await navigator.clipboard.writeText(html);
         setCopied(true);
