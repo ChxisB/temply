@@ -210,6 +210,28 @@ Either way:
 - Confirm the facts in `client/lib/legal.ts` (operator, contact address,
   governing law) before the terms and privacy pages go live.
 
+### On a single VM (Oracle Cloud Always Free, or any Ubuntu host)
+
+`deploy/oracle/` is the one-host arrangement, scripted. On a fresh Ubuntu
+24.04 machine with ports 80 and 443 open in the cloud firewall:
+
+```bash
+git clone <this repository> temply && cd temply
+REPO_URL=<this repository> TEMPLY_HOST=<hostname> bash deploy/oracle/setup.sh
+```
+
+`setup.sh` installs Bun and Caddy, opens 80/443 in the VM's own firewall,
+clones the repository to `/opt/temply`, installs two systemd services
+(`temply-server` on loopback :3001, `temply-client` on :9000), a Caddy site
+that terminates HTTPS for `TEMPLY_HOST` and proxies to :9000, and an hourly
+`db:backup` cron. With no domain yet, leave `TEMPLY_HOST` unset and it uses
+`<public-ip>.sslip.io`, a free DNS name that resolves to the IP.
+
+Then fill in `client/.env` and `server/.env` under `/opt/temply` and run
+`bash deploy/oracle/update.sh`, which pulls, installs, builds the client and
+restarts both services — the same command deploys every later commit. Logs:
+`journalctl -u temply-server -u temply-client -f`.
+
 ## Layout worth knowing
 
 ```
