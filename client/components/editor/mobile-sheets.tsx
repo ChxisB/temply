@@ -132,7 +132,12 @@ export function MobileSheets({
       </BottomSheet>
 
       <BottomSheet open={open === 'brand'} onOpenChange={close} title="Brand" height="full">
-        <TemplateThemePanel theme={model.theme} onChange={model.setTheme} className="border-0 bg-transparent shadow-none" />
+        {/* The brand card comes across from the desktop as it is, controls
+            sized for a mouse — 32px buttons, a 16px slider. They are grown to
+            a thumb's 44px here rather than in the card the desktop draws. */}
+        <div className="[&_button]:min-h-11 [&_input]:min-h-11">
+          <TemplateThemePanel theme={model.theme} onChange={model.setTheme} className="border-0 bg-transparent shadow-none" />
+        </div>
       </BottomSheet>
 
       <BottomSheet open={open === 'data'} onOpenChange={close} title="Sample data">
