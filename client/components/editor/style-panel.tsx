@@ -41,9 +41,10 @@ export function StylePanel({ editor, open, onOpenChange }: { editor: Editor | nu
           from the desktop bubble-menu wrapper; the sheet is their only
           ancestor here, so it supplies one. */}
       <TooltipProvider>
-        {/* The menu components carry the editor's own `mly:` styles and
-            were laid out for a horizontal strip; the wrapper lets them wrap. */}
-        <div className="mly-editor flex flex-wrap items-center gap-2 py-1 [&_button]:min-h-11">
+        {/* The menu components carry the editor's own `mly:` styles and were
+            laid out for a horizontal strip a mouse aims at: 28px controls that
+            wrap here and are grown to a thumb's 44px in both directions. */}
+        <div className="mly-editor flex flex-wrap items-center gap-2 py-1 [&_button]:min-h-11 [&_button]:min-w-11 [&_input]:min-h-11">
           {Content && editor ? <Content editor={editor} /> : null}
         </div>
       </TooltipProvider>
