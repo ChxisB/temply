@@ -29,6 +29,16 @@ export function BottomSheet({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="overlay-fade fixed inset-0 z-50 bg-black/40" />
         <DialogPrimitive.Content
+          // The sheets are full of icon-only controls whose only label is a
+          // tooltip, and Radix opens a tooltip on focus — so letting the
+          // dialog focus its first control pops an unanchored tooltip over
+          // the sheet the moment it appears, and an input would raise the
+          // keyboard over the sheet besides. Focus the sheet itself; the
+          // focus trap and Escape are unaffected.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).focus();
+          }}
           className={cn(
             'sheet-up fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-xl border-t border-line bg-raised shadow-xl outline-none',
             // The height transition covers a sheet growing when Advanced opens.
