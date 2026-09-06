@@ -8,6 +8,7 @@ import { Button } from '~/components/ui/button';
 import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { httpDelete, httpPost } from '~/lib/http';
+import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 
 /**
  * A review link for a saved template: anyone holding it sees the draft,
@@ -29,6 +30,7 @@ export function ShareLinkPopover({
 }) {
   const [token, setToken] = useState<string | null>(initialToken);
   const [copied, setCopied] = useState(false);
+  const [, copyText] = useCopyToClipboard();
   // The origin is the browser's; read after mount so the server render
   // never has to guess it.
   const [origin, setOrigin] = useState('');
@@ -52,13 +54,15 @@ export function ShareLinkPopover({
   const url = token ? `${origin}/p/${token}` : '';
 
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
+    // The hook checks the API exists before reaching for it: on a plain-http
+    // LAN origin — how the phone opens this in dev — there is none, and a
+    // bare call would fail with nothing on screen to say so.
+    if (!(await copyText(url))) {
       toast.error('Could not copy the link.');
+      return;
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (

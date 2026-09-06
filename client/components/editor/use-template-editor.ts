@@ -18,6 +18,7 @@ import {
   type Draft,
 } from '~/lib/drafts';
 import { createEditorUploader } from '~/lib/assets';
+import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 import type { Mail } from '~/db/schema';
 import type { ContentMode } from '../content-mode-switch';
 import {
@@ -858,6 +859,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   };
 
   const [shortCodeCopied, setShortCodeCopied] = useState(false);
+  const [, copyText] = useCopyToClipboard();
 
   // The editor canvas only consumes --mly-* variables for buttons and links;
   // everything else (page background, card width, paddings, corners) is
@@ -908,7 +910,13 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
   const copyShortCode = async () => {
     if (!template?.short_code) return;
-    await navigator.clipboard.writeText(template.short_code);
+    // The ⋯ menu is reached from a phone on a plain-http LAN origin, where
+    // navigator.clipboard is undefined; the hook answers false there rather
+    // than rejecting into a tick that never appears.
+    if (!(await copyText(template.short_code))) {
+      toast.error('Could not copy — this browser blocks the clipboard here.');
+      return;
+    }
     setShortCodeCopied(true);
     setTimeout(() => setShortCodeCopied(false), 2000);
   };

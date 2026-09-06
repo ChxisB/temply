@@ -5,8 +5,10 @@ import {
   CopyIcon,
   DownloadIcon,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
+import { toast } from 'sonner';
 import type { AutosaveStatus } from '~/lib/autosave';
+import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 import { cn } from '~/lib/classname';
 import { Button } from './ui/button';
 import { useMediaQuery } from '~/hooks/use-media-query';
@@ -95,7 +97,11 @@ export function DownloadButton({ content, filename, mimeType, label }: { content
 /** Copies the source already on screen — no second render to fetch it. The
  *  label names what is being copied: the same pane serves HTML and text. */
 export function CopyHtmlButton({ html, label = 'Copy HTML' }: { html: string; label?: string }) {
-  const [copied, setCopied] = useState(false);
+  // Through the hook, not navigator.clipboard directly: the phone is opened
+  // over plain http on the LAN, where the API is undefined and a bare call
+  // rejects into nothing. A copy that cannot happen has to say so.
+  const [copiedText, copy] = useCopyToClipboard();
+  const copied = copiedText === html;
 
   return (
     <Button
@@ -104,9 +110,7 @@ export function CopyHtmlButton({ html, label = 'Copy HTML' }: { html: string; la
       aria-label={copied ? 'Copied' : label}
       title={copied ? 'Copied' : label}
       onClick={async () => {
-        await navigator.clipboard.writeText(html);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (!(await copy(html))) toast.error('Could not copy — this browser blocks the clipboard here.');
       }}
       className={cn(copied && 'text-accent-ink hover:text-accent-ink')}
     >
