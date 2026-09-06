@@ -27,7 +27,12 @@ export function selectedBlock(editor: Editor): { node: Node; pos: number; depth:
   return first ? { node: first, pos: 0, depth: 1 } : null;
 }
 
+/** Selects the node starting at `pos`. A position that is not a node start
+ *  has nothing to select and NodeSelection.create throws on it, which would
+ *  surface as a crash inside whatever handler asked — a Checks row, say — so
+ *  it is a no-op instead. */
 export function selectBlockAt(editor: Editor, pos: number): void {
+  if (!editor.state.doc.resolve(pos).nodeAfter) return;
   const tr = editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos));
   editor.view.dispatch(tr);
 }

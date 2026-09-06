@@ -155,6 +155,49 @@ describe('collectContentFindings — images', () => {
   });
 });
 
+describe('collectContentFindings — positions', () => {
+  it('reports a link finding at its paragraph, not at the text run', () => {
+    // A NodeSelection over an inline text run highlights nothing and leaves
+    // the block actions operating inside the paragraph, so the paragraph is
+    // the position the Checks sheet has to jump to.
+    const issues = collectContentFindings(doc(paragraph(linkedText('here', '#'))));
+    expect(issues[0].pos).toBe(0);
+  });
+
+  it('walks past every leaf type with the right footprint', () => {
+    // LEAF_NODE_TYPES is a hand-kept list — the JSON walked here carries no
+    // schema to ask — and a name missing from it sizes that node 2 instead
+    // of 1, shifting every position after it. This document holds one of
+    // each, so the expected positions below are what keeps the list honest.
+    const issues = collectContentFindings(
+      doc(
+        paragraph(linkedText('one', '#')), //           0, size 5
+        { type: 'spacer', attrs: {} }, //               5
+        { type: 'horizontalRule' }, //                  6
+        { type: 'logo', attrs: { alt: 'Us' } }, //      7
+        button(''), //                                  8
+        { type: 'linkCard', attrs: { link: '' } }, //   9
+        image({ alt: '', title: '' }), //              10
+        paragraph(
+          //                                           11, size 5
+          { type: 'variable', attrs: { id: 'name' } },
+          { type: 'hardBreak' },
+          { type: 'inlineImage', attrs: { alt: '', title: '' } },
+        ),
+      ),
+    );
+
+    expect(issues.map((issue) => [issue.id, issue.pos])).toEqual([
+      ['link-0', 0],
+      ['button-1', 8],
+      ['link-card-2', 9],
+      ['image-alt-3', 10],
+      // The inline image reports its paragraph, the block a tap can select.
+      ['image-alt-4', 11],
+    ]);
+  });
+});
+
 describe('unresolvedVariables', () => {
   const keys = { conditions: [], variables: ['firstName', 'orderUrl'], placeholders: {}, where: {}, urlVariables: [] };
 

@@ -14,10 +14,14 @@ export type PreflightIssue = {
   severity: 'error' | 'warn';
   message: string;
   detail?: string;
-  /** The ProseMirror position of the offending node, for a finding that
-   *  comes from walking the document — lets a caller select and scroll to
-   *  it. Absent for findings with no single spot in the document (subject,
-   *  preview text, unresolved variables, size, theme contrast). */
+  /** The ProseMirror position of the block the finding sits in — where a
+   *  selection has to land to reach it, which is what lets a caller select
+   *  and scroll to it. A finding on something inline (a link mark, an
+   *  inline image) reports its enclosing block rather than the run itself:
+   *  a NodeSelection over an inline run highlights nothing and leaves the
+   *  block actions operating inside a paragraph. Absent for findings with
+   *  no single spot in the document (subject, preview text, unresolved
+   *  variables, size, theme contrast). */
   pos?: number;
 };
 
@@ -96,6 +100,10 @@ const LEAF_NODE_TYPES = new Set([
   'horizontalRule',
 ]);
 
+/** Node types that live inside a textblock rather than beside it. Their
+ *  findings are reported at the enclosing block's position — see `pos`. */
+const INLINE_NODE_TYPES = new Set(['text', 'inlineImage', 'variable', 'hardBreak']);
+
 /** A node's footprint in document positions, counted the way ProseMirror
  *  counts it: text by its length, a leaf as one slot, anything else
  *  bracketed by an open and a close token around its children's footprint. */
@@ -140,12 +148,15 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
     });
   };
 
-  // `pos` is this node's own document position — where a selection would
-  // land to reach it. The doc's own children start at 0; every other
-  // node's children start one slot in, past its own open token.
-  const walk = (node: Node | null | undefined, pos: number, isRoot = false) => {
+  // `pos` is this node's own document position; `parentPos` is the position
+  // of the node holding it. The doc's own children start at 0; every other
+  // node's children start one slot in, past its own open token. A finding on
+  // an inline node is reported at `at` — the enclosing block — because that
+  // is the position a selection can actually land on.
+  const walk = (node: Node | null | undefined, pos: number, parentPos: number, isRoot = false) => {
     if (!node || typeof node !== 'object') return;
     const attrs = node.attrs ?? {};
+    const at = node.type && INLINE_NODE_TYPES.has(node.type) ? parentPos : pos;
 
     const linkMark = (node.marks ?? []).find((mark) => mark.type === 'link');
     if (linkMark) {
@@ -162,7 +173,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
               "A link's",
               'A link in the text has no destination yet.',
               node.text,
-              pos,
+              at,
             );
           }
         }
@@ -182,7 +193,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           "A button's",
           'A button has no URL yet.',
           typeof attrs.text === 'string' ? attrs.text : undefined,
-          pos,
+          at,
         );
       }
     }
@@ -198,7 +209,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           "A link card's",
           'A link card has no URL yet.',
           typeof attrs.title === 'string' ? attrs.title : undefined,
-          pos,
+          at,
         );
       }
     }
@@ -208,7 +219,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
       // one that fails to parse is a mistake.
       const externalLink = typeof attrs.externalLink === 'string' ? attrs.externalLink : '';
       if (externalLink.trim() && !attrs.isExternalLinkVariable && urlProblem(externalLink) === 'invalid') {
-        linkIssue('image-link', 'invalid', externalLink, "An image link's", '', undefined, pos);
+        linkIssue('image-link', 'invalid', externalLink, "An image link's", '', undefined, at);
       }
 
       // The renderer falls back alt || title, so either one covers screen
@@ -220,7 +231,7 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
           id: `image-alt-${counter++}`,
           severity: 'warn',
           message: 'An image has no alt text — clients that block images show nothing in its place.',
-          pos,
+          pos: at,
         });
       }
     }
@@ -228,12 +239,12 @@ export function collectContentFindings(content: unknown): PreflightIssue[] {
     const children = node.content ?? [];
     let childPos = isRoot ? 0 : pos + 1;
     for (const child of children) {
-      walk(child, childPos);
+      walk(child, childPos, pos);
       childPos += nodeSize(child);
     }
   };
 
-  walk(content as Node, 0, true);
+  walk(content as Node, 0, 0, true);
   return issues;
 }
 
