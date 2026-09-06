@@ -178,12 +178,13 @@ export function TextFormatBar({
       <div className={cn('grid transition-[grid-template-rows] duration-base ease-out motion-reduce:transition-none', panelOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')} inert={!panelOpen}>
         <div className="overflow-hidden">
           <div className="space-y-3 border-t border-line px-3 py-3">
-            <div className="flex items-center gap-2">
-              <span className="w-16 shrink-0 text-xs text-muted">Colour</span>
-              {/* Seven 44px targets and their gaps need 332px; the row has 294
-                  at 390px, and less on a smaller phone. Wrapping keeps every
-                  swatch at a thumb's size rather than clipping the last one. */}
-              <div className="flex flex-1 flex-wrap gap-1">
+            {/* Labels sit above their rows, not beside them: seven 44px
+                swatches and their gaps need 332px, which a 390px phone has
+                only when the label is not taking 72 of them. Beside the row
+                the last swatch wrapped onto a line of its own. */}
+            <div className="space-y-1">
+              <span className="block text-xs text-muted">Colour</span>
+              <div className="flex flex-wrap gap-1">
                 {SWATCHES.map(({ hex, name }) => (
                   <button
                     key={hex}
@@ -193,7 +194,7 @@ export function TextFormatBar({
                     onMouseDown={keepFocus}
                     onPointerDown={keepFocus}
                     onClick={() => setTextColor(editor, hex, { focus: false })}
-                    className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md hover:bg-hover', pressable)}
+                    className={cn('flex h-11 min-w-11 items-center justify-center rounded-md hover:bg-hover', pressable)}
                   >
                     <span
                       aria-hidden
@@ -204,8 +205,8 @@ export function TextFormatBar({
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-16 shrink-0 text-xs text-muted">Link</span>
+            <div className="space-y-1">
+              <span className="block text-xs text-muted">Link</span>
               {/* The editor's own link popover, so the destination can be a
                   {{variable}} here exactly as it can in the desktop bubble
                   menu — one field, one set of rules. */}
@@ -234,16 +235,16 @@ export function TextFormatBar({
                 ) : null}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-16 text-xs text-muted">Align</span>
+            <div className="space-y-1">
+              <span className="block text-xs text-muted">Align</span>
               <div className="flex flex-1 gap-1">
                 {alignCommands.map((c) => (
                   <Toggle key={c.id} editor={editor} command={c} focus={false} />
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-16 text-xs text-muted">More</span>
+            <div className="space-y-1">
+              <span className="block text-xs text-muted">More</span>
               <div className="flex flex-1 gap-1">
                 <Toggle editor={editor} command={textCommands.strike} focus={false} />
                 <Toggle editor={editor} command={textCommands.code} focus={false} />
