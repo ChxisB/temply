@@ -70,4 +70,15 @@ describe('BlockSelection (touch)', () => {
     expect(isEditingText(editor)).toBe(false);
     editor.destroy();
   });
+
+  it('a tap inside the block being typed in is left to the browser', () => {
+    const editor = makeEditor(doc, { touch: true });
+    tap(editor, 7);                                   // select "two"
+    expect(tap(editor, 7)).toBe(false);               // edit it
+    expect(tapTransaction(editor.state, 8, 5)).toBeNull(); // another tap in "two": caret moves, no reselect
+    expect(isEditingText(editor)).toBe(true);
+    expect(tap(editor, 2)).toBe(true);                // a tap in "one" still selects that block
+    expect(selectedBlock(editor)!.node.textContent).toBe('one');
+    editor.destroy();
+  });
 });

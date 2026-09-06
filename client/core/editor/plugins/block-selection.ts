@@ -38,6 +38,12 @@ export function tapTransaction(state: EditorState, pos: number, inside: number):
   if (targetPos < 0) return null;
   const target = state.doc.nodeAt(targetPos);
   if (!target) return null;
+  // Already typing in this block: the tap is the browser's — it moves the
+  // caret, and a long press selects a word — not a step back to the block.
+  const { selection } = state;
+  if (selection instanceof TextSelection && selection.$from.parent.isTextblock && selection.$from.before(selection.$from.depth) === targetPos) {
+    return null;
+  }
   if (current === targetPos && target.isTextblock) {
     // Second tap: edit here. Placed by hand rather than left to the browser,
     // whose default would first turn the node selection into a DOM range
