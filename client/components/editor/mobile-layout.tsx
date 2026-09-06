@@ -46,6 +46,21 @@ import type { TemplateEditorModel } from './use-template-editor';
  *  is taller than the desktop Button sizes go. */
 const touchTarget = 'h-11 min-w-11';
 
+/** Whatever actually scrolls around an element. The playground lets the window
+ *  scroll, but `/templates/[id]` pins the page to the viewport and gives the
+ *  scrolling to a div inside it — so asking the window to scroll there moves
+ *  nothing at all. Falls back to the window, which is the scroller when no
+ *  ancestor claims it. */
+function scrollParent(el: HTMLElement | null): HTMLElement | Window {
+  for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
+    const overflowY = getComputedStyle(node).overflowY;
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+  }
+  return window;
+}
+
 /**
  * The phone shell: the email fills the screen, everything else rises from
  * the bottom. Three fixed layers — top bar, canvas, bottom bar — and the
@@ -106,7 +121,10 @@ export function MobileEditorLayout({
       const barTop = bar ? bar.getBoundingClientRect().top : window.innerHeight;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (coords.bottom > barTop - 24) {
-        window.scrollBy({ top: coords.bottom - (barTop - 24), behavior: reduceMotion ? 'auto' : 'smooth' });
+        scrollParent(editor.view.dom).scrollBy({
+          top: coords.bottom - (barTop - 24),
+          behavior: reduceMotion ? 'auto' : 'smooth',
+        });
       }
     }, 250); // after the keyboard (or the panel's own grid transition) has settled
     return () => window.clearTimeout(id);
