@@ -39,6 +39,7 @@ import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
 import { bottomBarState, EditorBottomBar, type IdleTab } from './bottom-bar';
 import { MobileSheets, type SheetId } from './mobile-sheets';
 import { StylePanel } from './style-panel';
+import { keepFocus } from './text-format-bar';
 import type { TemplateEditorModel } from './use-template-editor';
 
 /** The bars are thumb country: every control in them is a 44px target, which
@@ -73,13 +74,15 @@ export function MobileEditorLayout({
   // Aa takes the keyboard's place: opening it blurs the editor so the
   // keyboard drops, closing it gives focus back. The SelectionExtension
   // keeps the selection drawn while unfocused, so the panel's own commands
-  // (colour, align, the link row) still land on it.
+  // (colour, align, the link row) still land on it. Read `panelOpen` from
+  // the render closure rather than a state updater — same rule as
+  // `closeSheet` below: blur()/focus() dispatch a transaction, which
+  // notifies useEditorState's subscribers synchronously, and React can run
+  // an updater during another component's render.
   const togglePanel = () => {
-    setPanelOpen((open) => {
-      if (!open) editor?.commands.blur();
-      else editor?.commands.focus();
-      return !open;
-    });
+    if (panelOpen) editor?.commands.focus();
+    else editor?.commands.blur();
+    setPanelOpen(!panelOpen);
   };
 
   // A stale panelOpen would reopen the panel the next time text is entered
@@ -89,8 +92,11 @@ export function MobileEditorLayout({
     if (state !== 'text') setPanelOpen(false);
   }, [state]);
 
-  // The keyboard (or the Aa panel) can cover the block being edited; once
-  // the text face is up, bring the caret back above the bar.
+  // The keyboard (or the Aa panel opening, which grows the bar) can cover
+  // the block being edited; once the text face is up — or the panel toggles
+  // while it already is — bring the caret back above the bar. `panelOpen` is
+  // in the deps because `state` alone stays 'text' across that toggle, but
+  // the bar's height (and so its top edge) still changes underneath it.
   useEffect(() => {
     if (state !== 'text' || !editor) return;
     const id = window.setTimeout(() => {
@@ -98,10 +104,13 @@ export function MobileEditorLayout({
       const coords = editor.view.coordsAtPos(from);
       const bar = document.querySelector<HTMLElement>('[data-editor-bottom-bar]');
       const barTop = bar ? bar.getBoundingClientRect().top : window.innerHeight;
-      if (coords.bottom > barTop - 24) window.scrollBy({ top: coords.bottom - (barTop - 24), behavior: 'smooth' });
-    }, 250); // after the keyboard has settled
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (coords.bottom > barTop - 24) {
+        window.scrollBy({ top: coords.bottom - (barTop - 24), behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }, 250); // after the keyboard (or the panel's own grid transition) has settled
     return () => window.clearTimeout(id);
-  }, [state, editor]);
+  }, [state, panelOpen, editor]);
 
   const closeSheet = () => {
     // The eye sheet drives the model's mode; closing it has to put the
@@ -164,7 +173,11 @@ export function MobileEditorLayout({
           <EyeIcon />
         </Button>
         {state === 'text' ? (
-          <Button variant="primary" className="h-11 px-3" onClick={done}>
+          // Same race the bar's own Aa/Link/Done buttons guard against: an
+          // unprevented mousedown here would focus this button and blur the
+          // ProseMirror before onClick runs, dropping `state` out of 'text'
+          // (and this button with it) a beat before the click fires.
+          <Button variant="primary" className="h-11 px-3" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={done}>
             Done
           </Button>
         ) : template?.id ? (

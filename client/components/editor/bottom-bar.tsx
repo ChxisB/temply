@@ -34,10 +34,11 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
 ];
 
 /**
- * One bar, three faces. The faces swap by opacity inside a fixed-height
- * row so the canvas above never jumps; only the keyboard moves the bar,
- * and it moves with it. The + button rides above the bar in idle and
- * block states and hides while typing, where it would sit on the keys.
+ * One bar, three faces. The faces swap by opacity inside a shared grid row
+ * so switching between idle/block/closed-text never jumps the canvas above;
+ * that row only grows when the Aa panel opens, and the keyboard moves the
+ * whole bar besides. The + button rides above the bar in idle and block
+ * states and hides while typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
   editor, state, checksCount, panelOpen, onTogglePanel, onOpenTab, onAdd, onStyle, onDone,

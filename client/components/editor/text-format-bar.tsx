@@ -24,12 +24,13 @@ const SWATCHES = [
 // Same trick the desktop bubble menu uses: a mousedown on a button would
 // otherwise steal focus from the ProseMirror before onClick runs. For Bold
 // and its neighbours that just drops the caret and the keyboard; for Aa,
-// Link and Done — which mean to blur, deliberately, from inside their own
-// handler — an unprevented mousedown blurs a tick earlier than that, which
-// flips bottomBarState off 'text' before the click fires and can make the
-// tap land on nothing. Either way the fix is the same: keep focus here, and
-// let the click handler be the only thing that ever moves it.
-const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
+// Link and Done (here and the header's own Done, in mobile-layout.tsx) —
+// which mean to blur, deliberately, from inside their own handler — an
+// unprevented mousedown blurs a tick earlier than that, which flips
+// bottomBarState off 'text' before the click fires and can make the tap
+// land on nothing. Either way the fix is the same: keep focus here, and let
+// the click handler be the only thing that ever moves it.
+export const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
 
 function Toggle({ editor, command }: { editor: Editor; command: EditorCommand }) {
   const active = useEditorState({ editor, selector: ({ editor }) => (command.isActive ? command.isActive(editor) : false) });
@@ -126,7 +127,7 @@ export function TextFormatBar({
           // onTogglePanel) — but that has to be the ONLY blur in play.
           // Without this, the browser's own mousedown default focuses this
           // button first, blurring the editor a tick before onClick runs;
-          // bottomBarState then drops to 'block' between the two, the text
+          // bottomBarState then drops to 'idle' between the two, the text
           // face (this button included) goes pointer-events-none, and the
           // tap's click can land on nothing. Keeping focus here just defers
           // the blur to togglePanel's own call, in the same turn as
