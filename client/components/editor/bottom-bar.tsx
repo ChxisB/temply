@@ -41,7 +41,7 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
  * states and hides while typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
-  editor, state, checksCount, panelOpen, onTogglePanel, onOpenTab, onAdd, onStyle, onDone,
+  editor, state, checksCount, panelOpen, onTogglePanel, onOpenTab, onAdd, onStyle,
 }: {
   editor: Editor | null;
   state: BottomBarState;
@@ -53,7 +53,6 @@ export function EditorBottomBar({
   onOpenTab: (tab: IdleTab) => void;
   onAdd: () => void;
   onStyle: () => void;
-  onDone: () => void;
 }) {
   const inset = useKeyboardInset();
   const badge = checksCount.errors > 0 ? { n: checksCount.errors, tone: 'danger' as const } : checksCount.warnings > 0 ? { n: checksCount.warnings, tone: 'warn' as const } : null;
@@ -121,7 +120,7 @@ export function EditorBottomBar({
             className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'text' ? 'opacity-100' : 'pointer-events-none opacity-0')}
             aria-hidden={state !== 'text'}
           >
-            {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} onDone={onDone} /> : null}
+            {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} /> : null}
           </div>
         </div>
       </div>

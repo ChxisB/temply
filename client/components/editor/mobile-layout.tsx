@@ -340,7 +340,6 @@ export function MobileEditorLayout({
         onOpenTab={openTab}
         onAdd={() => setSheet('add')}
         onStyle={() => setStyleOpen(true)}
-        onDone={done}
       />
       <StylePanel editor={editor} open={styleOpen} onOpenChange={setStyleOpen} />
       <MobileSheets

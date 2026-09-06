@@ -85,18 +85,18 @@ function Toggle({ editor, command }: { editor: Editor; command: EditorCommand })
  * The row above the keyboard: the three the thumb reaches for, link, a
  * variable, and Aa. Aa swaps the keyboard for the panel below (the row
  * stays), which is where colour, size, alignment and lists live — they
- * need room a single row cannot give.
+ * need room a single row cannot give. Done is not here: the top bar owns
+ * it, and a second copy both duplicated the action and cost this row the
+ * ~62px it needs to fit a 375px phone.
  */
 export function TextFormatBar({
   editor,
   panelOpen,
   onTogglePanel,
-  onDone,
 }: {
   editor: Editor;
   panelOpen: boolean;
   onTogglePanel: () => void;
-  onDone: () => void;
 }) {
   const color = useEditorState({ editor, selector: ({ editor }) => currentTextColor(editor) });
   const { linkUrl, isUrlVariable } = useTextMenuState(editor);
@@ -170,9 +170,6 @@ export function TextFormatBar({
           <TypeIcon className="size-4" />
           Aa
         </button>
-        <button type="button" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={onDone} className={cn('h-11 rounded-md px-3 text-sm font-medium text-accent-ink', pressable)}>
-          Done
-        </button>
       </div>
       {/* The panel replaces the keyboard: the editor is blurred when it opens,
           so the keyboard goes and this takes the space. */}
@@ -180,8 +177,11 @@ export function TextFormatBar({
         <div className="overflow-hidden">
           <div className="space-y-3 border-t border-line px-3 py-3">
             <div className="flex items-center gap-2">
-              <span className="w-16 text-xs text-muted">Colour</span>
-              <div className="flex flex-1 gap-1">
+              <span className="w-16 shrink-0 text-xs text-muted">Colour</span>
+              {/* Seven 44px targets and their gaps need 332px; the row has 294
+                  at 390px, and less on a smaller phone. Wrapping keeps every
+                  swatch at a thumb's size rather than clipping the last one. */}
+              <div className="flex flex-1 flex-wrap gap-1">
                 {SWATCHES.map(({ hex, name }) => (
                   <button
                     key={hex}
