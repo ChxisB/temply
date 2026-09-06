@@ -2,20 +2,24 @@ import { describe, expect, it } from 'bun:test';
 import '../test/dom';
 import { makeEditor } from '../test/make-editor';
 import { selectedBlock } from '../commands/block';
-import { isEditingText } from './block-selection';
+import { isEditingText, isTouchEditor, tapTransaction } from './block-selection';
 
 const doc = { type: 'doc', content: [
   { type: 'paragraph', content: [{ type: 'text', text: 'one' }] },
   { type: 'paragraph', content: [{ type: 'text', text: 'two' }] },
 ] };
 
-/** Drives the plugin the way the view would: handleClickOn with the clicked node. */
+/** Drives the model the way the view would: a tap resolving to `pos`, inside
+ *  the block that holds it. Returns true when the tap selected a block and
+ *  false when it was left to ProseMirror (a second tap: place the caret). */
 function tap(editor: ReturnType<typeof makeEditor>, pos: number) {
   const { view } = editor;
   const $pos = view.state.doc.resolve(pos);
-  const node = $pos.parent;
-  const nodePos = $pos.before($pos.depth);
-  return view.someProp('handleClickOn', (f) => f(view, pos, node, nodePos, new MouseEvent('click'), true));
+  const inside = $pos.depth > 0 ? $pos.before($pos.depth) : -1;
+  const tap = tapTransaction(view.state, pos, inside);
+  if (!tap) return false;
+  view.dispatch(tap.tr);
+  return !tap.edit;
 }
 
 describe('BlockSelection (touch)', () => {
@@ -24,10 +28,9 @@ describe('BlockSelection (touch)', () => {
     expect(tap(editor, 7)).toBe(true);             // inside "two"
     expect(isEditingText(editor)).toBe(false);
     expect(selectedBlock(editor)!.node.textContent).toBe('two');
-    // someProp never returns the literal `false` a plugin handler returns —
-    // it only surfaces a truthy value or falls through to undefined — so
-    // "not handled" reads as falsy here, same as the no-touch-extension case.
-    expect(tap(editor, 7)).toBeFalsy();            // let ProseMirror place the caret
+    expect(tap(editor, 7)).toBe(false);            // second tap: a caret at the finger
+    expect(editor.state.selection.empty).toBe(true);
+    expect(editor.state.selection.from).toBe(7);
     editor.commands.setTextSelection(7);           // what the default handler does
     expect(isEditingText(editor)).toBe(true);
     editor.destroy();
@@ -42,10 +45,13 @@ describe('BlockSelection (touch)', () => {
     editor.destroy();
   });
 
-  it('does nothing without the touch extension', () => {
-    const editor = makeEditor(doc);
-    expect(tap(editor, 7)).toBeFalsy();
-    editor.destroy();
+  it('is only installed on a touch editor', () => {
+    const mouse = makeEditor(doc);
+    const touch = makeEditor(doc, { touch: true });
+    expect(isTouchEditor(mouse)).toBe(false);
+    expect(isTouchEditor(touch)).toBe(true);
+    mouse.destroy();
+    touch.destroy();
   });
 
   it('a tap on a variable pill selects the pill, not the paragraph around it', () => {
@@ -57,8 +63,9 @@ describe('BlockSelection (touch)', () => {
     const pillPos = 4; // after "Hi " inside the paragraph
     const pill = view.state.doc.nodeAt(pillPos)!;
     expect(pill.type.name).toBe('variable');
-    const handled = view.someProp('handleClickOn', (f) => f(view, pillPos, pill, pillPos, new MouseEvent('click'), true));
-    expect(handled).toBe(true);
+    const tap = tapTransaction(view.state, pillPos, pillPos);
+    expect(tap?.edit).toBe(false);
+    view.dispatch(tap!.tr);
     expect(selectedBlock(editor)!.node.type.name).toBe('variable');
     expect(isEditingText(editor)).toBe(false);
     editor.destroy();
