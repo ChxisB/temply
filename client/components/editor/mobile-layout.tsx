@@ -142,28 +142,54 @@ export function MobileEditorLayout({
     if (state !== 'text') setPanelOpen(false);
   }, [state]);
 
-  // The keyboard (or the Aa panel opening, which grows the bar) can cover
-  // the block being edited; once the text face is up — or the panel toggles
-  // while it already is — bring the caret back above the bar. `panelOpen` is
-  // in the deps because `state` alone stays 'text' across that toggle, but
-  // the bar's height (and so its top edge) still changes underneath it.
+  // Whatever is selected stays in view. Several things cover the bottom of
+  // the canvas — the keyboard (which shrinks the frame), the Aa panel, the
+  // Style sheet, the dock — and each arrives after the selection was made,
+  // so the canvas scrolls to keep the selected block (or the caret, while
+  // typing) above whichever of them is lowest on screen. The sheet and dock
+  // are read at their laid-out position, not their mid-slide one. Runs a
+  // beat late so the keyboard, the sheet and the panel's transition have
+  // settled; the frame height is in the deps because that is what the
+  // keyboard changes.
   useEffect(() => {
-    if (state !== 'text' || !editor) return;
-    const id = window.setTimeout(() => {
-      const { from } = editor.state.selection;
-      const coords = editor.view.coordsAtPos(from);
+    if (!editor) return;
+    if (state === 'idle' && !styleOpen && !dock) return;
+    const keepVisible = () => {
+      const scroller = scrollParent(editor.view.dom);
+      if (!(scroller instanceof HTMLElement)) return;
+      const frameRect = frameEl?.getBoundingClientRect();
+      const inFrame = (el: HTMLElement | null) => (el && frameRect ? frameRect.top + el.offsetTop : null);
+      const dockEl = dock ? frameEl?.querySelector<HTMLElement>('[data-editor-input-dock]') ?? null : null;
+      const sheetEl = styleOpen ? frameEl?.querySelector<HTMLElement>('[role="dialog"]') ?? null : null;
       const bar = document.querySelector<HTMLElement>('[data-editor-bottom-bar]');
-      const barTop = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+      const limit = inFrame(dockEl) ?? inFrame(sheetEl) ?? (bar ? bar.getBoundingClientRect().top : window.innerHeight);
+      const target = (() => {
+        if (state === 'text') {
+          const coords = editor.view.coordsAtPos(editor.state.selection.from);
+          return { top: coords.top, bottom: coords.bottom };
+        }
+        const block = selectedBlock(editor);
+        const dom = block ? editor.view.nodeDOM(block.pos) : null;
+        return dom instanceof HTMLElement ? dom.getBoundingClientRect() : null;
+      })();
+      if (!target) return;
+      const margin = 16;
+      const top = scroller.getBoundingClientRect().top + margin;
+      const bottom = limit - margin;
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (coords.bottom > barTop - 24) {
-        scrollParent(editor.view.dom).scrollBy({
-          top: coords.bottom - (barTop - 24),
-          behavior: reduceMotion ? 'auto' : 'smooth',
-        });
+      const behavior = reduceMotion ? 'auto' : 'smooth';
+      // Too tall for the room left: its top edge is what to show.
+      if (target.top < top || target.bottom - target.top > bottom - top) {
+        scroller.scrollBy({ top: target.top - top, behavior });
+      } else if (target.bottom > bottom) {
+        scroller.scrollBy({ top: target.bottom - bottom, behavior });
       }
-    }, 250); // after the keyboard (or the panel's own grid transition) has settled
-    return () => window.clearTimeout(id);
-  }, [state, panelOpen, editor]);
+    };
+    // Twice: once after the keyboard and the slide have settled, and again
+    // after a sheet whose controls wrap has finished growing into its rows.
+    const ids = [250, 700].map((delay) => window.setTimeout(keepVisible, delay));
+    return () => ids.forEach((id) => window.clearTimeout(id));
+  }, [state, panelOpen, styleOpen, dock, frame?.height, editor, frameEl]);
 
   // Arming is the whole explanation on desktop, where it expands the
   // preflight panel beside the button. Nothing on the phone reads
@@ -411,10 +437,17 @@ export function MobileEditorLayout({
 
       {/* The canvas: the frame's one scroller. `isolate` keeps the document's
           own stacking (a spacer is z-50 in the editor's CSS) inside it, so no
-          block can sit over the bars and take their taps. Padding at the
-          bottom keeps the last block clear of the + button. */}
+          block can sit over the bars and take their taps. The bottom padding
+          is a half sheet's height: the last block has to be able to scroll
+          up clear of the Style sheet (or the dock) that opens over it, and a
+          canvas that ends at its last block has nowhere to go. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-      <div ref={model.editorPaneRef} onClick={clearOnCanvasTap} className={cn('isolate min-h-0 flex-1 overflow-y-auto overscroll-contain pb-24', model.mode !== 'edit' && 'hidden')} style={model.pageStyle}>
+      <div
+        ref={model.editorPaneRef}
+        onClick={clearOnCanvasTap}
+        className={cn('isolate min-h-0 flex-1 overflow-y-auto overscroll-contain', model.mode !== 'edit' && 'hidden')}
+        style={{ ...model.pageStyle, paddingBottom: Math.max(96, Math.round((frame?.height ?? 0) * 0.55)) }}
+      >
         <div style={model.cardStyle}>
           <EmailEditor
             allowedMimeTypes={UPLOAD_MIME_TYPES}

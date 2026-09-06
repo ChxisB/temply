@@ -46,6 +46,7 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
 
   return (
     <div
+      data-editor-input-dock
       className={cn(
         'absolute inset-x-0 bottom-0 z-50 border-t border-line bg-raised shadow-lg transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
         open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
