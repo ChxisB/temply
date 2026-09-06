@@ -17,6 +17,10 @@ const nextConfig = {
   // /_next assets as cross-origin. The tunnel host comes from the same
   // variable the rest of the site reads. Ignored outside development.
   allowedDevOrigins: ['192.168.1.192', ...devOriginFromEnv()],
+  // The dev indicator sits bottom-right, exactly where the phone shell keeps
+  // its + button, and the app is tested on a phone in development. Off,
+  // rather than moved: every other corner holds a control on a 390px screen.
+  devIndicators: false,
   webpack: (config) => {
     config.resolve.alias['~'] = process.cwd();
     config.resolve.alias['@'] = process.cwd() + '/core';
