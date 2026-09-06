@@ -41,7 +41,7 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
  * states and hides while typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
-  editor, state, checksCount, panelOpen, onTogglePanel, onOpenTab, onAdd, onStyle,
+  editor, state, checksCount, panelOpen, onTogglePanel, openTab, onOpenTab, addOpen, onAdd, styleOpen, onStyle,
 }: {
   editor: Editor | null;
   state: BottomBarState;
@@ -50,8 +50,14 @@ export function EditorBottomBar({
   // open before the header face (Done vs. Publish) can agree with the bar's.
   panelOpen: boolean;
   onTogglePanel: () => void;
+  // Which sheet each trigger has open. Every one of them is a disclosure, and
+  // a disclosure that never says it is expanded reads as a plain button to a
+  // screen reader.
+  openTab: IdleTab | null;
   onOpenTab: (tab: IdleTab) => void;
+  addOpen: boolean;
   onAdd: () => void;
+  styleOpen: boolean;
   onStyle: () => void;
 }) {
   const inset = useKeyboardInset();
@@ -65,8 +71,21 @@ export function EditorBottomBar({
           state === 'text' ? 'pointer-events-none translate-y-2 opacity-0' : 'pointer-events-auto opacity-100',
         )}
         style={{ bottom: `calc(100% + 0.75rem)` }}
+        // The faces and the FAB all stay mounted and swap by opacity, so
+        // without this the invisible ones keep their place in the tab order
+        // and their buttons answer the keyboard. `inert` takes them out of
+        // focus and out of the accessibility tree in one prop.
+        inert={state === 'text'}
       >
-        <Button variant="primary" size="icon" aria-label="Add block" className="size-12 rounded-full shadow-lg" onClick={onAdd} tabIndex={state === 'text' ? -1 : 0}>
+        <Button
+          variant="primary"
+          size="icon"
+          aria-label="Add block"
+          aria-haspopup="dialog"
+          aria-expanded={addOpen}
+          className="size-12 rounded-full shadow-lg"
+          onClick={onAdd}
+        >
           <PlusIcon />
         </Button>
       </div>
@@ -81,7 +100,7 @@ export function EditorBottomBar({
           <nav
             aria-label="Editor sections"
             className={cn('flex items-stretch justify-around transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'idle' ? 'opacity-100' : 'pointer-events-none opacity-0')}
-            aria-hidden={state !== 'idle'}
+            inert={state !== 'idle'}
           >
             <span className="flex min-w-16 flex-col items-center justify-center gap-0.5 text-2xs font-medium text-accent-ink">
               <LayoutTemplateIcon className="size-5" />
@@ -94,9 +113,10 @@ export function EditorBottomBar({
                 // Without this the badge's bare number joins the label and
                 // the tab is announced as "Checks1".
                 aria-label={tab.id === 'checks' && badge ? `${tab.label}, ${badge.n} ${badge.tone === 'danger' ? (badge.n === 1 ? 'error' : 'errors') : badge.n === 1 ? 'warning' : 'warnings'}` : undefined}
+                aria-haspopup="dialog"
+                aria-expanded={openTab === tab.id}
                 onClick={() => onOpenTab(tab.id)}
                 className={cn('relative flex min-w-16 flex-col items-center justify-center gap-0.5 text-2xs text-muted hover:text-ink', pressable)}
-                tabIndex={state === 'idle' ? 0 : -1}
               >
                 <tab.icon className="size-5" />
                 {tab.label}
@@ -111,14 +131,14 @@ export function EditorBottomBar({
           {/* block */}
           <div
             className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'block' ? 'opacity-100' : 'pointer-events-none opacity-0')}
-            aria-hidden={state !== 'block'}
+            inert={state !== 'block'}
           >
-            {editor ? <BlockActionBar editor={editor} onStyle={onStyle} /> : null}
+            {editor ? <BlockActionBar editor={editor} styleOpen={styleOpen} onStyle={onStyle} /> : null}
           </div>
           {/* text */}
           <div
             className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'text' ? 'opacity-100' : 'pointer-events-none opacity-0')}
-            aria-hidden={state !== 'text'}
+            inert={state !== 'text'}
           >
             {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} /> : null}
           </div>

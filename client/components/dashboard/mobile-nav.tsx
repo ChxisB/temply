@@ -37,7 +37,12 @@ export function MobileNav() {
 
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="overlay-fade fixed inset-0 z-50 bg-black/40 md:hidden" />
-        <DialogPrimitive.Content className="drawer-left fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden">
+        {/* The drawer is its title and its links; Radix warns on every open
+            unless the missing description is stated rather than implied. */}
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className="drawer-left fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-rail-bg text-rail-ink shadow-xl md:hidden"
+        >
           <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
 
           <div className="flex h-12 items-center justify-between border-b border-rail-line pr-2.5 pl-5">

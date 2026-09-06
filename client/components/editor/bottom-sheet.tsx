@@ -29,6 +29,9 @@ export function BottomSheet({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="overlay-fade fixed inset-0 z-50 bg-black/40" />
         <DialogPrimitive.Content
+          // The sheet's own title is the whole description; Radix warns on
+          // every open unless the absence is stated rather than left implied.
+          aria-describedby={undefined}
           // The sheets are full of icon-only controls whose only label is a
           // tooltip, and Radix opens a tooltip on focus — so letting the
           // dialog focus its first control pops an unanchored tooltip over

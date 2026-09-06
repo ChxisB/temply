@@ -31,7 +31,7 @@ function BarButton({ editor, command }: { editor: Editor; command: EditorCommand
 
 /** Up, down, Style, duplicate, delete for the selected block. Style only
  *  shows for block types that have settings. */
-export function BlockActionBar({ editor, onStyle }: { editor: Editor; onStyle: () => void }) {
+export function BlockActionBar({ editor, styleOpen, onStyle }: { editor: Editor; styleOpen: boolean; onStyle: () => void }) {
   const typeName = useEditorState({ editor, selector: ({ editor }) => selectedBlock(editor)?.node.type.name ?? null });
   const hasStyle = typeName ? menuContentFor(typeName) !== null : false;
   return (
@@ -41,6 +41,8 @@ export function BlockActionBar({ editor, onStyle }: { editor: Editor; onStyle: (
       {hasStyle ? (
         <button
           type="button"
+          aria-haspopup="dialog"
+          aria-expanded={styleOpen}
           onClick={onStyle}
           className={cn('flex h-11 flex-[2] items-center justify-center gap-1.5 rounded-md text-sm font-medium text-ink hover:bg-hover', pressable)}
         >

@@ -178,6 +178,10 @@ export function MobileEditorLayout({
     if (tab === 'data') model.refreshPreviewKeys();
     setSheet(tab);
   };
+  // Which of the bar's four tabs has its own sheet up — the other two sheet
+  // ids ('eye', 'add') belong to triggers elsewhere and expand none of them.
+  const idleTabOpen: IdleTab | null =
+    sheet === 'details' || sheet === 'brand' || sheet === 'data' || sheet === 'checks' ? sheet : null;
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
 
@@ -354,8 +358,11 @@ export function MobileEditorLayout({
         checksCount={{ errors, warnings }}
         panelOpen={panelOpen}
         onTogglePanel={togglePanel}
+        openTab={idleTabOpen}
         onOpenTab={openTab}
+        addOpen={sheet === 'add'}
         onAdd={() => setSheet('add')}
+        styleOpen={styleOpen}
         onStyle={() => setStyleOpen(true)}
       />
       <StylePanel editor={editor} open={styleOpen} onOpenChange={setStyleOpen} />
