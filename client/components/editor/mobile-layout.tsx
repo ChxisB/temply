@@ -35,6 +35,7 @@ import { VersionHistoryDialog } from '~/components/version-history-dialog';
 import { clearBlockSelection, selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
+import { useVisualViewport } from '~/hooks/use-visual-viewport';
 import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
 import { bottomBarState, EditorBottomBar, type IdleTab } from './bottom-bar';
 import { MobileSheets, type SheetId } from './mobile-sheets';
@@ -46,11 +47,9 @@ import type { TemplateEditorModel } from './use-template-editor';
  *  is taller than the desktop Button sizes go. */
 const touchTarget = 'h-11 min-w-11';
 
-/** Whatever actually scrolls around an element. The playground lets the window
- *  scroll, but `/templates/[id]` pins the page to the viewport and gives the
- *  scrolling to a div inside it — so asking the window to scroll there moves
- *  nothing at all. Falls back to the window, which is the scroller when no
- *  ancestor claims it. */
+/** Whatever actually scrolls around an element — the shell's canvas, here,
+ *  but found rather than assumed so the effect below survives a change of
+ *  frame. Falls back to the window, the scroller when no ancestor claims it. */
 function scrollParent(el: HTMLElement | null): HTMLElement | Window {
   for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
     const overflowY = getComputedStyle(node).overflowY;
@@ -76,6 +75,7 @@ export function MobileEditorLayout({
   imageUploads: boolean;
 }) {
   const { editor, template } = model;
+  const frame = useVisualViewport();
   const [sheet, setSheet] = useState<SheetId>(null);
   const [styleOpen, setStyleOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -190,8 +190,18 @@ export function MobileEditorLayout({
   void autofocus;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-1 border-b border-line bg-raised px-2">
+    // An app frame, not a page: the shell is fixed to the visual viewport —
+    // the part of the screen the keyboard has not taken — and only the canvas
+    // inside it scrolls. The bars are ordinary children, so there is nothing
+    // to reposition when the keyboard opens or the page is scrolled under it;
+    // a fixed bar that chased the keyboard with a measured inset painted in
+    // one place and answered taps in another mid-scroll. Until the viewport
+    // is measured the frame is the dynamic viewport height.
+    <div
+      className={cn('fixed inset-x-0 z-30 flex flex-col overflow-hidden bg-surface', frame ? '' : 'top-0 h-dvh')}
+      style={frame ? { top: frame.top, height: frame.height } : undefined}
+    >
+      <header className="z-40 flex h-14 shrink-0 items-center gap-1 border-b border-line bg-raised px-2">
         {/* The playground has no template to go back to, and its visitor may
             not even be signed in — the link only belongs on a saved one. */}
         {template?.id ? (
@@ -335,9 +345,12 @@ export function MobileEditorLayout({
         </div>
       ) : null}
 
-      {/* The canvas. Padding at the bottom keeps the last block clear of the bar. */}
+      {/* The canvas: the frame's one scroller. `isolate` keeps the document's
+          own stacking (a spacer is z-50 in the editor's CSS) inside it, so no
+          block can sit over the bars and take their taps. Padding at the
+          bottom keeps the last block clear of the + button. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-      <div ref={model.editorPaneRef} onClick={clearOnCanvasTap} className={cn('flex-1 pb-28', model.mode !== 'edit' && 'hidden')} style={model.pageStyle}>
+      <div ref={model.editorPaneRef} onClick={clearOnCanvasTap} className={cn('isolate min-h-0 flex-1 overflow-y-auto overscroll-contain pb-24', model.mode !== 'edit' && 'hidden')} style={model.pageStyle}>
         <div style={model.cardStyle}>
           <EmailEditor
             allowedMimeTypes={UPLOAD_MIME_TYPES}

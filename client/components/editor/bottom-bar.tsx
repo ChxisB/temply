@@ -4,7 +4,6 @@ import type { Editor } from '@tiptap/core';
 import { NodeSelection } from '@tiptap/pm/state';
 import { CheckCircle2Icon, LayoutTemplateIcon, MailIcon, PaletteIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react';
 import { Button, pressable } from '~/components/ui/button';
-import { useKeyboardInset } from '~/hooks/use-keyboard-inset';
 import { isEditingText } from '~/core/editor/plugins/block-selection';
 import { cn } from '~/lib/classname';
 import { BlockActionBar } from './block-action-bar';
@@ -36,9 +35,11 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
 /**
  * One bar, three faces. The faces swap by opacity inside a shared grid row
  * so switching between idle/block/closed-text never jumps the canvas above;
- * that row only grows when the Aa panel opens, and the keyboard moves the
- * whole bar besides. The + button rides above the bar in idle and block
- * states and hides while typing, where it would sit on the keys.
+ * that row only grows when the Aa panel opens. The bar is a child of the
+ * shell's frame, which is sized to the visual viewport — so the keyboard
+ * shrinks the frame and the bar sits on the keys without measuring them.
+ * The + button rides above the bar in idle and block states and hides while
+ * typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
   editor, state, checksCount, panelOpen, onTogglePanel, openTab, onOpenTab, addOpen, onAdd, styleOpen, onStyle,
@@ -60,11 +61,10 @@ export function EditorBottomBar({
   styleOpen: boolean;
   onStyle: () => void;
 }) {
-  const inset = useKeyboardInset();
   const badge = checksCount.errors > 0 ? { n: checksCount.errors, tone: 'danger' as const } : checksCount.warnings > 0 ? { n: checksCount.warnings, tone: 'warn' as const } : null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40" style={{ paddingBottom: inset }}>
+    <div className="relative z-40 shrink-0">
       <div
         className={cn(
           'absolute right-4 transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
@@ -90,7 +90,7 @@ export function EditorBottomBar({
         </Button>
       </div>
 
-      <div data-editor-bottom-bar className="pointer-events-auto border-t border-line bg-raised pb-[env(safe-area-inset-bottom)]">
+      <div data-editor-bottom-bar className="border-t border-line bg-raised pb-[env(safe-area-inset-bottom)]">
         {/* A floor, not a fixed height: idle/block/text agree on 56px when
             the text face is just its top row, but the Aa panel grows that
             face taller, and the row this shares has to grow with it or the
