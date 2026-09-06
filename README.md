@@ -156,6 +156,11 @@ Set both webhooks up once:
 
 Test cards: `4242 4242 4242 4242` with any future expiry and any CVC.
 
+Once something else is receiving the webhooks (the VM in *Production*), a
+tunnel that only exists to look at the work from a phone should not move
+them: `bun run dev:public --keep-webhooks` writes the envs and starts the
+dev servers but leaves Stripe and Clerk where they point.
+
 ## Gates
 
 Every one of these before a change is done:

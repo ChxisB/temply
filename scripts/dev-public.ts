@@ -4,6 +4,7 @@
  *   bun run dev:public              # new cloudflared quick tunnel, then `bun run dev`
  *   bun run dev:public --url <url>  # reuse an address (a tunnel already up, or a named one)
  *   bun run dev:public --no-dev     # configure only; the dev servers are already running
+ *   bun run dev:public --keep-webhooks  # leave the Stripe and Clerk endpoints where they are
  *
  * A quick tunnel's address is random and changes every time, and three
  * things have to follow it: NEXT_PUBLIC_APP_URL in both env files (every
@@ -12,6 +13,11 @@
  * endpoint, which only the dashboard can change — the URL to paste is
  * printed. The dev servers start after the envs are written, since neither
  * re-reads .env while running. Ctrl+C stops everything.
+ *
+ * --keep-webhooks is for a tunnel that only exists to look at the work from
+ * a phone while the webhooks belong to another deployment (the VM): the
+ * envs still follow the tunnel, but Stripe is not touched and nothing asks
+ * for the Clerk endpoint to move.
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,6 +26,7 @@ const ENV_FILES = ['client/.env', 'server/.env'];
 const STRIPE_EVENTS = ['checkout.session.completed', 'customer.subscription.updated', 'customer.subscription.deleted'];
 
 const noDev = process.argv.includes('--no-dev');
+const keepWebhooks = process.argv.includes('--keep-webhooks');
 const argUrl = (() => {
   const i = process.argv.indexOf('--url');
   return i >= 0 ? process.argv[i + 1] : undefined;
@@ -87,8 +94,12 @@ console.log(`\nPublic address: ${url}\n`);
 for (const file of ENV_FILES) writeEnv(file, 'NEXT_PUBLIC_APP_URL', url);
 console.log(`NEXT_PUBLIC_APP_URL written to ${ENV_FILES.join(' and ')}`);
 
-await repointStripe(url);
-console.log(`Clerk: set the endpoint in the dashboard to ${url}/api/webhooks/clerk (it cannot be changed through the API)\n`);
+if (keepWebhooks) {
+  console.log('Webhooks left alone (--keep-webhooks): billing and account events keep going to wherever they point now.\n');
+} else {
+  await repointStripe(url);
+  console.log(`Clerk: set the endpoint in the dashboard to ${url}/api/webhooks/clerk (it cannot be changed through the API)\n`);
+}
 
 if (noDev) {
   console.log('Restart the dev servers to pick up the new env (bun --watch and next dev do not re-read .env).');
