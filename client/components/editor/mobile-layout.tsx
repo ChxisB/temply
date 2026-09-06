@@ -170,7 +170,14 @@ export function MobileEditorLayout({
     clearBlockSelection(editor);
   };
 
-  const openTab = (tab: IdleTab) => setSheet(tab);
+  const openTab = (tab: IdleTab) => {
+    // The keys are collected on the way into a rendered view, and the Data
+    // sheet is not one — so they are re-read here, in the same event that
+    // opens it. An effect inside the sheet is a render late, which flashed
+    // "No variables yet" on a template that has them.
+    if (tab === 'data') model.refreshPreviewKeys();
+    setSheet(tab);
+  };
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
 

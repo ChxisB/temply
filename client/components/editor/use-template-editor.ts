@@ -96,6 +96,9 @@ export type TemplateEditorModel = {
   refreshPreviewKeys: () => void;
   hasPreviewData: boolean;
   previewHtml: string; isPreviewPending: boolean; htmlSource: string; textSource: string;
+  /** Why the last render failed, or null. The desktop stays on the edit pane
+   *  and lets the toast carry it; the phone's sheet has to say it in place. */
+  previewError: string | null;
   // preflight
   preflight: { issues: PreflightIssue[]; bytes: number | null };
   preflightExpanded: boolean; setPreflightExpanded: Dispatch<SetStateAction<boolean>>;
@@ -252,6 +255,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   const [htmlSource, setHtmlSource] = useState('');
   // The text alternative — what a client that cannot show markup would print.
   const [textSource, setTextSource] = useState('');
+  const [previewError, setPreviewError] = useState<string | null>(null);
   // Drives the one-shot enter animation. The editor is hidden rather than
   // unmounted, so showing it again fires no transition of its own.
   const [switching, setSwitching] = useState(false);
@@ -312,6 +316,10 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   };
 
   const { mutate: renderPreview, isPending: isPreviewPending } = useMutation({
+    // Clearing on the way in, not on success: a retry has to drop the last
+    // failure before the request lands, or the sheet keeps showing the error
+    // over a pane that is already loading.
+    onMutate: () => setPreviewError(null),
     mutationFn: async ({ signature, payload, variant }: { signature: string; payload?: Record<string, unknown>; enter?: ContentMode; variant: RenderVariant }) => {
       const res = await httpPost<{ html: string }>('/api/v1/emails/preview', {
         content: JSON.stringify(editor?.getJSON()),
@@ -341,7 +349,9 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     },
     onError: (error) => {
       setPendingMode(null);
-      toast.error(error.message || 'Failed to render the preview');
+      const message = error.message || 'Failed to render the preview';
+      setPreviewError(message);
+      toast.error(message);
     },
   });
 
@@ -911,7 +921,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     imageUploader, pickFromLibrary, pickerOpen, settlePick,
     mode, changeMode, pendingMode, forceDark, setForceDark,
     previewKeys, previewData, setPreviewData, hasPreviewData, refreshPreviewKeys,
-    previewHtml, isPreviewPending, htmlSource, textSource,
+    previewHtml, isPreviewPending, htmlSource, textSource, previewError,
     preflight, preflightExpanded, setPreflightExpanded,
     saveStatus, autosave, unpublished, publishedAt, publishedLabel,
     isPublishing, publishArmed, handlePublish, sendArmed, handleSend, handleDiscarded,

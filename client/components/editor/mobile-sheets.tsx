@@ -9,7 +9,7 @@ import { ContentSource } from '~/components/content-source';
 import { PreflightPanel } from '~/components/preflight-panel';
 import { PreviewDataPanel } from '~/components/preview-data-panel';
 import { TemplateThemePanel } from '~/components/template-theme-panel';
-import { EmptyState, lift } from '~/components/ui/surfaces';
+import { EmptyState, ErrorState, lift } from '~/components/ui/surfaces';
 import { blockCatalogue, insertBlock } from '~/core/editor/block-catalogue';
 import type { BlockItem } from '@/blocks/types';
 import { cn } from '~/lib/classname';
@@ -130,14 +130,6 @@ export function MobileSheets({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, eyeTab]);
 
-  // The keys are collected on the way into a rendered view. This sheet is not
-  // one, so it asks for them itself — otherwise a variable added since the
-  // last preview leaves the sheet claiming the email has none.
-  useEffect(() => {
-    if (open === 'data') model.refreshPreviewKeys();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   return (
     <>
       <BottomSheet open={open === 'details'} onOpenChange={close} title="Email details">
@@ -207,10 +199,10 @@ export function MobileSheets({
                 key={tab}
                 role="tab"
                 aria-selected={eyeTab === tab}
-                onClick={() => {
-                  setEyeTab(tab);
-                  model.changeMode(tab);
-                }}
+                // Only the tab changes here: the effect below covers the mode,
+                // and asking for it twice put two renders of the same email on
+                // the wire before the first had answered.
+                onClick={() => setEyeTab(tab)}
                 className={cn(
                   'h-11 rounded-md px-3 text-sm font-medium transition-colors duration-fast ease-out motion-reduce:transition-none',
                   eyeTab === tab ? 'bg-accent-wash text-accent-ink' : 'text-muted hover:bg-hover hover:text-ink',
@@ -247,7 +239,18 @@ export function MobileSheets({
           )}
         </div>
         <div className="-mx-4">
-          {eyeTab === 'preview' ? (
+          {model.previewError ? (
+            /* The desktop stays on the edit pane when a render fails, so the
+               work is still on screen and the toast is enough. The sheet has
+               covered the canvas, so an empty pane would be all there is. */
+            <div className="item-motion px-4 pt-4">
+              <ErrorState
+                title="Could not render this email"
+                description={model.previewError}
+                onRetry={() => model.changeMode(eyeTab)}
+              />
+            </div>
+          ) : eyeTab === 'preview' ? (
             <ContentPreview
               className={cn('min-h-[60dvh]', model.paneClass)}
               html={model.previewHtml}
