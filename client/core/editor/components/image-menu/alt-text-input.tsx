@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { BaseButton } from '../base-button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { useInputDock } from '../ui/input-dock';
 
 /**
  * Alternative text for the image.
@@ -25,6 +26,39 @@ export function AltTextInput({
 
   // Reseed when the selection moves to a different image.
   useEffect(() => setDraft(value), [value]);
+
+  // On the phone the text is typed in the shell's dock, above the keyboard.
+  const dock = useInputDock();
+  if (dock) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <BaseButton
+            variant="ghost"
+            size="sm"
+            type="button"
+            className="mly:h-7! mly:w-7!"
+            data-state={!!value}
+            aria-label="Alt text"
+            onClick={() =>
+              dock.open({
+                label: 'Alt text',
+                value,
+                placeholder: 'What the image shows',
+                hint: 'Shown when a mail client blocks the image',
+                onCommit: (raw) => {
+                  if (raw !== value) onChange(raw);
+                },
+              })
+            }
+          >
+            <TypeIcon className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5] mly:text-midnight-gray" />
+          </BaseButton>
+        </TooltipTrigger>
+        <TooltipContent sideOffset={8}>Alt text</TooltipContent>
+      </Tooltip>
+    );
+  }
 
   return (
     <Popover

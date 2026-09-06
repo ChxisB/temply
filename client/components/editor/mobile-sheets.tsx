@@ -82,11 +82,14 @@ export function MobileSheets({
   open,
   onClose,
   onSelectBlockAt,
+  returnFocus,
 }: {
   model: TemplateEditorModel;
   open: SheetId;
   onClose: () => void;
   onSelectBlockAt: (pos: number) => void;
+  /** Passed through to every sheet; see BottomSheet. */
+  returnFocus?: boolean;
 }) {
   const [eyeTab, setEyeTab] = useState<'preview' | 'html' | 'text'>('preview');
   // Headers/Footers are a group, not a block: tapping one opens its own
@@ -132,7 +135,7 @@ export function MobileSheets({
 
   return (
     <>
-      <BottomSheet open={open === 'details'} onOpenChange={close} title="Email details">
+      <BottomSheet returnFocus={returnFocus} open={open === 'details'} onOpenChange={close} title="Email details">
         <div className="space-y-4 py-1">
           <Field id="m-subject" label="Subject" value={model.subject} onChange={model.setSubject} placeholder="Your email subject" />
           <Field id="m-from" label="From name" value={model.fromName} onChange={model.setFromName} placeholder="Your name or brand" />
@@ -142,7 +145,7 @@ export function MobileSheets({
         </div>
       </BottomSheet>
 
-      <BottomSheet open={open === 'brand'} onOpenChange={close} title="Brand" height="full">
+      <BottomSheet returnFocus={returnFocus} open={open === 'brand'} onOpenChange={close} title="Brand" height="full">
         {/* The brand card comes across from the desktop as it is, controls
             sized for a mouse — 32px buttons, a 16px slider. The ones it draws
             inline are grown here; the brand dropdown's rows and the colour
@@ -153,7 +156,7 @@ export function MobileSheets({
         </div>
       </BottomSheet>
 
-      <BottomSheet open={open === 'data'} onOpenChange={close} title="Sample data">
+      <BottomSheet returnFocus={returnFocus} open={open === 'data'} onOpenChange={close} title="Sample data">
         {model.hasPreviewData ? (
           /* The panel is the desktop popover's: 28px fields, a 14px checkbox.
              Grown to the shell's 44px row here, not in the shared panel. */
@@ -169,7 +172,7 @@ export function MobileSheets({
         )}
       </BottomSheet>
 
-      <BottomSheet open={open === 'checks'} onOpenChange={close} title="Checks">
+      <BottomSheet returnFocus={returnFocus} open={open === 'checks'} onOpenChange={close} title="Checks">
         {model.preflight.issues.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">
             Nothing to fix
@@ -191,7 +194,7 @@ export function MobileSheets({
         )}
       </BottomSheet>
 
-      <BottomSheet open={open === 'eye'} onOpenChange={close} title="Preview" showTitle={false} height="full">
+      <BottomSheet returnFocus={returnFocus} open={open === 'eye'} onOpenChange={close} title="Preview" showTitle={false} height="full">
         <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-2 border-b border-line bg-raised px-4 pb-2">
           <div role="tablist" aria-label="View" className="flex gap-1">
             {(['preview', 'html', 'text'] as const).map((tab) => (

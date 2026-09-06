@@ -8,6 +8,7 @@ import { useVariableOptions } from '../utils/node-options';
 import { processVariables } from '../utils/variable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { InputAutocomplete } from './ui/input-autocomplete';
+import { useInputDock } from './ui/input-dock';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 type ShowPopoverProps = {
@@ -52,6 +53,43 @@ function _ShowPopover(props: ShowPopoverProps) {
 
   // A highlight must not outlive the popover that painted it.
   useEffect(() => () => highlightShowIfKey(editor, null), [editor]);
+
+  // On the phone the key is typed in the shell's dock, above the keyboard,
+  // with the keys already in use offered as chips.
+  const dock = useInputDock();
+  if (dock) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          type="button"
+          aria-label="Show block conditionally"
+          className={cn(
+            'mly:flex mly:size-7 mly:items-center mly:justify-center mly:gap-1 mly:rounded-md mly:px-1.5 mly:text-sm mly:transition-colors mly:hover:bg-soft-gray',
+            showIfKey && 'mly:bg-accent-wash mly:text-accent-ink mly:hover:bg-accent-wash'
+          )}
+          onClick={() => {
+            const inUse = collectDataKeys(editor.getJSON()).conditions;
+            const known = [
+              ...inUse.map((name) => ({ name })),
+              ...(Array.isArray(variables) ? variables.filter((variable) => !inUse.includes(variable.name)) : []),
+            ];
+            dock.open({
+              label: 'Show if',
+              value: showIfKey,
+              placeholder: 'e.g. isMember',
+              hint: 'Shown only when this is true in the data you send',
+              options: (draft) =>
+                processVariables(known, { query: draft, from: 'bubble-variable', editor }).map((variable) => variable.name),
+              onCommit: (raw) => onShowIfKeyValueChange?.(raw.trim()),
+            });
+          }}
+        >
+          <Eye className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
+        </TooltipTrigger>
+        <TooltipContent sideOffset={8}>Show block conditionally</TooltipContent>
+      </Tooltip>
+    );
+  }
 
   return (
     <Popover

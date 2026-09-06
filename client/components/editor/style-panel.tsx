@@ -26,7 +26,7 @@ const LABELS: Record<string, string> = {
 
 /** The selected block's controls — the same components the desktop bubble
  *  menu draws — in a sheet, with the canvas still visible above. */
-export function StylePanel({ editor, open, onOpenChange }: { editor: Editor | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+export function StylePanel({ editor, open, onOpenChange, returnFocus }: { editor: Editor | null; open: boolean; onOpenChange: (o: boolean) => void; returnFocus?: boolean }) {
   // `editor` can still be null while the lazy editor is mounting; the hook
   // itself must run unconditionally, so the null case is threaded through
   // the selector rather than skipping the call.
@@ -36,7 +36,7 @@ export function StylePanel({ editor, open, onOpenChange }: { editor: Editor | nu
   });
   const Content = typeName ? menuContentFor(typeName) : null;
   return (
-    <BottomSheet open={open && !!Content} onOpenChange={onOpenChange} title={typeName ? (LABELS[typeName] ?? typeName) : 'Style'}>
+    <BottomSheet open={open && !!Content} onOpenChange={onOpenChange} returnFocus={returnFocus} title={typeName ? (LABELS[typeName] ?? typeName) : 'Style'}>
       {/* The menu components use Radix Tooltip and normally get their provider
           from the desktop bubble-menu wrapper; the sheet is their only
           ancestor here, so it supplies one. */}

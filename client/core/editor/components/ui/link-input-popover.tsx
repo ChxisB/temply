@@ -2,7 +2,8 @@ import { Link, LinkIcon, LucideIcon, Pencil } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { BaseButton } from '../base-button';
 import { cn } from '@/editor/utils/classname';
-import { useRef, useState, type ComponentPropsWithoutRef } from 'react';
+import { useEffect, useRef, useState, type ComponentPropsWithoutRef } from 'react';
+import { useInputDock } from './input-dock';
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip';
 import { DEFAULT_PLACEHOLDER_URL, useMailyContext } from '@/editor/provider';
 import { InputAutocomplete } from './input-autocomplete';
@@ -109,18 +110,37 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   );
   const statusMessage = showImageStatus ? imageUrlMessage(imageStatus) : null;
 
-  const autoCompleteOptions = useMemo(() => {
-    const withoutTrigger = draft.replace(
-      new RegExp(variableTriggerCharacter, 'g'),
-      ''
-    );
-    return processVariables(variables, {
-      query: withoutTrigger || '',
+  const suggestionsFor = (query: string) =>
+    processVariables(variables, {
+      query: query.replace(new RegExp(variableTriggerCharacter, 'g'), '') || '',
       from: 'bubble-variable',
       editor,
     }).map((variable) => variable.name);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const autoCompleteOptions = useMemo(() => suggestionsFor(draft), [variables, variableTriggerCharacter, draft, editor]);
+
+  // On the phone the field is not a popover but the shell's dock: the sheet
+  // this button sits in closes, the field rises above the keyboard, and the
+  // committed draft comes back through the same `commit`. A controlled
+  // `open` (the format bar's Link key) reaches the dock the same way.
+  const dock = useInputDock();
+  const openDock = () => {
+    dock?.open({
+      label: showImageStatus ? 'Image source' : 'Link',
+      value: seed(),
+      placeholder: placeholderUrl,
+      hint: showImageStatus ? 'A direct link to the image' : `Or a variable: ${variableTriggerCharacter}name`,
+      triggerChar: variableTriggerCharacter,
+      options: suggestionsFor,
+      onCommit: commit,
+    });
+  };
+  useEffect(() => {
+    if (!dock || !open) return;
+    openDock();
+    onOpenChange?.(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variables, variableTriggerCharacter, draft, editor]);
+  }, [dock, open]);
 
   const popoverButton = (
     <PopoverTrigger asChild>
@@ -136,6 +156,30 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       </BaseButton>
     </PopoverTrigger>
   );
+
+  if (dock) {
+    const button = (
+      <BaseButton
+        variant="ghost"
+        size="sm"
+        {...triggerProps}
+        type="button"
+        className={cn('mly:h-7! mly:w-7!', triggerProps?.className)}
+        data-state={!!defaultValue}
+        onClick={openDock}
+      >
+        <Icon className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5] mly:text-midnight-gray" />
+      </BaseButton>
+    );
+    return tooltip ? (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent sideOffset={8}>{tooltip}</TooltipContent>
+      </Tooltip>
+    ) : (
+      button
+    );
+  }
 
   return (
     <Popover

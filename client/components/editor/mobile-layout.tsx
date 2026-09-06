@@ -2,7 +2,7 @@
 
 import type { FocusPosition } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -33,12 +33,15 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { VersionHistoryDialog } from '~/components/version-history-dialog';
 import { clearBlockSelection, selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
+import { InputDockContext, type InputDock as InputDockApi, type InputDockSpec } from '~/core/editor/components/ui/input-dock';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { useVisualViewport } from '~/hooks/use-visual-viewport';
 import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
 import { bottomBarState, EditorBottomBar, type IdleTab } from './bottom-bar';
+import { InputDock } from './input-dock';
 import { MobileSheets, type SheetId } from './mobile-sheets';
+import { ShellFrameContext } from './shell-context';
 import { StylePanel } from './style-panel';
 import { keepFocus } from './text-format-bar';
 import type { TemplateEditorModel } from './use-template-editor';
@@ -76,9 +79,38 @@ export function MobileEditorLayout({
 }) {
   const { editor, template } = model;
   const frame = useVisualViewport();
+  // The frame element itself, as state so the sheets (rendered into it) see
+  // it once it exists rather than the null a ref holds on first render.
+  const [frameEl, setFrameEl] = useState<HTMLElement | null>(null);
   const [sheet, setSheet] = useState<SheetId>(null);
   const [styleOpen, setStyleOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+
+  // The input dock: a Link, Show-if or Alt-text control in a sheet hands its
+  // field here, the sheet closes so the keyboard has nothing to cover, and
+  // whichever sheet was open comes back when the field is done with.
+  const [dock, setDock] = useState<InputDockSpec | null>(null);
+  const resumeAfterDock = useRef<{ sheet: SheetId; styleOpen: boolean } | null>(null);
+  const inputDock = useMemo<InputDockApi>(
+    () => ({
+      open: (spec) => {
+        resumeAfterDock.current = { sheet, styleOpen };
+        setSheet(null);
+        setStyleOpen(false);
+        setDock(spec);
+      },
+    }),
+    [sheet, styleOpen],
+  );
+  const closeDock = () => {
+    setDock(null);
+    const resume = resumeAfterDock.current;
+    resumeAfterDock.current = null;
+    if (resume) {
+      setSheet(resume.sheet);
+      setStyleOpen(resume.styleOpen);
+    }
+  };
 
   // The bar's face follows the selection; useEditorState re-renders on every
   // transaction, which is exactly when the face can change. panelOpen lives
@@ -190,14 +222,17 @@ export function MobileEditorLayout({
   void autofocus;
 
   return (
-    // An app frame, not a page: the shell is fixed to the visual viewport —
+    <InputDockContext.Provider value={inputDock}>
+    <ShellFrameContext.Provider value={frameEl}>
+    {/* An app frame, not a page: the shell is fixed to the visual viewport —
     // the part of the screen the keyboard has not taken — and only the canvas
     // inside it scrolls. The bars are ordinary children, so there is nothing
     // to reposition when the keyboard opens or the page is scrolled under it;
     // a fixed bar that chased the keyboard with a measured inset painted in
     // one place and answered taps in another mid-scroll. Until the viewport
-    // is measured the frame is the dynamic viewport height.
+    // is measured the frame is the dynamic viewport height. */}
     <div
+      ref={setFrameEl}
       className={cn('fixed inset-x-0 z-30 flex flex-col overflow-hidden bg-surface', frame ? '' : 'top-0 h-dvh')}
       style={frame ? { top: frame.top, height: frame.height } : undefined}
     >
@@ -378,11 +413,13 @@ export function MobileEditorLayout({
         styleOpen={styleOpen}
         onStyle={() => setStyleOpen(true)}
       />
-      <StylePanel editor={editor} open={styleOpen} onOpenChange={setStyleOpen} />
+      <InputDock spec={dock} onClose={closeDock} />
+      <StylePanel editor={editor} open={styleOpen} onOpenChange={setStyleOpen} returnFocus={!dock} />
       <MobileSheets
         model={model}
         open={sheet}
         onClose={closeSheet}
+        returnFocus={!dock}
         onSelectBlockAt={(pos) => {
           if (!editor) return;
           selectBlockAt(editor, pos);
@@ -402,5 +439,7 @@ export function MobileEditorLayout({
         />
       )}
     </div>
+    </ShellFrameContext.Provider>
+    </InputDockContext.Provider>
   );
 }
