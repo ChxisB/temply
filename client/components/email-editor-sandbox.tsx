@@ -5,12 +5,13 @@ import {
   CopyIcon,
   DownloadIcon,
 } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useSyncExternalStore } from 'react';
 import { toast } from 'sonner';
 import type { AutosaveStatus } from '~/lib/autosave';
 import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 import { cn } from '~/lib/classname';
 import { Button } from './ui/button';
+import { PageLoading } from './ui/page-loading';
 import { useMediaQuery } from '~/hooks/use-media-query';
 import { DesktopEditorLayout } from './editor/desktop-layout';
 import { MobileEditorLayout } from './editor/mobile-layout';
@@ -119,6 +120,12 @@ export function CopyHtmlButton({ html, label = 'Copy HTML' }: { html: string; la
   );
 }
 
+/** False on the server and during hydration, true from the first client
+ *  render after it. */
+function useHydrated(): boolean {
+  return useSyncExternalStore(() => () => {}, () => true, () => false);
+}
+
 export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   const { imageUploads = true, autofocus } = props;
   const model = useTemplateEditor(props);
@@ -126,6 +133,7 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // desktop, so the markup agrees during hydration; a phone switches on its
   // first effect, before the editor has mounted.
   const phone = useMediaQuery('(max-width: 639px)');
+  const hydrated = useHydrated();
   // The two shells are different trees, so crossing 640px unmounts one editor
   // and mounts another from `model.editorContent` — which the autosave only
   // refreshes on a 1000 ms debounce. Rotating a phone within a second of the
@@ -138,9 +146,24 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
     lastShell.current = phone;
     model.flushContent();
   }
-  return phone ? (
-    <MobileEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
-  ) : (
-    <DesktopEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
+  if (phone) {
+    return <MobileEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />;
+  }
+  // Until the client has hydrated, only CSS knows the width: the server's
+  // desktop markup is hidden below `sm` and the page's wait state shows in
+  // its place, so a phone never paints the desktop page while its JavaScript
+  // is still on the way. The wrapper stays after hydration, as `contents`,
+  // so lifting the class does not remount the desktop shell.
+  return (
+    <>
+      <div className={hydrated ? 'contents' : 'contents max-sm:hidden'}>
+        <DesktopEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
+      </div>
+      {hydrated ? null : (
+        <div className="sm:hidden">
+          <PageLoading label="Loading the editor…" />
+        </div>
+      )}
+    </>
   );
 }
