@@ -8,6 +8,7 @@ import { BrandMark } from '~/components/brand-mark';
 import { ThemeToggle } from '~/components/theme-toggle';
 import { UserMenu } from '~/components/dashboard/user-menu';
 import { Button } from '~/components/ui/button';
+import { cn } from '~/lib/classname';
 
 // The landing page sections these point at. Smooth scrolling and the offset that
 // keeps a heading clear of this sticky bar are both handled in globals.css.
@@ -66,9 +67,19 @@ export function Header() {
   // first rather than scroll to nothing.
   const onLanding = pathname === '/';
   const active = useActiveSection(onLanding);
+  // The playground's phone shell brings its own sticky top bar at z-40, and
+  // this one is z-50 on the same edge — so once the page scrolled it painted
+  // over the editor's subject, preview and Publish. Above `sm` the editor
+  // sits inside the marketing page as usual and the header stays.
+  const onEditor = pathname === '/playground';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-surface/85 backdrop-blur-md">
+    <header
+      className={cn(
+        'sticky top-0 z-50 border-b border-line bg-surface/85 backdrop-blur-md',
+        onEditor && 'hidden sm:block',
+      )}
+    >
       <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-5">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
