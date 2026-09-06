@@ -77,10 +77,22 @@ export function TextFormatBar({
   // the caret is mid-sentence, exactly as typing it would need.
   const variableChar = useVariableOptions(editor)?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
   const insertVariable = () => {
-    const { $from, empty } = editor.state.selection;
-    const before = empty ? $from.nodeBefore?.text?.slice(-1) : undefined;
+    const { $from, $to, empty } = editor.state.selection;
+    // A selected run is what the variable goes next to, not instead of, so the
+    // insert happens at the end of it.
+    const at = empty ? $from : $to;
+    // textBetween, not nodeBefore.text: the node before may be a leaf — a
+    // variable pill — which has no text of its own, and reading it as "no
+    // character before" would drop the space the suggestion needs.
+    const before =
+      at.parentOffset > 0 ? at.parent.textBetween(at.parentOffset - 1, at.parentOffset) : ' ';
     const prefix = before && before !== ' ' ? ' ' : '';
-    editor.chain().focus().insertContent(`${prefix}${variableChar}`).run();
+    editor
+      .chain()
+      .focus()
+      .setTextSelection(at.pos)
+      .insertContent(`${prefix}${variableChar}`)
+      .run();
   };
 
   /** The same set the desktop bubble menu applies, minus the focus call: the
