@@ -82,6 +82,8 @@ export type TemplateEditorModel = {
   // the brief's `| null` doesn't match what the hook ever produces, and
   // EmailEditor's defaultContent prop (Mail['content']) rejects null.
   editorContent: Mail['content'];
+  /** Pulls the live document into `editorContent` at once. */
+  flushContent: () => void;
   editorPaneRef: RefObject<HTMLDivElement | null>;
   paneClass: string | undefined; paneHeight: number | undefined;
   imageUploader: (file: Blob) => Promise<string>;
@@ -610,6 +612,10 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   /** The document editorContent was last set from, so an unchanged one costs
    *  no render. */
   const capturedContent = useRef<string | null>(null);
+  /** The autosave's capture, reachable from outside its effect. The shell
+   *  swap has to take the live document before the new tree mounts, which is
+   *  a render-phase call rather than an event — see `flushContent`. */
+  const captureRef = useRef<() => void>(() => {});
   const [editorContent, setEditorContent] = useState(() => {
     if (template?.content) {
       return typeof template.content === 'string'
@@ -721,6 +727,8 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
       });
     };
 
+    captureRef.current = capture;
+
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       clearTimeout(timer);
@@ -739,6 +747,13 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subject, previewText, fromName, replyTo, theme, editor, draftId, usesLocalDraft, autosave]);
+
+  /** Takes the live document now instead of waiting for the debounce. The
+   *  640px shell swap remounts the editor from `editorContent`, so anything
+   *  typed inside the last second would be dropped by the new tree with no
+   *  history to undo it back. The caller runs this during render, before the
+   *  new shell mounts — a layout effect is already too late. */
+  const flushContent = () => captureRef.current();
 
   // Closing the tab is the one exit the autosave cannot await. A template's
   // pending draft is beaconed — the browser sends it after the page is gone
@@ -892,7 +907,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     template,
     subject, setSubject, previewText, setPreviewText, fromName, setFromName, to, setTo, replyTo, setReplyTo,
     theme, setTheme, pageStyle, cardStyle,
-    editor, setEditor, editorContent, editorPaneRef, paneClass, paneHeight,
+    editor, setEditor, editorContent, flushContent, editorPaneRef, paneClass, paneHeight,
     imageUploader, pickFromLibrary, pickerOpen, settlePick,
     mode, changeMode, pendingMode, forceDark, setForceDark,
     previewKeys, previewData, setPreviewData, hasPreviewData, refreshPreviewKeys,

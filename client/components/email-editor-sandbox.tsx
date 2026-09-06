@@ -5,7 +5,7 @@ import {
   CopyIcon,
   DownloadIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { AutosaveStatus } from '~/lib/autosave';
 import { cn } from '~/lib/classname';
 import { Button } from './ui/button';
@@ -122,6 +122,18 @@ export function EmailEditorSandbox(props: EmailEditorSandboxProps) {
   // desktop, so the markup agrees during hydration; a phone switches on its
   // first effect, before the editor has mounted.
   const phone = useMediaQuery('(max-width: 639px)');
+  // The two shells are different trees, so crossing 640px unmounts one editor
+  // and mounts another from `model.editorContent` — which the autosave only
+  // refreshes on a 1000 ms debounce. Rotating a phone within a second of the
+  // last keystroke would drop that run of typing with no history to undo it
+  // back, so the live document is taken here, during render, before the new
+  // shell mounts. A layout effect runs after the new editor already has the
+  // stale content and is too late.
+  const lastShell = useRef(phone);
+  if (lastShell.current !== phone) {
+    lastShell.current = phone;
+    model.flushContent();
+  }
   return phone ? (
     <MobileEditorLayout model={model} autofocus={autofocus} imageUploads={imageUploads} />
   ) : (
