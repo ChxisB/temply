@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import type { Node } from '@tiptap/pm/model';
-import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { NodeSelection, Selection, TextSelection } from '@tiptap/pm/state';
 import { ArrowDownIcon, ArrowUpIcon, CopyIcon, Trash2Icon } from 'lucide-react';
 import type { EditorCommand } from './types';
 
@@ -30,6 +30,18 @@ export function selectedBlock(editor: Editor): { node: Node; pos: number; depth:
 export function selectBlockAt(editor: Editor, pos: number): void {
   const tr = editor.state.tr.setSelection(NodeSelection.create(editor.state.doc, pos));
   editor.view.dispatch(tr);
+}
+
+/**
+ * Nothing selected: a caret in the first textblock. The action bar has no
+ * subject then, so the phone's bottom bar falls back to its tabs. A document
+ * with no textblock at all keeps the selection it has — there is nowhere for
+ * a caret to go.
+ */
+export function clearBlockSelection(editor: Editor): void {
+  const caret = Selection.findFrom(editor.state.doc.resolve(0), 1, true);
+  if (!caret) return;
+  editor.view.dispatch(editor.state.tr.setSelection(caret).setMeta('addToHistory', false));
 }
 
 /** Swaps the block with its sibling in the same parent. False at an edge — nothing dispatched. */

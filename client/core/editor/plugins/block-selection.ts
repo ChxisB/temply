@@ -1,6 +1,6 @@
 import { Extension, type Editor } from '@tiptap/core';
-import { NodeSelection, Plugin, PluginKey, Selection, TextSelection } from '@tiptap/pm/state';
-import { selectBlockAt, selectedBlock } from '../commands/block';
+import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { clearBlockSelection, selectBlockAt, selectedBlock } from '../commands/block';
 
 export const blockSelectionKey = new PluginKey('blockSelection');
 
@@ -29,13 +29,8 @@ export const BlockSelection = Extension.create({
   // canvas claims a selection nothing acts on. Nothing is selected until a
   // finger says so.
   onCreate() {
-    const { state, view } = this.editor;
-    if (!(state.selection instanceof NodeSelection)) return;
-    // `findFrom` with textOnly gives a caret in the first textblock; a
-    // document with nothing to type into keeps the selection it has.
-    const caret = Selection.findFrom(state.doc.resolve(0), 1, true);
-    if (!caret) return;
-    view.dispatch(state.tr.setSelection(caret).setMeta('addToHistory', false));
+    if (!(this.editor.state.selection instanceof NodeSelection)) return;
+    clearBlockSelection(this.editor);
   },
 
   addProseMirrorPlugins() {
@@ -66,4 +61,4 @@ export const BlockSelection = Extension.create({
   },
 });
 
-export { selectBlockAt, selectedBlock };
+export { clearBlockSelection, selectBlockAt, selectedBlock };

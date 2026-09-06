@@ -32,7 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { VersionHistoryDialog } from '~/components/version-history-dialog';
-import { selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
+import { clearBlockSelection, selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
@@ -132,6 +132,16 @@ export function MobileEditorLayout({
     editor.commands.blur();
     if (block) selectBlockAt(editor, block.pos);
   };
+  /** A tap on the canvas but outside the document means "nothing selected":
+   *  the bar goes back to its tabs, which are otherwise unreachable once a
+   *  block has been touched. ProseMirror never sees these taps — they land on
+   *  the page margin around the card — so the shell answers them. */
+  const clearOnCanvasTap = (event: React.MouseEvent) => {
+    if (!editor || (event.target as HTMLElement).closest('.ProseMirror')) return;
+    editor.commands.blur();
+    clearBlockSelection(editor);
+  };
+
   const openTab = (tab: IdleTab) => setSheet(tab);
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
@@ -287,7 +297,8 @@ export function MobileEditorLayout({
       ) : null}
 
       {/* The canvas. Padding at the bottom keeps the last block clear of the bar. */}
-      <div ref={model.editorPaneRef} className={cn('flex-1 pb-28', model.mode !== 'edit' && 'hidden')} style={model.pageStyle}>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+      <div ref={model.editorPaneRef} onClick={clearOnCanvasTap} className={cn('flex-1 pb-28', model.mode !== 'edit' && 'hidden')} style={model.pageStyle}>
         <div style={model.cardStyle}>
           <EmailEditor
             allowedMimeTypes={UPLOAD_MIME_TYPES}

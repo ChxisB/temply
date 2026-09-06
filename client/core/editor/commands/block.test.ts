@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import '../test/dom';
 import { makeEditor } from '../test/make-editor';
-import { deleteBlock, duplicateBlock, moveBlock, selectBlockAt, selectedBlock } from './block';
+import { clearBlockSelection, deleteBlock, duplicateBlock, moveBlock, selectBlockAt, selectedBlock } from './block';
 
 const para = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
 const doc = { type: 'doc', content: [para('one'), para('two'), para('three')] };
@@ -53,6 +53,18 @@ describe('block commands', () => {
     selectBlockAt(editor, 0);
     expect(editor.state.selection.constructor.name).toBe('NodeSelection');
     expect(selectedBlock(editor)!.node.textContent).toBe('one');
+    editor.destroy();
+  });
+
+  it('clears a block selection to a caret', () => {
+    const editor = makeEditor(doc);
+    selectBlockAt(editor, 0);
+    expect(editor.state.selection.constructor.name).toBe('NodeSelection');
+
+    clearBlockSelection(editor);
+
+    expect(editor.state.selection.constructor.name).toBe('TextSelection');
+    expect(editor.state.selection.empty).toBe(true);
     editor.destroy();
   });
 });
