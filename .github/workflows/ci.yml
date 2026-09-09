@@ -16,9 +16,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      # Pinned to the version everyone runs locally. On `latest` a Bun release
+      # can turn the suite red with no commit behind it — 1.4.2 did, by
+      # reordering the test files enough to expose global leakage between them.
+      # Upgrading is a commit that runs the gates, not something CI decides.
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.2
 
       - name: Install
         run: bun install --frozen-lockfile
