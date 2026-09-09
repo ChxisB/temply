@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'bun:test';
 import type { Editor } from '@tiptap/core';
 import '../../core/editor/test/dom';
 import { makeEditor } from '../../core/editor/test/make-editor';
-import { insertVariableTrigger } from './text-format-bar';
+import { insertVariable } from './text-format-bar';
 
 const CHAR = '@';
 
@@ -28,48 +28,38 @@ const spell = (editor: Editor) => {
   return out;
 };
 
-describe('insertVariableTrigger', () => {
-  it('puts a space before the trigger when the caret sits right after a variable pill', () => {
-    const editor = editorFor({
-      type: 'doc',
-      content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id: 'firstName', label: null } }] }],
-    });
-    // Immediately after the pill, nothing in between: the slot a leaf's empty
-    // textBetween used to report as the start of a line.
-    editor.commands.setTextSelection(editor.state.doc.child(0).nodeSize - 1);
+describe('insertVariable', () => {
+  it('inserts the pill and leaves the caret after it, not inside it', () => {
+    const editor = editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi ' }] }] });
+    editor.commands.setTextSelection(4);
 
-    insertVariableTrigger(editor, CHAR);
+    expect(insertVariable(editor, 'first_name', '', CHAR)).toBe(true);
 
-    expect(spell(editor)).toBe(`{{firstName}} ${CHAR}`);
+    expect(spell(editor)).toBe('Hi {{first_name}} ');
   });
 
-  it('puts a space before the trigger when the caret is mid-word', () => {
+  it('takes the name spelled the way the desktop list is typed', () => {
+    const editor = editorFor({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+    insertVariable(editor, `  ${CHAR}company  `, '', CHAR);
+
+    expect(spell(editor)).toBe('{{company}} ');
+  });
+
+  it('carries the placeholder onto the pill', () => {
+    const editor = editorFor({ type: 'doc', content: [{ type: 'paragraph' }] });
+
+    insertVariable(editor, 'first_name', 'there', CHAR);
+
+    expect(editor.state.doc.child(0).child(0).attrs.fallback).toBe('there');
+  });
+
+  it('inserts nothing for a dismissed field', () => {
     const editor = editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] }] });
-    editor.commands.setTextSelection(3); // after "Hi"
 
-    insertVariableTrigger(editor, CHAR);
+    expect(insertVariable(editor, '   ', '', CHAR)).toBe(false);
+    expect(insertVariable(editor, CHAR, '', CHAR)).toBe(false);
 
-    expect(spell(editor)).toBe(`Hi ${CHAR}`);
-  });
-
-  it('adds no space at the start of a paragraph', () => {
-    const editor = editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi' }] }] });
-    editor.commands.setTextSelection(1); // before "Hi"
-
-    insertVariableTrigger(editor, CHAR);
-
-    expect(spell(editor)).toBe(`${CHAR}Hi`);
-  });
-
-  it('leaves a selected run in place and puts the trigger after it', () => {
-    const editor = editorFor({
-      type: 'doc',
-      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Try editing this' }] }],
-    });
-    editor.commands.setTextSelection({ from: 5, to: 12 }); // "editing"
-
-    insertVariableTrigger(editor, CHAR);
-
-    expect(spell(editor)).toBe(`Try editing ${CHAR} this`);
+    expect(spell(editor)).toBe('Hi');
   });
 });

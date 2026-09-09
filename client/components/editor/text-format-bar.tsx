@@ -7,8 +7,10 @@ import { useState } from 'react';
 import { alignCommands, currentTextColor, PRIMARY_TEXT_COMMANDS, setTextColor, textCommands } from '~/core/editor/commands/text';
 import type { EditorCommand } from '~/core/editor/commands/types';
 import { LinkInputPopover } from '~/core/editor/components/ui/link-input-popover';
+import { useInputDock } from '~/core/editor/components/ui/input-dock';
 import { DEFAULT_VARIABLE_TRIGGER_CHAR } from '~/core/editor/nodes/variable/variable';
 import { useVariableOptions } from '~/core/editor/utils/node-options';
+import { knownVariableNames } from '~/core/editor/utils/variable';
 import { useTextMenuState } from '~/core/editor/components/text-menu/use-text-menu-state';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
@@ -34,33 +36,23 @@ const SWATCHES = [
 // the click handler be the only thing that ever moves it.
 export const keepFocus = (e: React.SyntheticEvent) => e.preventDefault();
 
-/** Stands in for a leaf node when all we are asking is whether the slot before
- *  the caret holds a space. U+FFFC, the object replacement character. */
-const LEAF_PLACEHOLDER = '\uFFFC';
-
 /**
- * What the `{}` key does: put the character the variable suggestion listens
- * for at the caret, so the list opens.
- *
- * The suggestion only opens at the start of a word, so a space goes in ahead
- * of the character when the caret is mid-sentence — exactly what typing it
- * would need. Reading what is already there needs the placeholder: textBetween
- * returns '' for a leaf unless it is told what a leaf should read as, and a
- * variable pill is a leaf, so without it a caret sitting right after a pill
- * looks like the start of a line and loses the space.
- *
- * A selected run is what the variable goes next to, not instead of, so with a
- * range selected the insert happens at the end of it.
+ * A draft committed in the surface. The name field accepts a bare name or the
+ * same `@name` the desktop list is typed as, so both spellings mean the
+ * variable; an empty name is a dismissed field and inserts nothing. The
+ * trailing space is what picking from the desktop list leaves too, so the
+ * caret carries on after the pill instead of inside it.
  */
-export function insertVariableTrigger(editor: Editor, char: string): void {
-  const { $from, $to, empty } = editor.state.selection;
-  const at = empty ? $from : $to;
-  const before =
-    at.parentOffset > 0
-      ? at.parent.textBetween(at.parentOffset - 1, at.parentOffset, undefined, LEAF_PLACEHOLDER)
-      : ' ';
-  const prefix = before && before !== ' ' ? ' ' : '';
-  editor.chain().focus().setTextSelection(at.pos).insertContent(`${prefix}${char}`).run();
+export function insertVariable(editor: Editor, rawName: string, rawFallback: string, char: string): boolean {
+  const trimmed = rawName.trim();
+  const name = (trimmed.startsWith(char) ? trimmed.slice(char.length) : trimmed).trim();
+  if (!name) return false;
+  const fallback = rawFallback.trim() || null;
+  editor
+    .chain()
+    .insertContent([{ type: 'variable', attrs: { id: name, fallback } }, { type: 'text', text: ' ' }])
+    .run();
+  return true;
 }
 
 function Toggle({ editor, command, focus = true }: { editor: Editor; command: EditorCommand; focus?: boolean }) {
@@ -101,8 +93,28 @@ export function TextFormatBar({
   const color = useEditorState({ editor, selector: ({ editor }) => currentTextColor(editor) });
   const { linkUrl, isUrlVariable } = useTextMenuState(editor);
   const [linkOpen, setLinkOpen] = useState(false);
-  const variableChar = useVariableOptions(editor)?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
-  const insertVariable = () => insertVariableTrigger(editor, variableChar);
+  const dock = useInputDock();
+  const variableOptions = useVariableOptions(editor);
+  const variableChar = variableOptions?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
+
+  /** Same source the pill's own Name field reads, so a name used once is
+   *  offered from both places after. The trigger character is not part of a
+   *  name, so it is dropped from the query — the field takes it, but never
+   *  searches for it. */
+  const variableNames = (draft: string) =>
+    knownVariableNames(editor, variableOptions?.variables, draft.split(variableChar).join(''), 'content-variable');
+
+  /** The same surface the pill opens, so inserting a variable and giving it a
+   *  placeholder is one edit rather than an insert followed by a hunt. */
+  const openVariable = () =>
+    dock?.open({
+      title: 'Variable',
+      fields: [
+        { label: 'Name', value: '', placeholder: 'first_name', hint: 'The name your data uses', options: variableNames },
+        { label: 'Placeholder', value: '', placeholder: 'there', hint: 'Shown when the data has no value' },
+      ],
+      onCommit: ([name, placeholder]) => void insertVariable(editor, name, placeholder, variableChar),
+    });
 
   /** The same set the desktop bubble menu applies, minus the focus call: the
    *  destination is typed in the panel, and pulling focus back to the canvas
@@ -144,7 +156,7 @@ export function TextFormatBar({
         >
           <LinkIcon className="size-5" />
         </button>
-        <button type="button" aria-label="Insert variable" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={insertVariable} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
+        <button type="button" aria-label="Insert variable" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={openVariable} className={cn('flex h-11 min-w-11 flex-1 items-center justify-center rounded-md text-ink hover:bg-hover', pressable)}>
           <BracesIcon className="size-5" />
         </button>
         <button
