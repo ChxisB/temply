@@ -1,11 +1,20 @@
 'use client';
 
 import { CheckIcon, CircleXIcon, XIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { InputDockSpec, InputField } from '~/core/editor/components/ui/input-dock';
 import { Button, pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 import { keepFocus } from './text-format-bar';
+
+/** Every field's committed value, coerced to a controlled draft. A nullish
+ *  value would hand the input back to the DOM, which then keeps whatever the
+ *  previous field left in it and answers every keystroke twice — the fault
+ *  behind the placeholder field that went uncontrolled, closed here so it
+ *  cannot reopen at a call site. */
+export function seedDrafts(fields: InputField[]): string[] {
+  return fields.map((field) => field.value ?? '');
+}
 
 /**
  * The field(s) a Link, Show-if, Alt-text or Variable control opens on the
@@ -13,26 +22,38 @@ import { keepFocus } from './text-format-bar';
  * suggestions as chips above each input. The sheet that held the control has
  * been closed by the shell so the keyboard has nothing to cover; it comes
  * back when this closes. Rendered as the bar's own field face — the grid
- * cell it sits in positions it, so this only fades. Stays mounted, keeping
- * its last spec through the exit.
+ * cell it sits in positions it, and the face that hosts this component (see
+ * `bottom-bar.tsx`) owns the fade and the closed-state height alike. Stays
+ * mounted, keeping its last spec through the exit, which is exactly why it
+ * cannot size itself: whatever renders it must give the closed state no
+ * height, or the tallest spec this ever showed becomes the floor forever.
  */
 export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClose: () => void }) {
   const [shown, setShown] = useState<InputDockSpec | null>(null);
   const [drafts, setDrafts] = useState<string[]>([]);
-  const firstRef = useRef<HTMLInputElement>(null);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  // A layout effect, not a passive one: reseeding after paint would let the
+  // browser show one frame pairing the new spec's fields with the previous
+  // surface's drafts.
+  useLayoutEffect(() => {
+    if (!spec) return;
+    setShown(spec);
+    setDrafts(seedDrafts(spec.fields));
+  }, [spec]);
 
   useEffect(() => {
     if (!spec) return;
-    setShown(spec);
-    // Never null: a null value hands the input back to the DOM, which then
-    // keeps whatever the last spec left in it and answers keystrokes twice.
-    setDrafts(spec.fields.map((field) => field.value ?? ''));
     // After the sheet's close has let go of focus, and after this has painted:
     // focusing an input that is still translated off its place makes iOS
     // scroll to where it was.
     const id = requestAnimationFrame(() => {
-      firstRef.current?.focus();
-      firstRef.current?.select();
+      const input = inputRefs.current[0];
+      input?.focus();
+      // The seed is whatever is already there — usually the value being
+      // replaced — so selecting it lets the first keystroke overwrite it
+      // instead of landing in the middle of it.
+      input?.select();
     });
     return () => cancelAnimationFrame(id);
   }, [spec]);
@@ -47,14 +68,11 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
     setDrafts((current) => current.map((draft, i) => (i === index ? value : draft)));
 
   return (
-    <div
-      data-editor-input-dock
-      className={cn(
-        'transition-opacity duration-base ease-out motion-reduce:transition-none',
-        open ? 'opacity-100' : 'pointer-events-none opacity-0',
-      )}
-      inert={!open}
-    >
+    // Not dead: this is the handle the browser verification and the bar's
+    // height measurements query. Visibility and the closed-state height are
+    // the field face's job (bottom-bar.tsx), not this component's — driving
+    // the same fade from both places would square the eased curve.
+    <div data-editor-input-dock>
       {view ? (
         <form
           onSubmit={(event) => {
@@ -64,16 +82,25 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
           className="px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
           aria-label={view.title}
         >
+          <p className="mb-2 text-sm font-semibold text-ink">{view.title}</p>
           {view.fields.map((field, index) => (
             <FieldRow
-              key={field.label}
+              key={index}
               field={field}
               index={index}
               draft={drafts[index] ?? ''}
               onDraft={(value) => setDraft(index, value)}
-              inputRef={index === 0 ? firstRef : undefined}
+              inputRef={(el) => {
+                inputRefs.current[index] = el;
+              }}
               last={index === view.fields.length - 1}
               onCancel={onClose}
+              onNext={() => inputRefs.current[index + 1]?.focus()}
+              // A field labelled exactly like the surface would say the same
+              // word twice right under the title — the repeat a single-field
+              // surface used to get away with because the title was never
+              // drawn at all.
+              hideLabel={field.label === view.title}
             />
           ))}
         </form>
@@ -93,15 +120,17 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
  * edit is the rule the four controls now share.
  */
 function FieldRow({
-  field, index, draft, onDraft, inputRef, last, onCancel,
+  field, index, draft, onDraft, inputRef, last, onCancel, onNext, hideLabel,
 }: {
   field: InputField;
   index: number;
   draft: string;
   onDraft: (value: string) => void;
-  inputRef?: React.RefObject<HTMLInputElement | null>;
+  inputRef: (el: HTMLInputElement | null) => void;
   last: boolean;
   onCancel: () => void;
+  onNext: () => void;
+  hideLabel: boolean;
 }) {
   const id = `editor-input-dock-${index}`;
   const trigger = field.triggerChar ?? '';
@@ -109,7 +138,7 @@ function FieldRow({
   return (
     <div className={cn(index > 0 && 'mt-3')}>
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className="text-xs font-medium text-ink">
+        <label htmlFor={id} className={cn('text-xs font-medium text-ink', hideLabel && 'sr-only')}>
           {field.label}
         </label>
         {field.hint ? <span className="truncate text-2xs text-muted">{field.hint}</span> : null}
@@ -147,6 +176,15 @@ function FieldRow({
             ref={inputRef}
             value={draft}
             onChange={(event) => onDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' || last) return;
+              // enterKeyHint says "next", but Enter inside a form still
+              // submits by default — moving between fields must commit
+              // nothing and close nothing, so this both stops the implicit
+              // submit and does the moving itself.
+              event.preventDefault();
+              onNext();
+            }}
             placeholder={field.placeholder}
             autoComplete="off"
             autoCorrect="off"
@@ -160,7 +198,7 @@ function FieldRow({
               rather than appears, so the field's edge is steady while typing. */}
           <button
             type="button"
-            aria-label={`Clear ${field.label.toLowerCase()}`}
+            aria-label={`Clear ${field.label} value`}
             onMouseDown={keepFocus}
             onPointerDown={keepFocus}
             onClick={() => onDraft('')}
