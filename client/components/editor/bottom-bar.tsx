@@ -4,12 +4,14 @@ import type { Editor } from '@tiptap/core';
 import { NodeSelection } from '@tiptap/pm/state';
 import { CheckCircle2Icon, LayoutTemplateIcon, MailIcon, PaletteIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react';
 import { Button, pressable } from '~/components/ui/button';
+import type { InputDockSpec } from '~/core/editor/components/ui/input-dock';
 import { isEditingText } from '~/core/editor/plugins/block-selection';
 import { cn } from '~/lib/classname';
 import { BlockActionBar } from './block-action-bar';
+import { InputDock } from './input-dock';
 import { TextFormatBar } from './text-format-bar';
 
-export type BottomBarState = 'idle' | 'block' | 'text';
+export type BottomBarState = 'idle' | 'block' | 'text' | 'field';
 export type IdleTab = 'details' | 'brand' | 'data' | 'checks';
 
 // Focus, not just selection shape, decides the text face: a NodeSelection
@@ -18,7 +20,11 @@ export type IdleTab = 'details' | 'brand' | 'data' | 'checks';
 // (the keyboard drops), so `panelOpen` keeps the text face up on its own —
 // the panel's commands still apply to the selection the SelectionExtension
 // keeps drawn.
-export function bottomBarState(editor: Editor | null, panelOpen: boolean): BottomBarState {
+//
+// A field surface is up: it owns the bar until it closes, whatever the
+// selection is underneath.
+export function bottomBarState(editor: Editor | null, panelOpen: boolean, fieldOpen = false): BottomBarState {
+  if (fieldOpen) return 'field';
   if (!editor) return 'idle';
   if (isEditingText(editor) && (editor.isFocused || panelOpen)) return 'text';
   if (editor.state.selection instanceof NodeSelection) return 'block';
@@ -33,16 +39,17 @@ const TABS: Array<{ id: IdleTab; label: string; icon: typeof MailIcon }> = [
 ];
 
 /**
- * One bar, three faces. The faces swap by opacity inside a shared grid row
+ * One bar, four faces. The faces swap by opacity inside a shared grid row
  * so switching between idle/block/closed-text never jumps the canvas above;
- * that row only grows when the Aa panel opens. The bar is a child of the
- * shell's frame, which is sized to the visual viewport — so the keyboard
- * shrinks the frame and the bar sits on the keys without measuring them.
+ * that row only grows when the Aa panel or the field surface opens. The bar
+ * is a child of the shell's frame, which is sized to the visual viewport —
+ * so the keyboard shrinks the frame and the bar sits on the keys without
+ * measuring them.
  * The + button rides above the bar in idle and block states and hides while
  * typing, where it would sit on the keys.
  */
 export function EditorBottomBar({
-  editor, state, checksCount, panelOpen, onTogglePanel, openTab, onOpenTab, addOpen, onAdd, styleOpen, onStyle,
+  editor, state, checksCount, panelOpen, onTogglePanel, openTab, onOpenTab, addOpen, onAdd, styleOpen, onStyle, dock, onCloseDock,
 }: {
   editor: Editor | null;
   state: BottomBarState;
@@ -60,6 +67,8 @@ export function EditorBottomBar({
   onAdd: () => void;
   styleOpen: boolean;
   onStyle: () => void;
+  dock: InputDockSpec | null;
+  onCloseDock: () => void;
 }) {
   const badge = checksCount.errors > 0 ? { n: checksCount.errors, tone: 'danger' as const } : checksCount.warnings > 0 ? { n: checksCount.warnings, tone: 'warn' as const } : null;
 
@@ -68,14 +77,14 @@ export function EditorBottomBar({
       <div
         className={cn(
           'absolute right-4 transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
-          state === 'text' ? 'pointer-events-none translate-y-2 opacity-0' : 'pointer-events-auto opacity-100',
+          state === 'text' || state === 'field' ? 'pointer-events-none translate-y-2 opacity-0' : 'pointer-events-auto opacity-100',
         )}
         style={{ bottom: `calc(100% + 0.75rem)` }}
         // The faces and the FAB all stay mounted and swap by opacity, so
         // without this the invisible ones keep their place in the tab order
         // and their buttons answer the keyboard. `inert` takes them out of
         // focus and out of the accessibility tree in one prop.
-        inert={state === 'text'}
+        inert={state === 'text' || state === 'field'}
       >
         <Button
           variant="primary"
@@ -141,6 +150,13 @@ export function EditorBottomBar({
             inert={state !== 'text'}
           >
             {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} /> : null}
+          </div>
+          {/* field */}
+          <div
+            className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'field' ? 'opacity-100' : 'pointer-events-none opacity-0')}
+            inert={state !== 'field'}
+          >
+            <InputDock spec={dock} onClose={onCloseDock} />
           </div>
         </div>
       </div>

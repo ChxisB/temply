@@ -9,11 +9,12 @@ import { keepFocus } from './text-format-bar';
 
 /**
  * The field(s) a Link, Show-if, Alt-text or Variable control opens on the
- * phone: one or more inputs docked at the bottom of the frame, which the
- * keyboard pushes up, with any variable suggestions as chips above each
- * input. The sheet that held the control has been closed by the shell so the
- * keyboard has nothing to cover; it comes back when this closes. Stays
- * mounted and slides in and out, keeping its last spec through the exit.
+ * phone: one or more inputs, which the keyboard pushes up, with any variable
+ * suggestions as chips above each input. The sheet that held the control has
+ * been closed by the shell so the keyboard has nothing to cover; it comes
+ * back when this closes. Rendered as the bar's own field face — the grid
+ * cell it sits in positions it, so this only fades. Stays mounted, keeping
+ * its last spec through the exit.
  */
 export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClose: () => void }) {
   const [shown, setShown] = useState<InputDockSpec | null>(null);
@@ -49,8 +50,8 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
     <div
       data-editor-input-dock
       className={cn(
-        'absolute inset-x-0 bottom-0 z-50 border-t border-line bg-raised shadow-lg transition-[opacity,transform] duration-base ease-out motion-reduce:transition-none',
-        open ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
+        'transition-opacity duration-base ease-out motion-reduce:transition-none',
+        open ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       inert={!open}
     >

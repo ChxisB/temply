@@ -40,8 +40,7 @@ import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from 
 import { cn } from '~/lib/classname';
 import { useVisualViewport } from '~/hooks/use-visual-viewport';
 import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
-import { bottomBarState, EditorBottomBar, type IdleTab } from './bottom-bar';
-import { InputDock } from './input-dock';
+import { bottomBarState, EditorBottomBar, type BottomBarState, type IdleTab } from './bottom-bar';
 import { MobileSheets, type SheetId } from './mobile-sheets';
 import { ShellFrameContext } from './shell-context';
 import { StylePanel } from './style-panel';
@@ -118,7 +117,11 @@ export function MobileEditorLayout({
   // transaction, which is exactly when the face can change. panelOpen lives
   // here, not inside the bar, because the header's own Done/Publish switch
   // reads `state` too — both faces have to agree the Aa panel is still "text".
-  const state = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor, panelOpen) }) ?? 'idle';
+  // The field face is derived outside the selector: opening the dock
+  // dispatches nothing to the editor, so a `dock` read inside useEditorState
+  // would never fire a re-render.
+  const selectionState = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor, panelOpen) }) ?? 'idle';
+  const state: BottomBarState = dock ? 'field' : selectionState;
   const canUndo = useEditorState({ editor, selector: ({ editor }) => editor?.can().undo() ?? false }) ?? false;
 
   // Aa takes the keyboard's place: opening it blurs the editor so the
@@ -144,13 +147,13 @@ export function MobileEditorLayout({
 
   // Whatever is selected stays in view. Several things cover the bottom of
   // the canvas — the keyboard (which shrinks the frame), the Aa panel, the
-  // Style sheet, the dock — and each arrives after the selection was made,
-  // so the canvas scrolls to keep the selected block (or the caret, while
-  // typing) above whichever of them is lowest on screen. The sheet and dock
-  // are read at their laid-out position, not their mid-slide one. Runs a
-  // beat late so the keyboard, the sheet and the panel's transition have
-  // settled; the frame height is in the deps because that is what the
-  // keyboard changes.
+  // dock (a face of the bar, so the bar's own height already covers it),
+  // the Style sheet — and each arrives after the selection was made, so the
+  // canvas scrolls to keep the selected block (or the caret, while typing)
+  // above whichever of them is lowest on screen. The sheet is read at its
+  // laid-out position, not its mid-slide one. Runs a beat late so the
+  // keyboard, the sheet and the panel's transition have settled; the frame
+  // height is in the deps because that is what the keyboard changes.
   useEffect(() => {
     if (!editor) return;
     if (state === 'idle' && !styleOpen && !dock) return;
@@ -159,10 +162,9 @@ export function MobileEditorLayout({
       if (!(scroller instanceof HTMLElement)) return;
       const frameRect = frameEl?.getBoundingClientRect();
       const inFrame = (el: HTMLElement | null) => (el && frameRect ? frameRect.top + el.offsetTop : null);
-      const dockEl = dock ? frameEl?.querySelector<HTMLElement>('[data-editor-input-dock]') ?? null : null;
       const sheetEl = styleOpen ? frameEl?.querySelector<HTMLElement>('[role="dialog"]') ?? null : null;
       const bar = document.querySelector<HTMLElement>('[data-editor-bottom-bar]');
-      const limit = inFrame(dockEl) ?? inFrame(sheetEl) ?? (bar ? bar.getBoundingClientRect().top : window.innerHeight);
+      const limit = inFrame(sheetEl) ?? (bar ? bar.getBoundingClientRect().top : window.innerHeight);
       const target = (() => {
         if (state === 'text') {
           const coords = editor.view.coordsAtPos(editor.state.selection.from);
@@ -482,8 +484,9 @@ export function MobileEditorLayout({
         onAdd={() => setSheet('add')}
         styleOpen={styleOpen}
         onStyle={() => setStyleOpen(true)}
+        dock={dock}
+        onCloseDock={closeDock}
       />
-      <InputDock spec={dock} onClose={closeDock} />
       <StylePanel editor={editor} open={styleOpen} onOpenChange={setStyleOpen} returnFocus={!dock} />
       <MobileSheets
         model={model}
