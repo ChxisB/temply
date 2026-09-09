@@ -64,3 +64,6 @@ server/*.db-wal
 
 # Database snapshots from `bun run db:backup`
 server/backups/
+
+# Brainstorming mockups and specs — local working notes, not part of the app.
+.superpowers/
