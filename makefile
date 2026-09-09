@@ -1,4 +1,4 @@
-.PHONY: deploy-dev dev-log
+.PHONY: deploy-dev dev-log run-local
 
 # Pull, build and restart the app on the Oracle VM (the `temply` ssh alias).
 deploy-dev:
