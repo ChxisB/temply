@@ -121,12 +121,10 @@ export function TextFormatBar({
       .run();
   };
 
-  // The link key is a shortcut to the panel's Link row: the row is where the
-  // address is typed, and there is only one of it.
-  const openLink = () => {
-    if (!panelOpen) onTogglePanel();
-    setLinkOpen(true);
-  };
+  // The link key goes straight to the field. It used to open the Aa panel on
+  // the way — seven swatches, Align and More expanded behind a surface that
+  // then covered them, with the word Link on screen twice.
+  const openLink = () => setLinkOpen(true);
 
   return (
     <div>
