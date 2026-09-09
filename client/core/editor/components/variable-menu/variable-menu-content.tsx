@@ -1,11 +1,9 @@
 import { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { Pencil } from 'lucide-react';
-import { collectDataKeys } from '@temply/shared/template-data';
 import { selectedBlock } from '@/editor/commands/block';
-import { cn } from '@/editor/utils/classname';
 import { useVariableOptions } from '@/editor/utils/node-options';
-import { processVariables } from '@/editor/utils/variable';
+import { knownVariableNames } from '@/editor/utils/variable';
 import { TextBubbleContent } from '../text-menu/text-bubble-content';
 import { Divider } from '../ui/divider';
 import { useInputDock } from '../ui/input-dock';
@@ -32,7 +30,10 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
   const dock = useInputDock();
   const variables = useVariableOptions(editor)?.variables;
   if (!node) return null;
-  const { id = '', fallback = '', hideDefaultValue = false } = node.attrs as { id?: string; fallback?: string; hideDefaultValue?: boolean };
+  const attrs = node.attrs as { id?: string | null; fallback?: string | null; hideDefaultValue?: boolean };
+  const id = attrs.id ?? '';
+  const fallback = attrs.fallback ?? '';
+  const hideDefaultValue = attrs.hideDefaultValue ?? false;
   // Re-selected after the write: the pill is an inline React node view, and
   // re-rendering it under a NodeSelection leaves ProseMirror reading a text
   // selection back off the DOM — which would turn the sheet into the Text
@@ -43,57 +44,37 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
     if (block) chain.setNodeSelection(block.pos);
     chain.run();
   };
-  // Every name the template already uses, then the ones the app offers.
-  const known = (query: string) => {
-    const inUse = collectDataKeys(editor.getJSON()).variables;
-    const offered = processVariables(variables, { query, from: 'bubble-variable', editor }).map((variable) => variable.name);
-    const fromDoc = inUse.filter((name) => name.toLowerCase().includes(query.toLowerCase()));
-    return [...new Set([...fromDoc, ...offered])];
-  };
+  const known = (query: string) => knownVariableNames(editor, variables, query, 'bubble-variable');
 
   const rowClass = 'mly:flex mly:h-11 mly:w-full mly:items-center mly:justify-between mly:gap-3 mly:rounded-md mly:border mly:border-gray-200 mly:px-3 mly:text-left mly:text-sm mly:text-midnight-gray mly:transition-colors mly:hover:bg-soft-gray';
 
   return (
     <div className="mly:flex mly:w-full mly:flex-col mly:gap-2">
       {dock ? (
-        <>
-          <button
-            type="button"
-            className={rowClass}
-            onClick={() =>
-              dock.open({
-                title: 'Variable',
-                fields: [{ label: 'Variable', value: id, placeholder: 'e.g. firstName', hint: 'The name in the data you send', options: known }],
-                onCommit: ([raw]) => update({ id: raw.trim() }),
-              })
-            }
-          >
-            <span className="mly:shrink-0 mly:text-xs mly:text-gray-500">Variable</span>
-            <span className="mly:flex mly:min-w-0 mly:items-center mly:gap-2">
-              <span className="mly:truncate mly:font-mono">{id || '—'}</span>
-              <Pencil className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5]" />
-            </span>
-          </button>
-          {!hideDefaultValue && (
-            <button
-              type="button"
-              className={rowClass}
-              onClick={() =>
-                dock.open({
-                  title: 'Placeholder',
-                  fields: [{ label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }],
-                  onCommit: ([raw]) => update({ fallback: raw }),
-                })
-              }
-            >
-              <span className="mly:shrink-0 mly:text-xs mly:text-gray-500">Placeholder</span>
-              <span className="mly:flex mly:min-w-0 mly:items-center mly:gap-2">
-                <span className={cn('mly:truncate', !fallback && 'mly:text-gray-400')}>{fallback || 'None'}</span>
-                <Pencil className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5]" />
-              </span>
-            </button>
-          )}
-        </>
+        <button
+          type="button"
+          className={rowClass}
+          onClick={() =>
+            dock.open({
+              title: 'Variable',
+              fields: [
+                { label: 'Name', value: id, placeholder: 'e.g. firstName', hint: 'The name in the data you send', options: known },
+                ...(hideDefaultValue
+                  ? []
+                  : [{ label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }]),
+              ],
+              onCommit: ([name, placeholder]) =>
+                update(hideDefaultValue ? { id: name.trim() } : { id: name.trim(), fallback: placeholder }),
+            })
+          }
+        >
+          <span className="mly:shrink-0 mly:text-xs mly:text-gray-500">Variable</span>
+          <span className="mly:flex mly:min-w-0 mly:items-center mly:gap-2">
+            <span className="mly:truncate mly:font-mono">{id || '—'}</span>
+            {!hideDefaultValue && fallback ? <span className="mly:truncate mly:text-gray-400">/ {fallback}</span> : null}
+            <Pencil className="mly:h-3 mly:w-3 mly:shrink-0 mly:stroke-[2.5]" />
+          </span>
+        </button>
       ) : (
         // Without a dock (no phone shell) the fields are typed in place.
         <div className="mly:flex mly:gap-2">
