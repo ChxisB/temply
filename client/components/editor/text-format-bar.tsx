@@ -147,8 +147,10 @@ export function TextFormatBar({
         <button
           type="button"
           aria-label="Link"
-          aria-haspopup="dialog"
-          aria-expanded={linkOpen}
+          // Not a disclosure: this opens the shared field surface, not a
+          // dialog owned by this button, and linkOpen flips back to false the
+          // instant that surface opens — an aria-expanded here would announce
+          // "collapsed" while the field is on screen.
           onMouseDown={keepFocus}
           onPointerDown={keepFocus}
           onClick={openLink}
