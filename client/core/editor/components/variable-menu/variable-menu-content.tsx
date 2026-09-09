@@ -62,12 +62,9 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
             className={rowClass}
             onClick={() =>
               dock.open({
-                label: 'Variable',
-                value: id,
-                placeholder: 'e.g. firstName',
-                hint: 'The name in the data you send',
-                options: known,
-                onCommit: (raw) => update({ id: raw.trim() }),
+                title: 'Variable',
+                fields: [{ label: 'Variable', value: id, placeholder: 'e.g. firstName', hint: 'The name in the data you send', options: known }],
+                onCommit: ([raw]) => update({ id: raw.trim() }),
               })
             }
           >
@@ -83,11 +80,9 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
               className={rowClass}
               onClick={() =>
                 dock.open({
-                  label: 'Placeholder',
-                  value: fallback,
-                  placeholder: 'e.g. there',
-                  hint: 'Shown when the data has no value',
-                  onCommit: (raw) => update({ fallback: raw }),
+                  title: 'Placeholder',
+                  fields: [{ label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }],
+                  onCommit: ([raw]) => update({ fallback: raw }),
                 })
               }
             >

@@ -42,11 +42,16 @@ export function AltTextInput({
             aria-label="Alt text"
             onClick={() =>
               dock.open({
-                label: 'Alt text',
-                value,
-                placeholder: 'What the image shows',
-                hint: 'Shown when a mail client blocks the image',
-                onCommit: (raw) => {
+                title: 'Alt text',
+                fields: [
+                  {
+                    label: 'Alt text',
+                    value,
+                    placeholder: 'What the image shows',
+                    hint: 'Shown when a mail client blocks the image',
+                  },
+                ],
+                onCommit: ([raw]) => {
                   if (raw !== value) onChange(raw);
                 },
               })

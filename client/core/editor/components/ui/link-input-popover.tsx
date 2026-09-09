@@ -125,14 +125,20 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   // `open` (the format bar's Link key) reaches the dock the same way.
   const dock = useInputDock();
   const openDock = () => {
+    const label = showImageStatus ? 'Image source' : 'Link';
     dock?.open({
-      label: showImageStatus ? 'Image source' : 'Link',
-      value: seed(),
-      placeholder: placeholderUrl,
-      hint: showImageStatus ? 'A direct link to the image' : `Or a variable: ${variableTriggerCharacter}name`,
-      triggerChar: variableTriggerCharacter,
-      options: suggestionsFor,
-      onCommit: commit,
+      title: label,
+      fields: [
+        {
+          label,
+          value: seed(),
+          placeholder: placeholderUrl,
+          hint: showImageStatus ? 'A direct link to the image' : `Or a variable: ${variableTriggerCharacter}name`,
+          triggerChar: variableTriggerCharacter,
+          options: suggestionsFor,
+        },
+      ],
+      onCommit: ([raw]) => commit(raw),
     });
   };
   useEffect(() => {

@@ -1,25 +1,33 @@
 import { createContext, useContext } from 'react';
 
-/**
- * A single text field the shell docks above the keyboard, in place of the
- * popover a control would otherwise open. The phone provides it; the
- * desktop never does, and the controls keep their popovers there.
- */
-export type InputDockSpec = {
+export type InputField = {
   label: string;
   value: string;
   placeholder?: string;
-  /** One short line under the label: what the value is for. */
+  /** One short line beside the label: what the value is for. */
   hint?: string;
-  /** Suggestions for the draft as typed; shown as a row of chips. */
+  /** Suggestions for the draft as typed; shown as chips under the label. */
   options?: (draft: string) => string[];
   /** The character a draft starts with to mean a variable, when the field
-   *  takes one — the chips are offered only for such a draft, or an empty
-   *  one. Empty means every draft is a plain key and the chips always show. */
+   *  takes one. Empty means every draft is a plain key and the chips always
+   *  show. */
   triggerChar?: string;
-  /** Done, Enter, or a chip: the raw draft, exactly as the popover's own
-   *  submit would have received it. */
-  onCommit: (raw: string) => void;
+};
+
+/**
+ * A small form the shell docks above the keyboard, in place of the popover a
+ * control would otherwise open. The phone provides it; the desktop never does,
+ * and the controls keep their popovers there.
+ *
+ * The title names the surface, not the first field — "Variable", above a Name
+ * and a Placeholder. One ✓ commits every field, because a control's values are
+ * one edit and asking for them one surface at a time is what this replaced.
+ */
+export type InputDockSpec = {
+  title: string;
+  fields: InputField[];
+  /** Every field's committed draft, in the order they were declared. */
+  onCommit: (values: string[]) => void;
 };
 
 export type InputDock = { open: (spec: InputDockSpec) => void };

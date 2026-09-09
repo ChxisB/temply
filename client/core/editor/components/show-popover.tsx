@@ -74,13 +74,18 @@ function _ShowPopover(props: ShowPopoverProps) {
               ...(Array.isArray(variables) ? variables.filter((variable) => !inUse.includes(variable.name)) : []),
             ];
             dock.open({
-              label: 'Show if',
-              value: showIfKey,
-              placeholder: 'e.g. isMember',
-              hint: 'Shown only when this is true in the data you send',
-              options: (draft) =>
-                processVariables(known, { query: draft, from: 'bubble-variable', editor }).map((variable) => variable.name),
-              onCommit: (raw) => onShowIfKeyValueChange?.(raw.trim()),
+              title: 'Show if',
+              fields: [
+                {
+                  label: 'Show if',
+                  value: showIfKey,
+                  placeholder: 'e.g. isMember',
+                  hint: 'Shown only when this is true in the data you send',
+                  options: (draft) =>
+                    processVariables(known, { query: draft, from: 'bubble-variable', editor }).map((variable) => variable.name),
+                },
+              ],
+              onCommit: ([raw]) => onShowIfKeyValueChange?.(raw.trim()),
             });
           }}
         >
