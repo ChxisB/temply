@@ -21,10 +21,10 @@ export type IdleTab = 'details' | 'brand' | 'data' | 'checks';
 // the panel's commands still apply to the selection the SelectionExtension
 // keeps drawn.
 //
-// A field surface is up: it owns the bar until it closes, whatever the
-// selection is underneath.
-export function bottomBarState(editor: Editor | null, panelOpen: boolean, fieldOpen = false): BottomBarState {
-  if (fieldOpen) return 'field';
+// The field face is not decided here: it is the shell's call, made in
+// `mobile-layout.tsx`, because opening a field spec dispatches nothing to
+// the editor for `useEditorState` to see this function react to.
+export function bottomBarState(editor: Editor | null, panelOpen: boolean): BottomBarState {
   if (!editor) return 'idle';
   if (isEditingText(editor) && (editor.isFocused || panelOpen)) return 'text';
   if (editor.state.selection instanceof NodeSelection) return 'block';

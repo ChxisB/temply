@@ -116,10 +116,14 @@ export function MobileEditorLayout({
   // The bar's face follows the selection; useEditorState re-renders on every
   // transaction, which is exactly when the face can change. panelOpen lives
   // here, not inside the bar, because the header's own Done/Publish switch
-  // reads `state` too — both faces have to agree the Aa panel is still "text".
-  // The field face is derived outside the selector: opening the dock
-  // dispatches nothing to the editor, so a `dock` read inside useEditorState
-  // would never fire a re-render.
+  // reads `selectionState` too — both faces have to agree the Aa panel is
+  // still "text". The field face is derived outside the selector: opening
+  // the dock dispatches nothing to the editor, so a `dock` read inside
+  // useEditorState would never fire a re-render. `state` folds the field
+  // face in on top of `selectionState` and is what the bar itself renders;
+  // everything that instead cares about the underlying selection — the
+  // header, the keep-visible effect — reads `selectionState` directly, since
+  // a field surface covering the bar does not change what is selected.
   const selectionState = useEditorState({ editor, selector: ({ editor }) => bottomBarState(editor, panelOpen) }) ?? 'idle';
   const state: BottomBarState = dock ? 'field' : selectionState;
   const canUndo = useEditorState({ editor, selector: ({ editor }) => editor?.can().undo() ?? false }) ?? false;
@@ -140,10 +144,13 @@ export function MobileEditorLayout({
 
   // A stale panelOpen would reopen the panel the next time text is entered
   // for an unrelated reason (a fresh tap, Done). It only means anything
-  // while the text face is up, so anything that leaves 'text' clears it.
+  // while the text face is up, so anything that leaves 'text' clears it —
+  // reading the selection, not the bar's face, so opening a field surface
+  // over a live text selection (the Link row does exactly this) does not
+  // itself clear a panel the field surface is about to sit on top of.
   useEffect(() => {
-    if (state !== 'text') setPanelOpen(false);
-  }, [state]);
+    if (selectionState !== 'text') setPanelOpen(false);
+  }, [selectionState]);
 
   // Whatever is selected stays in view. Several things cover the bottom of
   // the canvas — the keyboard (which shrinks the frame), the Aa panel, the
@@ -156,7 +163,7 @@ export function MobileEditorLayout({
   // height is in the deps because that is what the keyboard changes.
   useEffect(() => {
     if (!editor) return;
-    if (state === 'idle' && !styleOpen && !dock) return;
+    if (selectionState === 'idle' && !styleOpen && !dock) return;
     const keepVisible = () => {
       const scroller = scrollParent(editor.view.dom);
       if (!(scroller instanceof HTMLElement)) return;
@@ -166,7 +173,7 @@ export function MobileEditorLayout({
       const bar = document.querySelector<HTMLElement>('[data-editor-bottom-bar]');
       const limit = inFrame(sheetEl) ?? (bar ? bar.getBoundingClientRect().top : window.innerHeight);
       const target = (() => {
-        if (state === 'text') {
+        if (selectionState === 'text') {
           const coords = editor.view.coordsAtPos(editor.state.selection.from);
           return { top: coords.top, bottom: coords.bottom };
         }
@@ -191,7 +198,7 @@ export function MobileEditorLayout({
     // after a sheet whose controls wrap has finished growing into its rows.
     const ids = [250, 700].map((delay) => window.setTimeout(keepVisible, delay));
     return () => ids.forEach((id) => window.clearTimeout(id));
-  }, [state, panelOpen, styleOpen, dock, frame?.height, editor, frameEl]);
+  }, [selectionState, panelOpen, styleOpen, dock, frame?.height, editor, frameEl]);
 
   // Arming is the whole explanation on desktop, where it expands the
   // preflight panel beside the button. Nothing on the phone reads
@@ -320,11 +327,11 @@ export function MobileEditorLayout({
         >
           <Undo2Icon />
         </Button>
-        {state === 'text' ? (
+        {selectionState === 'text' ? (
           // Same race the bar's own Aa and Link buttons guard against: an
           // unprevented mousedown here would focus this button and blur the
-          // ProseMirror before onClick runs, dropping `state` out of 'text'
-          // (and this button with it) a beat before the click fires.
+          // ProseMirror before onClick runs, dropping `selectionState` out of
+          // 'text' (and this button with it) a beat before the click fires.
           <Button variant="primary" className="h-11 px-3" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={done}>
             Done
           </Button>
