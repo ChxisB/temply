@@ -252,6 +252,9 @@ export function MobileEditorLayout({
   // ids ('eye', 'add') belong to triggers elsewhere and expand none of them.
   const idleTabOpen: IdleTab | null =
     sheet === 'details' || sheet === 'brand' || sheet === 'data' || sheet === 'checks' ? sheet : null;
+  /** Half the screen: enough that the last block can sit above a sheet, the
+   *  dock or the Aa panel, none of which the canvas can measure in advance. */
+  const scrollTail = Math.max(96, Math.round((frame?.height ?? 0) * 0.55));
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
 
@@ -437,16 +440,13 @@ export function MobileEditorLayout({
 
       {/* The canvas: the frame's one scroller. `isolate` keeps the document's
           own stacking (a spacer is z-50 in the editor's CSS) inside it, so no
-          block can sit over the bars and take their taps. The bottom padding
-          is a half sheet's height: the last block has to be able to scroll
-          up clear of the Style sheet (or the dock) that opens over it, and a
-          canvas that ends at its last block has nowhere to go. */}
+          block can sit over the bars and take their taps. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
       <div
         ref={model.editorPaneRef}
         onClick={clearOnCanvasTap}
         className={cn('isolate min-h-0 flex-1 overflow-y-auto overscroll-contain', model.mode !== 'edit' && 'hidden')}
-        style={{ ...model.pageStyle, paddingBottom: Math.max(96, Math.round((frame?.height ?? 0) * 0.55)) }}
+        style={model.pageStyle}
       >
         <div style={model.cardStyle}>
           <EmailEditor
@@ -460,6 +460,14 @@ export function MobileEditorLayout({
             touch
           />
         </div>
+        {/* Room to scroll the last block clear of whatever opens over it — a
+            half sheet's worth. It is an element and not padding on the
+            scroller because padding is a floor the box cannot shrink past:
+            as a padding it stopped the canvas giving up its height when the
+            Aa panel grew the bar, and the panel's last rows were then cut
+            off by the frame's `overflow-clip`. Inside the scroller the same
+            space costs the layout nothing. */}
+        <div aria-hidden style={{ height: scrollTail }} />
       </div>
 
       <EditorBottomBar
