@@ -7,7 +7,7 @@ import { useInputDock } from './input-dock';
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip';
 import { DEFAULT_PLACEHOLDER_URL, useMailyContext } from '@/editor/provider';
 import { InputAutocomplete } from './input-autocomplete';
-import { processVariables } from '@/editor/utils/variable';
+import { knownVariableNames } from '@/editor/utils/variable';
 import { useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { useVariableOptions } from '@/editor/utils/node-options';
@@ -110,12 +110,11 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   );
   const statusMessage = showImageStatus ? imageUrlMessage(imageStatus) : null;
 
+  // The document first, the app's list after — the same shared source every
+  // field that offers names reads, so a name typed into this template a
+  // moment earlier shows up here instead of an always-empty chip band.
   const suggestionsFor = (query: string) =>
-    processVariables(variables, {
-      query: query.replace(new RegExp(variableTriggerCharacter, 'g'), '') || '',
-      from: 'bubble-variable',
-      editor,
-    }).map((variable) => variable.name);
+    knownVariableNames(editor, variables, query.replace(new RegExp(variableTriggerCharacter, 'g'), ''), 'bubble-variable');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const autoCompleteOptions = useMemo(() => suggestionsFor(draft), [variables, variableTriggerCharacter, draft, editor]);
 

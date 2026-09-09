@@ -126,6 +126,7 @@ export function ImageMenuContent({ editor }: { editor: Editor }) {
             tooltip="External URL"
             editor={editor}
             isVariable={state.isExternalLinkVariable}
+            triggerProps={{ 'aria-label': 'External URL' }}
           />
         )}
       </div>
