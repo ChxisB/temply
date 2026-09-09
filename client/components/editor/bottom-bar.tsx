@@ -152,11 +152,23 @@ export function EditorBottomBar({
             {editor ? <TextFormatBar editor={editor} panelOpen={panelOpen} onTogglePanel={onTogglePanel} /> : null}
           </div>
           {/* field */}
+          {/* Unlike the other three faces, this one's content is much taller
+              than the row the rest agree on, and InputDock keeps its last
+              spec mounted to animate its own exit — so a plain opacity swap
+              would leave that tall, invisible content sizing the shared grid
+              row forever. The 0fr→1fr collapse (see template-theme-panel.tsx)
+              makes the closed face contribute no height at all, on top of
+              the same opacity fade the other faces use. */}
           <div
-            className={cn('transition-opacity duration-base ease-out motion-reduce:transition-none', state === 'field' ? 'opacity-100' : 'pointer-events-none opacity-0')}
+            className={cn(
+              'grid transition-[grid-template-rows,opacity] duration-base ease-out motion-reduce:transition-none',
+              state === 'field' ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+            )}
             inert={state !== 'field'}
           >
-            <InputDock spec={dock} onClose={onCloseDock} />
+            <div className="overflow-hidden">
+              <InputDock spec={dock} onClose={onCloseDock} />
+            </div>
           </div>
         </div>
       </div>
