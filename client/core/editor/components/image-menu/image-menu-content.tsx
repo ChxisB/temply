@@ -92,6 +92,7 @@ export function ImageMenuContent({ editor }: { editor: Editor }) {
           editor={editor}
           isVariable={state.isSrcVariable}
           showImageStatus
+          triggerProps={{ 'aria-label': 'Image source' }}
         />
 
         {/* Where the bytes live is the one thing the URL field does not
