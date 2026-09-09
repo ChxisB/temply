@@ -24,7 +24,7 @@ export type IdleTab = 'details' | 'brand' | 'data' | 'checks';
 // The field face is not decided here: it is the shell's call, made in
 // `mobile-layout.tsx`, because opening a field spec dispatches nothing to
 // the editor for `useEditorState` to see this function react to.
-export function bottomBarState(editor: Editor | null, panelOpen: boolean): BottomBarState {
+export function bottomBarState(editor: Editor | null, panelOpen: boolean): Exclude<BottomBarState, 'field'> {
   if (!editor) return 'idle';
   if (isEditingText(editor) && (editor.isFocused || panelOpen)) return 'text';
   if (editor.state.selection instanceof NodeSelection) return 'block';
@@ -156,9 +156,13 @@ export function EditorBottomBar({
               than the row the rest agree on, and InputDock keeps its last
               spec mounted to animate its own exit — so a plain opacity swap
               would leave that tall, invisible content sizing the shared grid
-              row forever. The 0fr→1fr collapse (see template-theme-panel.tsx)
-              makes the closed face contribute no height at all, on top of
-              the same opacity fade the other faces use. */}
+              row forever. The 0fr→1fr collapse (see desktop-layout.tsx's save
+              status row, the same combined grid-template-rows/opacity
+              transition) makes the closed face contribute no height at all,
+              on top of the same opacity fade the other faces use. This face
+              also owns InputDock's visibility outright — InputDock itself
+              renders no opacity or inert of its own — so the fade is driven
+              from exactly one place. */}
           <div
             className={cn(
               'grid transition-[grid-template-rows,opacity] duration-base ease-out motion-reduce:transition-none',
