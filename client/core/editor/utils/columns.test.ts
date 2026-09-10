@@ -114,6 +114,26 @@ describe('the columns controls from a selected columns node', () => {
   });
 });
 
+describe('vertical alignment', () => {
+  // The columns node is the second top-level child in `doc`, so its children
+  // are the two columns' current `verticalAlign`.
+  const verticalAligns = (editor: ReturnType<typeof makeEditor>) => editor.state.doc.child(1).content.content.map((c) => c.attrs.verticalAlign);
+
+  it('from a selected columns node sets every column, not the one `updateAttributes` would silently land on', () => {
+    const editor = withColumnsSelected();
+    expect(editor.commands.updateColumn({ verticalAlign: 'middle' })).toBe(true);
+    expect(verticalAligns(editor)).toEqual(['middle', 'middle']);
+    editor.destroy();
+  });
+
+  it('from a caret (desktop) still sets only the column the caret is in', () => {
+    const editor = withCaret();
+    expect(editor.commands.updateColumn({ verticalAlign: 'middle' })).toBe(true);
+    expect(verticalAligns(editor)).toEqual(['middle', 'top']);
+    editor.destroy();
+  });
+});
+
 describe('the columns controls from a caret (desktop)', () => {
   it('still reads the count and the widths', () => {
     const editor = withCaret();

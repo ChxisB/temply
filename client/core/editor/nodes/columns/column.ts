@@ -1,5 +1,6 @@
 import { updateAttributes } from '@/editor/utils/update-attribute';
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Command, Node, mergeAttributes } from '@tiptap/core';
+import { NodeSelection } from '@tiptap/pm/state';
 import { v4 as uuidv4 } from 'uuid';
 
 export const DEFAULT_COLUMN_WIDTH = 'auto';
@@ -96,7 +97,32 @@ export const ColumnExtension = Node.create({
 
   addCommands() {
     return {
-      updateColumn: (attrs) => updateAttributes(this.name, attrs),
+      // `updateAttributes` resolves a selection to "the last node of this
+      // type inside it", which for a caret in one column is that column —
+      // right — but for the `columns` wrapper itself node-selected (the only
+      // selection touch can ever put on this block: a tap walks straight to
+      // the wrapper, never to a column inside it) silently picks whichever
+      // column sorts last, changing one column while the control reads as
+      // acting on the whole block. Selecting the wrapper means the whole
+      // block was selected, so the write fans out to every column in it
+      // instead; a single `column` active keeps writing to just that one.
+      updateColumn: (attrs) =>
+        ((props) => {
+          const { tr, state, dispatch } = props;
+          const { selection } = state;
+          if (selection instanceof NodeSelection && selection.node.type.name === 'columns') {
+            if (dispatch) {
+              let pos = selection.from + 1;
+              selection.node.forEach((child) => {
+                tr.setNodeMarkup(pos, null, { ...child.attrs, ...attrs });
+                pos += child.nodeSize;
+              });
+              dispatch(tr);
+            }
+            return true;
+          }
+          return updateAttributes(this.name, attrs)(props);
+        }) satisfies Command,
     };
   },
 
