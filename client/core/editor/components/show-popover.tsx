@@ -135,11 +135,11 @@ function _ShowPopover(props: ShowPopoverProps) {
           </Tooltip>
         </div>
 
-        {/* The field is always mounted. It used to be a pill that swapped
-            itself for an input on click — but unmounting the very element
-            being clicked leaves Radix comparing against a detached node, which
-            reads as a click outside, so the whole popover closed and the input
-            could never be reached. */}
+        {/* The field stays mounted, and nothing here may swap it for another
+            element on click: Radix decides "outside" by testing the clicked
+            node against the popover's tree, and a node removed by its own
+            click is no longer in either — so the popover closes on the very
+            gesture meant to reach the input. */}
         <form onSubmit={(e) => e.preventDefault()}>
           <InputAutocomplete
             editor={editor}
