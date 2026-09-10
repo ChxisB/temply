@@ -1,6 +1,6 @@
 import { updateAttributes } from '@/editor/utils/update-attribute';
+import { selectedNodeOfType } from '@/editor/utils/selected-node';
 import { Command, Node, mergeAttributes } from '@tiptap/core';
-import { NodeSelection } from '@tiptap/pm/state';
 import { v4 as uuidv4 } from 'uuid';
 
 export const DEFAULT_COLUMN_WIDTH = 'auto';
@@ -109,11 +109,11 @@ export const ColumnExtension = Node.create({
       updateColumn: (attrs) =>
         ((props) => {
           const { tr, state, dispatch } = props;
-          const { selection } = state;
-          if (selection instanceof NodeSelection && selection.node.type.name === 'columns') {
+          const columns = selectedNodeOfType(state, 'columns');
+          if (columns) {
             if (dispatch) {
-              let pos = selection.from + 1;
-              selection.node.forEach((child) => {
+              let pos = state.selection.from + 1;
+              columns.forEach((child) => {
                 tr.setNodeMarkup(pos, null, { ...child.attrs, ...attrs });
                 pos += child.nodeSize;
               });

@@ -7,7 +7,7 @@ import { useInputDock } from './input-dock';
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip';
 import { DEFAULT_PLACEHOLDER_URL, useMailyContext } from '@/editor/provider';
 import { InputAutocomplete } from './input-autocomplete';
-import { knownNames } from '@/editor/utils/variable';
+import { useKnownNames } from '@/editor/utils/use-known-names';
 import { useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { useVariableOptions } from '@/editor/utils/node-options';
@@ -112,14 +112,18 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
 
   // The document first, the app's list after — the same shared source every
   // field that offers names reads, so a name typed into this template a
-  // moment earlier shows up here instead of an always-empty chip band. The
-  // snapshot is taken once, when the popover or the dock opens (both below),
-  // and held here rather than retaken per keystroke — the field can call
-  // `suggestionsFor` on every character without re-serialising the document.
-  const search = useRef<(query: string) => string[]>(() => []);
-  const suggestionsFor = (query: string) =>
-    search.current(query.replace(new RegExp(variableTriggerCharacter, 'g'), ''));
-  const autoCompleteOptions = useMemo(() => suggestionsFor(draft), [draft, variableTriggerCharacter]);
+  // moment earlier shows up here instead of an always-empty chip band. Taken
+  // once, when the popover or the dock opens (both below).
+  const { search, snapshot } = useKnownNames(editor, 'variables', variables, 'bubble-variable');
+  // The trigger character is not part of a name, so it is dropped from the
+  // query — the field takes it, but never searches for it.
+  const withoutTrigger = (query: string) =>
+    query.replace(new RegExp(variableTriggerCharacter, 'g'), '');
+  const autoCompleteOptions = useMemo(
+    () => search(withoutTrigger(draft)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [draft, search, variableTriggerCharacter],
+  );
 
   // On the phone the field is not a popover but the shell's dock: the sheet
   // this button sits in closes, the field rises above the keyboard, and the
@@ -127,7 +131,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   // `open` (the format bar's Link key) reaches the dock the same way.
   const dock = useInputDock();
   const openDock = () => {
-    search.current = knownNames(editor, 'variables', variables, 'bubble-variable');
+    const names = snapshot();
     const label = showImageStatus ? 'Image source' : 'Link';
     dock?.open({
       title: label,
@@ -138,7 +142,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
           placeholder: placeholderUrl,
           hint: showImageStatus ? 'A direct link to the image' : `Or a variable: ${variableTriggerCharacter}name`,
           triggerChar: variableTriggerCharacter,
-          options: suggestionsFor,
+          options: (query: string) => names(withoutTrigger(query)),
         },
       ],
       onCommit: ([raw]) => commit(raw),
@@ -196,7 +200,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       onOpenChange={(open) => {
         setIsOpen(open);
         if (open) {
-          search.current = knownNames(editor, 'variables', variables, 'bubble-variable');
+          snapshot();
           setDraft(seed());
           setIsEditing(!isVariable);
           setTimeout(() => {

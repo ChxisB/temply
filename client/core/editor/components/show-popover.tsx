@@ -4,7 +4,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { cn } from '../utils/classname';
 import { highlightShowIfKey } from '../utils/highlight-show-if';
 import { useVariableOptions } from '../utils/node-options';
-import { knownNames } from '../utils/variable';
+import { useKnownNames } from '../utils/use-known-names';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { InputAutocomplete } from './ui/input-autocomplete';
 import { useInputDock } from './ui/input-dock';
@@ -27,14 +27,13 @@ function _ShowPopover(props: ShowPopoverProps) {
   // Condition keys already used elsewhere in this email, then the app's
   // list. Nothing records them, so the document is the list — and reusing
   // one key across blocks is the normal case (a section, its spacer, and its
-  // button all hang off `isMember`). Snapshotted at open (both below) rather
-  // than re-read per keystroke.
-  const search = useRef<(query: string) => string[]>(() => []);
+  // button all hang off `isMember`). Taken at open (both below).
+  const { search, snapshot } = useKnownNames(editor, 'conditions', variables, 'bubble-variable');
   // Controlled so picking a suggestion can dismiss the panel: the choice is
   // made, leaving it open just hides the block it applies to.
   const [open, setOpen] = useState(false);
 
-  const autoCompleteOptions = search.current(showIfKey || '');
+  const autoCompleteOptions = search(showIfKey || '');
 
   // A highlight must not outlive the popover that painted it.
   useEffect(() => () => highlightShowIfKey(editor, null), [editor]);
@@ -53,6 +52,7 @@ function _ShowPopover(props: ShowPopoverProps) {
             showIfKey && 'mly:bg-accent-wash mly:text-accent-ink mly:hover:bg-accent-wash'
           )}
           onClick={() => {
+            const names = snapshot();
             dock.open({
               title: 'Show if',
               fields: [
@@ -61,7 +61,7 @@ function _ShowPopover(props: ShowPopoverProps) {
                   value: showIfKey,
                   placeholder: 'e.g. isMember',
                   hint: 'Shown only when this is true in the data you send',
-                  options: knownNames(editor, 'conditions', variables, 'bubble-variable'),
+                  options: names,
                 },
               ],
               onCommit: ([raw]) => onShowIfKeyValueChange?.(raw.trim()),
@@ -80,7 +80,7 @@ function _ShowPopover(props: ShowPopoverProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) search.current = knownNames(editor, 'conditions', variables, 'bubble-variable');
+        if (next) snapshot();
         else highlightShowIfKey(editor, null);
       }}
     >

@@ -1,37 +1,31 @@
 import { Editor } from '@tiptap/react';
 import { Fragment, Node } from '@tiptap/pm/model';
-import { NodeSelection, Selection, TextSelection, Transaction } from '@tiptap/pm/state';
+import { EditorState, NodeSelection, Selection, TextSelection, Transaction } from '@tiptap/pm/state';
 import { v4 as uuidv4 } from 'uuid';
 import { findParentNode } from '@tiptap/core';
 import { DEFAULT_COLUMN_WIDTH } from '../nodes/columns/column';
+import { selectedNodeOfType } from './selected-node';
 
 export function getColumnCount(editor: Editor) {
   return getClosestNodeByName(editor, 'columns')?.node?.childCount || 0;
 }
 
-/**
- * The `columns` wrapper is the selection itself, not an ancestor of it. That
- * is the only shape touch can produce — a tap walks to the innermost
- * textblock or atom, never a wrapper, so a tap on a Columns block selects the
- * wrapper as a node and leaves no caret inside it.
- */
+/** The `columns` wrapper as the selection itself — the shape a tap leaves. */
 export function isColumnsSelected(editor: Editor): boolean {
-  const { selection } = editor.state;
-  return selection instanceof NodeSelection && selection.node.type.name === 'columns';
+  return !!selectedNodeOfType(editor.state, 'columns');
 }
 
 /**
- * The nearest `name` the selection belongs to. Ancestors, as a caret's
- * containers — plus the selected node itself, since a node-selected wrapper
- * is not among its own ancestors and every reader below would otherwise see
- * no columns at all.
+ * The nearest `name` the selection belongs to: ancestors, as a caret's
+ * containers, plus the selected node itself.
  */
 export function getClosestNodeByName(editor: Editor, name: string) {
   const { state } = editor.view;
   const { selection } = state;
-  if (selection instanceof NodeSelection && selection.node.type.name === name) {
+  const selected = selectedNodeOfType(state, name);
+  if (selected) {
     const $pos = state.doc.resolve(selection.from);
-    return { pos: selection.from, start: selection.from + 1, depth: $pos.depth, node: selection.node };
+    return { pos: selection.from, start: selection.from + 1, depth: $pos.depth, node: selected };
   }
   return findParentNode((node) => node.type.name === name)(selection);
 }
@@ -45,12 +39,12 @@ export function getClosestNodeByName(editor: Editor, name: string) {
  * the widths.
  */
 function selectionAfterRewrite(
-  before: Selection,
+  before: EditorState,
   tr: Transaction,
   columnsNodePos: number,
   caret: () => Selection
 ): Selection {
-  if (before instanceof NodeSelection && before.from === columnsNodePos && before.node.type.name === 'columns') {
+  if (selectedNodeOfType(before, 'columns') && before.selection.from === columnsNodePos) {
     return NodeSelection.create(tr.doc, columnsNodePos);
   }
   return caret();
@@ -334,7 +328,7 @@ export function addColumnByIndex(editor: Editor, index: number = -1) {
       .reduce((acc, node) => acc + node.nodeSize, 0);
 
   transaction.setSelection(
-    selectionAfterRewrite(state.selection, transaction, columnsNodePos, () =>
+    selectionAfterRewrite(state, transaction, columnsNodePos, () =>
       TextSelection.near(transaction.doc.resolve(newColumnPos))
     )
   );
@@ -383,7 +377,7 @@ export function removeColumnByIndex(editor: Editor, index: number = -1) {
       .reduce((acc, node) => acc + node.nodeSize, 0);
 
   transaction.setSelection(
-    selectionAfterRewrite(state.selection, transaction, columnsNodePos, () =>
+    selectionAfterRewrite(state, transaction, columnsNodePos, () =>
       TextSelection.near(transaction.doc.resolve(nextColumnPos))
     )
   );
