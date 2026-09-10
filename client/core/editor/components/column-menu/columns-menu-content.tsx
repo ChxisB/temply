@@ -22,7 +22,7 @@ export function ColumnsMenuContent({ editor }: { editor: Editor }) {
 
   return (
     <div className="mly:flex mly:items-stretch">
-      {state.isColumnActive && (
+      {(state.isColumnActive || state.isColumnsSelected) && (
         <>
           <ColumnsWidthConfig
             columnsCount={currentColumnCount}

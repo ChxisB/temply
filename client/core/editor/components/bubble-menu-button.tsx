@@ -10,6 +10,10 @@ export function BubbleMenuButton(item: BubbleMenuItem) {
     <BaseButton
       variant="ghost"
       size="sm"
+      // An icon alone names nothing. The tooltip is the label on a desktop and
+      // there is no hover at all on a phone, where these same buttons are what
+      // the Style sheet is made of.
+      {...(item.icon && tooltip ? { 'aria-label': tooltip } : {})}
       {...(item.command ? { onClick: item.command } : {})}
       data-state={item?.isActive?.()}
       className={cn(
