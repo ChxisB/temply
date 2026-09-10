@@ -36,6 +36,7 @@ import {
 import { VersionHistoryDialog } from '~/components/version-history-dialog';
 import { clearBlockSelection, selectBlockAt, selectedBlock } from '~/core/editor/commands/block';
 import { InputDockContext, type InputDock as InputDockApi, type InputDockSpec } from '~/core/editor/components/ui/input-dock';
+import { isEditingText } from '~/core/editor/plugins/block-selection';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { useVisualViewport } from '~/hooks/use-visual-viewport';
@@ -89,19 +90,25 @@ export function MobileEditorLayout({
 
   // The input dock: a Link, Show-if or Alt-text control in a sheet hands its
   // field here, the sheet closes so the keyboard has nothing to cover, and
-  // whichever sheet was open comes back when the field is done with.
+  // whichever sheet was open comes back when the field is done with. The
+  // Link and {} keys on the text format bar reach the dock too, but with no
+  // sheet to come back to — `editing` is what they leave behind instead, so
+  // closeDock knows to hand focus back to the editor rather than a sheet.
+  // Recorded from `isEditingText`, not the bar's face, because the face
+  // (`state` below) has already folded the field surface on top of it by the
+  // time closeDock runs.
   const [dock, setDock] = useState<InputDockSpec | null>(null);
-  const resumeAfterDock = useRef<{ sheet: SheetId; styleOpen: boolean } | null>(null);
+  const resumeAfterDock = useRef<{ sheet: SheetId; styleOpen: boolean; editing: boolean } | null>(null);
   const inputDock = useMemo<InputDockApi>(
     () => ({
       open: (spec) => {
-        resumeAfterDock.current = { sheet, styleOpen };
+        resumeAfterDock.current = { sheet, styleOpen, editing: !sheet && !styleOpen && !!editor && isEditingText(editor) };
         setSheet(null);
         setStyleOpen(false);
         setDock(spec);
       },
     }),
-    [sheet, styleOpen],
+    [sheet, styleOpen, editor],
   );
   const closeDock = () => {
     setDock(null);
@@ -111,6 +118,16 @@ export function MobileEditorLayout({
       setSheet(resume.sheet);
       setStyleOpen(resume.styleOpen);
     }
+    // Focus is what turns `state` back to 'text' — bottomBarState reads
+    // editor.isFocused, and the field surface's own input held DOM focus
+    // until this closed it. Only for the text-bar path: a Style sheet being
+    // resumed instead makes the editor non-editable on purpose (see the
+    // setEditable effect below), and focusing a non-editable view is a bug
+    // there, not a fix. `editor.commands.focus()` defers its real work to a
+    // rAF itself (tiptap's own focus command), which is what lets it win —
+    // it lands after React has committed the field face as inert and the
+    // input inside it has already given up focus, rather than racing it.
+    if (resume?.editing) editor?.commands.focus();
   };
 
   // The bar's face follows the selection; useEditorState re-renders on every
