@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { errorMessage, httpPost } from '~/lib/http';
 import { createAutosave, type AutosaveStatus } from '~/lib/autosave';
+import { captureThenFlush, captureThenLeave, createExitBeacon } from './exit-save';
 import { hasUnpublishedChanges } from '@temply/shared/publish';
 import { clearDraft, PLAYGROUND_DRAFT_ID } from '~/lib/drafts';
 import { createEditorUploader } from '~/lib/assets';
@@ -182,14 +183,14 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     });
   }, [template?.id]);
 
-  // Leaving the page (a Link, a route change) flushes whatever is waiting;
-  // the request outlives the component.
+  // Leaving the page (a Link, a route change) saves whatever is waiting —
+  // including the capture still sitting in its own timer, which the effect
+  // that owns it is about to clear. The autosave only holds what a capture
+  // handed it, so the capture is taken here first or the last run of typing
+  // leaves with the component. The request outlives it.
   useEffect(() => {
     if (!autosave) return;
-    return () => {
-      autosave.dispose();
-      void autosave.flush();
-    };
+    return () => captureThenLeave(() => captureRef.current(), autosave);
   }, [autosave]);
 
   const { mutateAsync: publishTemplate, isPending: isPublishing } = useMutation({
@@ -690,30 +691,53 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
    *  new shell mounts — a layout effect is already too late. */
   const flushContent = () => captureRef.current();
 
-  // Closing the tab is the one exit the autosave cannot await. A template's
-  // pending draft is beaconed — the browser sends it after the page is gone
-  // — and the leave is only questioned when the last save failed, since then
-  // nothing is holding the work. The playground has no autosave to lose, so
-  // it never has a reason to hold the tab open.
+  // The page going away is the one exit the autosave cannot await, so a
+  // template's pending draft is beaconed instead — the browser posts it once
+  // the page is gone. `beforeunload` alone would only cover the desktop:
+  // mobile Safari does not fire it for the ways a phone leaves a page — an
+  // app switch, a discarded tab, the home gesture — which is every exit the
+  // phone shell has. `pagehide` and a hidden `visibilitychange` cover those,
+  // and both can fire for one exit, which the beacon absorbs. What
+  // `beforeunload` keeps to itself is the prompt: only it can question a
+  // leave, and only a failed save is worth questioning, since nothing else
+  // is then holding the work. The playground has no draft to lose, so it
+  // registers nothing at all.
   const saveStatusRef = useRef(saveStatus);
   saveStatusRef.current = saveStatus;
+  const templateId = template?.id;
   useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => {
-      if (!autosave || !template?.id) return;
-      const snapshot = latestSnapshot.current;
-      if (autosave.pending() && snapshot) {
+    if (!autosave || !templateId) return;
+    const beacon = createExitBeacon<DraftSnapshot>({
+      // Same rule as every other exit: what the debounce is still holding is
+      // the newest work there is, and only a capture hands it over.
+      capture: () => captureRef.current(),
+      pending: () => autosave.pending(),
+      snapshot: () => latestSnapshot.current,
+      send: (snapshot) => {
         navigator.sendBeacon(
-          `/api/v1/templates/${template.id}`,
+          `/api/v1/templates/${templateId}`,
           new Blob([JSON.stringify(snapshot.body)], { type: 'application/json' }),
         );
-      }
+      },
+    });
+    const warn = (event: BeforeUnloadEvent) => {
+      beacon();
       if (saveStatusRef.current !== 'error') return;
       event.preventDefault();
       event.returnValue = '';
     };
+    const hide = () => {
+      if (document.visibilityState === 'hidden') beacon();
+    };
     window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [autosave, template?.id]);
+    window.addEventListener('pagehide', beacon);
+    document.addEventListener('visibilitychange', hide);
+    return () => {
+      window.removeEventListener('beforeunload', warn);
+      window.removeEventListener('pagehide', beacon);
+      document.removeEventListener('visibilitychange', hide);
+    };
+  }, [autosave, templateId]);
 
   const handlePublish = async () => {
     if (!autosave) return;
@@ -728,8 +752,12 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
       ensureSizeMeasured();
       return;
     }
-    // What is on screen is what gets published, so the draft goes first.
-    await autosave.flush();
+    // What is on screen is what gets published, so the draft goes first —
+    // captured, then flushed. A flush on its own posts whatever the last
+    // capture left, so a block or a subject edited inside the debounce would
+    // publish the previous draft and then autosave the newer one on top,
+    // hanging "Unpublished changes" off the back of a "Published" toast.
+    await captureThenFlush(() => captureRef.current(), autosave);
     if (autosave.pending()) {
       toast.error('The draft could not be saved, so it was not published.');
       return;
