@@ -283,6 +283,9 @@ export function MobileEditorLayout({
   const scrollTail = Math.max(96, Math.round((frame?.height ?? 0) * 0.55));
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
+  /** The draft is not on the server and the phone has to say so somewhere it
+   *  is seen: the status itself lives in the ⋯ menu, which is closed. */
+  const saveFailed = model.saveStatus === 'error';
 
   // Phone autofocus would raise the keyboard on arrival; the canvas is the
   // first thing to see, not the first thing to type into.
@@ -358,8 +361,24 @@ export function MobileEditorLayout({
           // unclickable behind its pointer-event guard.
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className={touchTarget} aria-label="More">
+              {/* A failed save is the one status that asks for something, and
+                  the menu it asks from is a tap the author has no reason to
+                  make. The dot says so from the bar; the Retry stays inside,
+                  where there is room for a word. */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(touchTarget, 'relative')}
+                aria-label={saveFailed ? 'More — changes not saved' : 'More'}
+              >
                 <MoreHorizontalIcon />
+                <span
+                  aria-hidden
+                  className={cn(
+                    'absolute top-2 right-2 size-2 rounded-full bg-danger transition-opacity duration-base ease-out motion-reduce:transition-none',
+                    saveFailed ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
