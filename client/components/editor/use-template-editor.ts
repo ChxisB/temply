@@ -6,7 +6,7 @@ import type { Editor, FocusPosition, JSONContent } from '@tiptap/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { errorMessage, httpDelete, httpPost } from '~/lib/http';
+import { errorMessage, httpPost } from '~/lib/http';
 import { createAutosave, type AutosaveStatus } from '~/lib/autosave';
 import { hasUnpublishedChanges } from '@temply/shared/publish';
 import { clearDraft, PLAYGROUND_DRAFT_ID } from '~/lib/drafts';
@@ -205,20 +205,6 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
       toast.error(error.message || 'Could not publish.');
     },
   });
-
-  const { mutateAsync: deleteTemplate, isPending: isDeletePending } =
-    useMutation({
-      mutationFn: () => {
-        return httpDelete(`/api/v1/templates/${template?.id}`);
-      },
-      onSuccess: () => {
-        toast.success('Template deleted successfully.');
-        router.push('/dashboard/templates');
-      },
-      onError: (error) => {
-        toast.error(error.message || 'Failed to delete template.');
-      },
-    });
 
   const imageUploader = useMemo(() => createEditorUploader(), []);
 
