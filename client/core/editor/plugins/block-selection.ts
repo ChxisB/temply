@@ -91,6 +91,21 @@ export const BlockSelection = Extension.create({
           handleDOMEvents: {
             mousedown(view: EditorView, event: MouseEvent) {
               if (event.button !== 0) return false;
+              // A read-only view is a covered one, and a covered canvas takes
+              // no taps at all. The phone shell turns editing off while a
+              // sheet or a field surface sits over the canvas, and those
+              // surfaces commit against the selection they were opened on — a
+              // tap that moved it underneath them landed their edit on
+              // whatever had just been tapped instead. Returning false is not
+              // enough: the browser's own default then puts a DOM selection
+              // into the read-only text and takes the focus off the field, and
+              // ProseMirror reads that selection back. A plugin handler runs
+              // whether or not the view is editable, so the tap has to be
+              // stopped here. The desktop view is never read-only.
+              if (!view.editable) {
+                event.preventDefault();
+                return true;
+              }
               const found = view.posAtCoords({ left: event.clientX, top: event.clientY });
               if (!found) return false;
               const tap = tapTransaction(view.state, found.pos, found.inside);
