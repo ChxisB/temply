@@ -10,7 +10,6 @@ import {
   Loader2Icon,
   MailIcon,
   MoonIcon,
-  RotateCcwIcon,
   SendIcon,
   SlidersHorizontalIcon,
 } from 'lucide-react';
@@ -33,7 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { VersionHistoryDialog } from '../version-history-dialog';
 import { ShareLinkPopover } from '../share-link-popover';
 import { TemplateThemePanel } from '../template-theme-panel';
-import { CopyHtmlButton, DownloadButton, SaveStatus, fileSlug, formatDraftAge } from '../email-editor-sandbox';
+import { CopyHtmlButton, DownloadButton, SaveStatus, fileSlug } from '../email-editor-sandbox';
 import type { TemplateEditorModel } from './use-template-editor';
 
 // The app-wide input treatment; the global :focus-visible ring supplies focus.
@@ -64,33 +63,11 @@ export function DesktopEditorLayout({
     preflight, preflightExpanded, setPreflightExpanded,
     saveStatus, autosave, unpublished, publishedAt, publishedLabel,
     isPublishing, publishArmed, handlePublish, sendArmed, handleSend, handleDiscarded,
-    draftFound, restoreDraft, discardDraft,
     shortCodeCopied, copyShortCode,
   } = model;
 
   return (
     <div className="space-y-6">
-      {/* A banner rather than a modal: the question is about the work on the
-          screen behind it, so covering that up would be the wrong move. */}
-      {draftFound && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent bg-accent-wash px-3.5 py-2.5">
-          <p className="text-sm text-ink">
-            <span className="font-medium">Unsaved changes</span> from{' '}
-            {formatDraftAge(draftFound.savedAt)}. You left{' '}
-            {template?.id ? 'this template' : 'the playground'} without saving.
-          </p>
-          <div className="flex items-center gap-2">
-            <Button onClick={restoreDraft}>
-              <RotateCcwIcon />
-              Restore
-            </Button>
-            <Button variant="ghost" onClick={discardDraft}>
-              Discard
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Toolbar — every control in it acts on a saved template, so on the
           anonymous playground it would render as an empty box. */}
       {template?.id && (

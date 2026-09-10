@@ -9,14 +9,7 @@ import { toast } from 'sonner';
 import { errorMessage, httpDelete, httpPost } from '~/lib/http';
 import { createAutosave, type AutosaveStatus } from '~/lib/autosave';
 import { hasUnpublishedChanges } from '@temply/shared/publish';
-import {
-  clearDraft,
-  isNewerThan,
-  PLAYGROUND_DRAFT_ID,
-  readDraft,
-  writeDraft,
-  type Draft,
-} from '~/lib/drafts';
+import { clearDraft, PLAYGROUND_DRAFT_ID } from '~/lib/drafts';
 import { createEditorUploader } from '~/lib/assets';
 import { useCopyToClipboard } from '~/hooks/use-copy-to-clipboard';
 import type { Mail } from '~/db/schema';
@@ -54,6 +47,19 @@ export type EmailEditorSandboxProps = {
   /** False on the signed-out playground: no upload, no library, URL only. */
   imageUploads?: boolean;
   autofocus?: FocusPosition;
+  /**
+   * Starting values for the "Email details" fields when there is no row to
+   * read them from. A saved template always takes subject and preview text
+   * from its row instead — this only fills the gap for a caller that has
+   * none, which today is the playground only.
+   */
+  seedFields?: {
+    subject: string;
+    previewText: string;
+    fromName: string;
+    to: string;
+    replyTo: string;
+  };
 };
 
 /** Which render a view needs. Preview and the two source views differ only in
@@ -109,23 +115,21 @@ export type TemplateEditorModel = {
   isPublishing: boolean; publishArmed: boolean; handlePublish: () => Promise<void>;
   sendArmed: boolean; handleSend: () => Promise<void>;
   handleDiscarded: (row: Mail) => void;
-  // drafts
-  draftFound: Draft | null; restoreDraft: () => void; discardDraft: () => void;
   // short code
   shortCodeCopied: boolean; copyShortCode: () => Promise<void>;
 };
 
 export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEditorModel {
-  const { template, imageUploads = true } = props;
+  const { template, imageUploads = true, seedFields } = props;
 
   const router = useRouter();
 
-  const [subject, setSubject] = useState(template?.title || '');
-  const [previewText, setPreviewText] = useState(template?.preview_text || '');
-  const [fromName, setFromName] = useState('');
-  const [to, setTo] = useState('');
+  const [subject, setSubject] = useState(template?.title || seedFields?.subject || '');
+  const [previewText, setPreviewText] = useState(template?.preview_text || seedFields?.previewText || '');
+  const [fromName, setFromName] = useState(seedFields?.fromName || '');
+  const [to, setTo] = useState(seedFields?.to || '');
 
-  const [replyTo, setReplyTo] = useState('');
+  const [replyTo, setReplyTo] = useState(seedFields?.replyTo || '');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [theme, setTheme] = useState<RendererThemeOptions>(() => {
     if (template?.theme) {
@@ -552,22 +556,16 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   // --- Unsaved work ---------------------------------------------------------
   // Kept in the browser rather than on the row: the public render API serves
   // that row, so autosaving into it would ship a half-finished email to
-  // whoever asked for one next.
-  // The playground has no row, so its work is keyed under a fixed id instead
-  // of being unprotected. A saved template never touches localStorage: its
-  // draft lives on the server, so it follows the author to the next machine.
-  const usesLocalDraft = !template?.id;
-  const draftId = PLAYGROUND_DRAFT_ID;
-  const [draftFound, setDraftFound] = useState<Draft | null>(null);
-  const hasUnsavedWork = useRef(false);
-  /**
-   * True while the banner offers a draft nobody has answered for. The autosave
-   * capture must stand down until the offer is answered, or the first debounce tick would
-   * overwrite the very draft on offer with the untouched document. A ref, not
-   * draftFound itself: the autosave effect's dependency list deliberately
-   * leaves banner state out, so its closure would go stale.
-   */
-  const offerPending = useRef(false);
+  // whoever asked for one next. A saved template never touches localStorage:
+  // its draft lives on the server, so it follows the author to the next
+  // machine.
+  //
+  // The playground has no row and keeps nothing at all: a demo that greets a
+  // visitor with someone else's half-finished email is worse than one that
+  // loses their own experiment on reload, so every visit starts from the same
+  // seeded document. A version before this one offered a saved draft back —
+  // any leftover from that is purged once below, so a returning visitor is
+  // never shown it.
   const lastWritten = useRef('');
   /** Bumped when the screen is reset to the row (a discard), so the baseline
    *  is re-read once the new state has rendered. */
@@ -588,41 +586,11 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     if (!editor) return;
     savedFingerprint.current = persistedFingerprint();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, draftId, baselineKey]);
+  }, [editor, baselineKey]);
 
-  // Offer a draft that holds work the saved row does not; clear one that was
-  // already published, so it cannot resurface months later.
   useEffect(() => {
-    if (!usesLocalDraft) return;
-    const draft = readDraft(draftId);
-    if (!draft) return;
-    // With no row to compare against, any draft counts as newer.
-    if (isNewerThan(draft, template?.updated_at)) {
-      offerPending.current = true;
-      setDraftFound(draft);
-    } else {
-      clearDraft(draftId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, usesLocalDraft]);
-
-  const restoreDraft = () => {
-    if (!draftFound) return;
-    setSubject(draftFound.subject);
-    setPreviewText(draftFound.previewText);
-    setFromName(draftFound.fromName);
-    setReplyTo(draftFound.replyTo);
-    setTheme(draftFound.theme as RendererThemeOptions);
-    editor?.commands.setContent(draftFound.content as JSONContent);
-    offerPending.current = false;
-    setDraftFound(null);
-  };
-
-  const discardDraft = () => {
-    clearDraft(draftId);
-    offerPending.current = false;
-    setDraftFound(null);
-  };
+    if (!template?.id) clearDraft(PLAYGROUND_DRAFT_ID);
+  }, [template?.id]);
 
   /** The document editorContent was last set from, so an unchanged one costs
    *  no render. */
@@ -661,19 +629,19 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   };
 
   // Autosave: debounced and silent. It fires when something actually
-  // changed, so an idle tab does nothing. A template's draft goes to the
-  // server; the playground's goes to localStorage. Neither snapshots a
+  // changed, so an idle tab does nothing. Only a saved template has anywhere
+  // to send it — the playground has no row, so this effect keeps
+  // editorContent current for it and stops there. Neither snapshots a
   // version — that is what Publish is for.
   useEffect(() => {
     if (!editor) return;
 
     const capture = () => {
-      // One read of the document per tick: the fingerprint, the shell's copy
-      // and the draft body all describe the same moment, so they all come
-      // from this one serialisation.
+      // One read of the document per tick: the fingerprint and the shell's
+      // copy both describe the same moment, so they come from this one
+      // serialisation.
       const json = editor.getJSON();
       const serializedContent = JSON.stringify(json);
-      const fingerprint = persistedFingerprint(json);
 
       // Crossing 640px swaps the shell, which remounts the editor from
       // editorContent — so that has to be the document as it stands, not the
@@ -685,61 +653,27 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
         setEditorContent(json);
       }
 
-      if (!usesLocalDraft && autosave) {
-        if (fingerprint === savedFingerprint.current) {
-          lastWritten.current = '';
-          return;
-        }
-        if (fingerprint === lastWritten.current) return;
-        lastWritten.current = fingerprint;
-        const snapshot: DraftSnapshot = {
-          body: {
-            title: subject,
-            previewText,
-            content: serializedContent,
-            theme: JSON.stringify(theme),
-          },
-          fingerprint,
-        };
-        latestSnapshot.current = snapshot;
-        autosave.change(snapshot);
-        setUnpublished(true);
-        return;
-      }
+      if (!autosave) return;
 
-      // While the offer stands, writing would overwrite the very draft on
-      // offer and clearing would destroy it — but the pause must not blind
-      // the beforeunload guard: typing past an unanswered banner is still
-      // unsaved work, so the dirtiness signal keeps tracking.
-      if (offerPending.current) {
-        hasUnsavedWork.current = fingerprint !== savedFingerprint.current;
-        return;
-      }
-
-      // The saved state is the baseline, not an empty string: comparing
-      // against nothing marked every template dirty the moment it opened, so
-      // leaving one you had only read warned you about work you never did.
-      // A warning that always fires is a warning nobody reads.
+      const fingerprint = persistedFingerprint(json);
       if (fingerprint === savedFingerprint.current) {
-        hasUnsavedWork.current = false;
         lastWritten.current = '';
-        clearDraft(draftId);
         return;
       }
-
       if (fingerprint === lastWritten.current) return;
-
       lastWritten.current = fingerprint;
-      hasUnsavedWork.current = true;
-      writeDraft(draftId, {
-        subject,
-        previewText,
-        fromName,
-        replyTo,
-        content: json,
-        theme,
-        savedAt: Date.now(),
-      });
+      const snapshot: DraftSnapshot = {
+        body: {
+          title: subject,
+          previewText,
+          content: serializedContent,
+          theme: JSON.stringify(theme),
+        },
+        fingerprint,
+      };
+      latestSnapshot.current = snapshot;
+      autosave.change(snapshot);
+      setUnpublished(true);
     };
 
     captureRef.current = capture;
@@ -761,7 +695,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subject, previewText, fromName, replyTo, theme, editor, draftId, usesLocalDraft, autosave]);
+  }, [subject, previewText, theme, editor, autosave]);
 
   /** Takes the live document now instead of waiting for the debounce. The
    *  640px shell swap remounts the editor from `editorContent`, so anything
@@ -772,25 +706,22 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
   // Closing the tab is the one exit the autosave cannot await. A template's
   // pending draft is beaconed — the browser sends it after the page is gone
-  // — and the leave is only questioned when the last save failed, since
-  // then nothing is holding the work. The playground's localStorage draft
-  // survives on its own; its warning covers the work not yet written.
+  // — and the leave is only questioned when the last save failed, since then
+  // nothing is holding the work. The playground has no autosave to lose, so
+  // it never has a reason to hold the tab open.
   const saveStatusRef = useRef(saveStatus);
   saveStatusRef.current = saveStatus;
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
-      if (autosave && template?.id) {
-        const snapshot = latestSnapshot.current;
-        if (autosave.pending() && snapshot) {
-          navigator.sendBeacon(
-            `/api/v1/templates/${template.id}`,
-            new Blob([JSON.stringify(snapshot.body)], { type: 'application/json' }),
-          );
-        }
-        if (saveStatusRef.current !== 'error') return;
-      } else if (!hasUnsavedWork.current) {
-        return;
+      if (!autosave || !template?.id) return;
+      const snapshot = latestSnapshot.current;
+      if (autosave.pending() && snapshot) {
+        navigator.sendBeacon(
+          `/api/v1/templates/${template.id}`,
+          new Blob([JSON.stringify(snapshot.body)], { type: 'application/json' }),
+        );
       }
+      if (saveStatusRef.current !== 'error') return;
       event.preventDefault();
       event.returnValue = '';
     };
@@ -937,7 +868,6 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     preflight, preflightExpanded, setPreflightExpanded,
     saveStatus, autosave, unpublished, publishedAt, publishedLabel,
     isPublishing, publishArmed, handlePublish, sendArmed, handleSend, handleDiscarded,
-    draftFound, restoreDraft, discardDraft,
     shortCodeCopied, copyShortCode,
   };
 }

@@ -52,18 +52,6 @@ export function SaveStatus({ status, onRetry }: { status: AutosaveStatus; onRetr
   );
 }
 
-/** "12 minutes ago" tells you whether the draft is worth having; a timestamp
- *  would make you do the subtraction. */
-export function formatDraftAge(savedAt: number): string {
-  const minutes = Math.round((Date.now() - savedAt) / 60_000);
-  if (minutes < 1) return 'a moment ago';
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  const days = Math.round(hours / 24);
-  return `${days} day${days === 1 ? '' : 's'} ago`;
-}
-
 /** A file name from the subject line: "Welcome to Temply" → welcome-to-temply. */
 export function fileSlug(title: string): string {
   const slug = title

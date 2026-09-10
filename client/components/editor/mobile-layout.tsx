@@ -40,7 +40,7 @@ import { isEditingText } from '~/core/editor/plugins/block-selection';
 import { EMAIL_TRANSFORM, isLibraryUrl, UPLOAD_MIME_TYPES, withTransform } from '~/lib/assets';
 import { cn } from '~/lib/classname';
 import { useVisualViewport } from '~/hooks/use-visual-viewport';
-import { formatDraftAge, SaveStatus } from '../email-editor-sandbox';
+import { SaveStatus } from '../email-editor-sandbox';
 import { bottomBarState, EditorBottomBar, type BottomBarState, type IdleTab } from './bottom-bar';
 import { MobileSheets, type SheetId } from './mobile-sheets';
 import { ShellFrameContext } from './shell-context';
@@ -449,20 +449,6 @@ export function MobileEditorLayout({
           </DropdownMenu>
         )}
       </header>
-
-      {model.draftFound ? (
-        <div className="flex items-center justify-between gap-2 border-b border-accent bg-accent-wash px-3 py-2 text-sm text-ink">
-          <span className="min-w-0">Unsaved changes from {formatDraftAge(model.draftFound.savedAt)}.</span>
-          <span className="flex shrink-0 gap-1">
-            <Button className="h-11 px-3" onClick={model.restoreDraft}>
-              Restore
-            </Button>
-            <Button variant="ghost" className="h-11 px-3" onClick={model.discardDraft}>
-              Discard
-            </Button>
-          </span>
-        </div>
-      ) : null}
 
       {/* The canvas: the frame's one scroller. `isolate` keeps the document's
           own stacking (a spacer is z-50 in the editor's CSS) inside it, so no

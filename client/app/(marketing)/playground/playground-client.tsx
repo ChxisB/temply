@@ -17,7 +17,17 @@ export default function PlaygroundClient() {
             Craft and preview your email templates
           </p>
         </div>
-        <EmailEditorSandbox imageUploads={false} autofocus={false} />
+        <EmailEditorSandbox
+          imageUploads={false}
+          autofocus={false}
+          seedFields={{
+            subject: 'Welcome to Temply',
+            previewText: 'Build a responsive email in about a minute.',
+            fromName: 'Temply',
+            to: 'you@example.com',
+            replyTo: 'reply@example.com',
+          }}
+        />
       </div>
     </main>
   );

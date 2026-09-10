@@ -1,16 +1,9 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
-import {
-  clearDraft,
-  isNewerThan,
-  PLAYGROUND_DRAFT_ID,
-  readDraft,
-  writeDraft,
-  type Draft,
-} from './drafts';
+import { clearDraft, PLAYGROUND_DRAFT_ID } from './drafts';
 
 const store = new Map<string, string>();
 
-// bun's test environment has no DOM. The store only needs the three methods
+// bun's test environment has no DOM. The store only needs the two methods
 // the module calls, so a Map stands in for it.
 (globalThis as any).window = {
   localStorage: {
@@ -20,135 +13,33 @@ const store = new Map<string, string>();
   },
 };
 
-const draft = (savedAt: number): Draft => ({
-  subject: 'Welcome',
-  previewText: 'Glad you are here',
-  fromName: 'Acme',
-  replyTo: '',
-  content: { type: 'doc', content: [] },
-  theme: { button: { backgroundColor: '#4F46E5' } },
-  savedAt,
-});
-
 beforeEach(() => store.clear());
 
-describe('draft storage', () => {
-  test('round-trips a draft', () => {
-    writeDraft('tpl_1', draft(1000));
-    expect(readDraft('tpl_1')).toEqual(draft(1000));
-  });
-
-  test('returns null when nothing was written', () => {
-    expect(readDraft('tpl_missing')).toBeNull();
-  });
-
-  test('keeps drafts of different templates apart', () => {
-    writeDraft('tpl_1', draft(1000));
-    writeDraft('tpl_2', { ...draft(2000), subject: 'Receipt' });
-    expect(readDraft('tpl_1')?.subject).toBe('Welcome');
-    expect(readDraft('tpl_2')?.subject).toBe('Receipt');
-  });
-
-  test('clearing removes only that template', () => {
-    writeDraft('tpl_1', draft(1000));
-    writeDraft('tpl_2', draft(1000));
-    clearDraft('tpl_1');
-    expect(readDraft('tpl_1')).toBeNull();
-    expect(readDraft('tpl_2')).not.toBeNull();
-  });
-
-  test('treats malformed storage as no draft', () => {
-    store.set('temply:draft:tpl_1', '{ not json');
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('rejects an entry without a timestamp', () => {
-    store.set('temply:draft:tpl_1', JSON.stringify({ subject: 'x' }));
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('round-trips a playground draft under the fixed key', () => {
-    writeDraft(PLAYGROUND_DRAFT_ID, draft(1000));
-    expect(readDraft(PLAYGROUND_DRAFT_ID)).toEqual(draft(1000));
-  });
-
-  test('the playground draft and a template draft stay apart', () => {
-    writeDraft(PLAYGROUND_DRAFT_ID, { ...draft(1000), subject: 'Scratch' });
-    writeDraft('tpl_1', draft(2000));
-    expect(readDraft(PLAYGROUND_DRAFT_ID)?.subject).toBe('Scratch');
-    expect(readDraft('tpl_1')?.subject).toBe('Welcome');
-    clearDraft('tpl_1');
-    expect(readDraft(PLAYGROUND_DRAFT_ID)).not.toBeNull();
+describe('clearDraft', () => {
+  test('removes a leftover draft under the playground key', () => {
+    store.set('temply:draft:playground', '{"subject":"stale"}');
     clearDraft(PLAYGROUND_DRAFT_ID);
-    expect(readDraft(PLAYGROUND_DRAFT_ID)).toBeNull();
+    expect(store.has('temply:draft:playground')).toBe(false);
   });
 
-  test('a write that throws leaves the caller unharmed', () => {
-    const original = (globalThis as any).window.localStorage.setItem;
-    (globalThis as any).window.localStorage.setItem = () => {
-      throw new Error('QuotaExceededError');
+  test('removes only the requested key, not another template\'s', () => {
+    store.set('temply:draft:playground', '{}');
+    store.set('temply:draft:tpl_1', '{}');
+    clearDraft(PLAYGROUND_DRAFT_ID);
+    expect(store.has('temply:draft:playground')).toBe(false);
+    expect(store.has('temply:draft:tpl_1')).toBe(true);
+  });
+
+  test('does nothing when there is no draft to clear', () => {
+    expect(() => clearDraft(PLAYGROUND_DRAFT_ID)).not.toThrow();
+  });
+
+  test('a removal that throws leaves the caller unharmed', () => {
+    const original = (globalThis as any).window.localStorage.removeItem;
+    (globalThis as any).window.localStorage.removeItem = () => {
+      throw new Error('SecurityError');
     };
-    expect(() => writeDraft('tpl_1', draft(1000))).not.toThrow();
-    (globalThis as any).window.localStorage.setItem = original;
-  });
-});
-
-describe('isNewerThan', () => {
-  const saved = '2026-08-06T12:00:00.000Z';
-  const savedMs = new Date(saved).getTime();
-
-  test('a draft written after the last save has unpublished work', () => {
-    expect(isNewerThan(draft(savedMs + 60_000), saved)).toBe(true);
-  });
-
-  test('a draft written before the last save is stale', () => {
-    expect(isNewerThan(draft(savedMs - 60_000), saved)).toBe(false);
-  });
-
-  test('a template that has never been saved keeps its draft', () => {
-    expect(isNewerThan(draft(savedMs), null)).toBe(true);
-  });
-
-  test('a row with no timestamp at all keeps the draft', () => {
-    // The playground path evaluates exactly this: template?.updated_at is
-    // undefined because there is no template.
-    expect(isNewerThan(draft(savedMs), undefined)).toBe(true);
-  });
-
-  test('an unparseable timestamp keeps the draft rather than dropping work', () => {
-    expect(isNewerThan(draft(savedMs), 'not a date')).toBe(true);
-  });
-});
-
-describe('corrupt drafts', () => {
-  const raw = (value: unknown) =>
-    store.set('temply:draft:tpl_1', typeof value === 'string' ? value : JSON.stringify(value));
-
-  test('rejects a draft missing its content', () => {
-    const { content: _content, ...rest } = draft(1);
-    raw(rest);
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('rejects a draft whose theme is not an object', () => {
-    raw({ ...draft(1), theme: 'null' });
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('rejects a draft whose fields lost their types', () => {
-    raw({ ...draft(1), subject: 42 });
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('rejects non-object and unparsable entries', () => {
-    raw('"just a string"');
-    expect(readDraft('tpl_1')).toBeNull();
-    raw('{oops');
-    expect(readDraft('tpl_1')).toBeNull();
-  });
-
-  test('still accepts everything writeDraft produces', () => {
-    writeDraft('tpl_1', draft(7));
-    expect(readDraft('tpl_1')).not.toBeNull();
+    expect(() => clearDraft(PLAYGROUND_DRAFT_ID)).not.toThrow();
+    (globalThis as any).window.localStorage.removeItem = original;
   });
 });

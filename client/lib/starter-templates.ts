@@ -32,7 +32,7 @@ export type StarterTemplate = {
 
 const logo: JSONContent = {
   type: 'logo',
-  attrs: { src: '/brand/mark.png', alt: null, title: null, size: 'md', alignment: 'left' },
+  attrs: { src: '/brand/mark.png', alt: 'Temply', title: null, size: 'md', alignment: 'left' },
 };
 const spacer = (height: 'sm' | 'md' | 'lg' | 'xl' = 'lg'): JSONContent => ({ type: 'spacer', attrs: { height } });
 const heading = (content: string | JSONContent[], level: 1 | 2 | 3 = 2): JSONContent => ({
@@ -206,12 +206,22 @@ export function personaliseStarter(starter: StarterTemplate, workspace: Workspac
   const swapName = name && name !== SAMPLE_COMPANY;
   if (!swapName && !logoUrl) return starter;
   const swap = (text: string) => (swapName ? text.split(SAMPLE_COMPANY).join(name) : text);
-  const walk = (node: JSONContent): JSONContent => ({
-    ...node,
-    ...(typeof node.text === 'string' ? { text: swap(node.text) } : {}),
-    ...(node.type === 'logo' && logoUrl ? { attrs: { ...node.attrs, src: logoUrl } } : {}),
-    ...(node.content ? { content: node.content.map(walk) } : {}),
-  });
+  // attrs is built up rather than spread twice — alt's swap and the logo's
+  // src replacement both land in the same object, or the second spread would
+  // silently drop the first.
+  const walk = (node: JSONContent): JSONContent => {
+    const attrs = node.attrs ? { ...node.attrs } : undefined;
+    if (attrs) {
+      if (typeof attrs.alt === 'string') attrs.alt = swap(attrs.alt);
+      if (node.type === 'logo' && logoUrl) attrs.src = logoUrl;
+    }
+    return {
+      ...node,
+      ...(typeof node.text === 'string' ? { text: swap(node.text) } : {}),
+      ...(attrs ? { attrs } : {}),
+      ...(node.content ? { content: node.content.map(walk) } : {}),
+    };
+  };
   return {
     ...starter,
     subject: swap(starter.subject),
