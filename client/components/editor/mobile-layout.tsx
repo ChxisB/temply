@@ -117,10 +117,11 @@ export function MobileEditorLayout({
         // The Aa panel goes too, and it is the one that cannot see itself out:
         // it only clears when the selection stops being text, and a field
         // surface over a caret leaves that selection exactly where it was. The
-        // panel then held the bar at its open height behind the field — 382px
-        // of bar for a surface that needs 149 — with no way back but closing
-        // the field. It is not restored afterwards either: the panel exists to
-        // stand in for the keyboard, and closeDock hands the keyboard back.
+        // panel left open holds the bar at its own height behind the field —
+        // 382px of bar for a surface that needs 149 — with no way back but
+        // closing the field. It is not restored afterwards either: the panel
+        // exists to stand in for the keyboard, and closeDock hands the
+        // keyboard back.
         setPanelOpen(false);
         setDock(spec);
       },
@@ -273,10 +274,11 @@ export function MobileEditorLayout({
 
   // The eye sheet is the only thing that puts the model into a rendered mode,
   // and the canvas is `hidden` while the mode is not 'edit' — so the canvas
-  // coming back hangs off the eye sheet being gone rather than off one branch
-  // of the function that used to close it. Every other route to a sheet — the
-  // armed-preflight effect above, a tab, the subject button, + — could land on
-  // top of the eye sheet and leave the editor off the screen for good.
+  // coming back hangs off the eye sheet being gone, not off any one path out
+  // of it. Every other route to a sheet — the armed-preflight effect above, a
+  // tab, the subject button, + — can land on top of the eye sheet, and a
+  // restore that only ran on its own close would leave the editor off the
+  // screen for good.
   useEffect(() => {
     if (sheet !== 'eye' && model.mode !== 'edit') model.changeMode('edit');
   }, [sheet, model]);

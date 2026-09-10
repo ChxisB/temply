@@ -66,9 +66,9 @@ describe('block commands', () => {
   });
 
   it('deleting a block whose neighbours are not blocks leaves a caret, not a node selection', () => {
-    // The `before` fallback used to take whatever sat behind the deleted
-    // node — for a pill, the text run in front of it, which is no block and
-    // no subject for the action bar.
+    // What sits behind a deleted node is only a candidate if it is a block:
+    // behind a pill is the text run in front of it, which the action bar has
+    // no subject for.
     const editor = makeEditor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hi ' }, pill('name')] }] });
     selectBlockAt(editor, 4);
     expect(deleteBlock(editor)).toBe(true);

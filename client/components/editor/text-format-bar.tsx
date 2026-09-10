@@ -139,9 +139,9 @@ export function TextFormatBar({
       .run();
   };
 
-  // The link key goes straight to the field. It used to open the Aa panel on
-  // the way — seven swatches, Align and More expanded behind a surface that
-  // then covered them, with the word Link on screen twice.
+  // The link key opens the field surface directly; the Aa panel is not on the
+  // path. Routing through the panel expands seven swatches, Align and More
+  // behind a surface that covers them, and puts the word Link on screen twice.
   const openLink = () => setLinkOpen(true);
 
   return (

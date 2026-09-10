@@ -9,9 +9,9 @@ import { keepFocus } from './text-format-bar';
 
 /** Every field's committed value, coerced to a controlled draft. A nullish
  *  value would hand the input back to the DOM, which then keeps whatever the
- *  previous field left in it and answers every keystroke twice — the fault
- *  behind the placeholder field that went uncontrolled, closed here so it
- *  cannot reopen at a call site. */
+ *  previous field left in it and answers every keystroke twice. The coercion
+ *  belongs here rather than at a call site, where one spec forgetting it is
+ *  enough. */
 export function seedDrafts(fields: InputField[]): string[] {
   return fields.map((field) => field.value ?? '');
 }
@@ -97,9 +97,7 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
               onCancel={onClose}
               onNext={() => inputRefs.current[index + 1]?.focus()}
               // A field labelled exactly like the surface would say the same
-              // word twice right under the title — the repeat a single-field
-              // surface used to get away with because the title was never
-              // drawn at all.
+              // word twice, the title and the label one under the other.
               hideLabel={field.label === view.title}
             />
           ))}
@@ -115,9 +113,9 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
  * nothing to offer has no chip row at all — reserving the space for an empty
  * row makes a one-field surface as tall as a two-field one.
  *
- * A chip fills its own field and stops there. It used to commit the surface on
- * the spot, which cannot survive a second field, and one ✓ finishing the whole
- * edit is the rule the four controls now share.
+ * A chip fills its own field and stops there: one ✓ finishes the whole edit,
+ * the rule the four controls share. A chip that committed on the spot would
+ * take a two-field surface with it before the second field was touched.
  */
 function FieldRow({
   field, index, draft, onDraft, inputRef, last, onCancel, onNext, hideLabel,
