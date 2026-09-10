@@ -18,10 +18,10 @@ import { cn } from '~/lib/classname';
 /**
  * Brand settings for the email being edited.
  *
- * These controls used to live on /editor — a route with no link pointing at it
- * anywhere in the app, whose state was kept in a base64 URL parameter. So the
- * one feature that makes an email look like the sender's own brand was
- * unreachable. It belongs beside the thing it changes.
+ * They sit beside the email they change. Brand is the one feature that makes a
+ * template look like the sender's own, so it has to be reachable from the
+ * place someone is already looking — not from a route they would have to know
+ * about, and not from state carried in the URL.
  */
 
 type Theme = RendererThemeOptions;

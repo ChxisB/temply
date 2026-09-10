@@ -1,7 +1,7 @@
 /** The hero's indigo glow. Purely decorative, so it is aria-hidden and sits
- *  behind the content. The dot texture that used to live here moved to the
- *  page-wide fixed field in page.tsx — two dot layers moving against each
- *  other during scroll produced moiré, so the hero keeps only the light. */
+ *  behind the content. The light is all it carries: the page-wide fixed field
+ *  in page.tsx already lays down the dot texture, and a second layer of dots
+ *  here would move against that one on scroll and moiré. */
 export function HeroBackground() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
