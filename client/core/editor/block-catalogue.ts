@@ -11,20 +11,24 @@ export type CatalogueGroup = {
 };
 
 /**
- * Blocks the slash menu offers that the phone's `+` sheet does not. An
- * inline image is an unselectable inline atom whose own click handler sets a
- * TextSelection, so a tap raises the keyboard and the text bar instead of
- * the block bar — its width, alt, link and source controls are unreachable
- * by thumb. Offering it from `+` would be a dead end; the slash menu keeps
- * it. The set is explicit because `blockCatalogue()`'s "rest" fallback
- * re-adds anything the group titles do not name.
+ * Blocks the slash menu offers that the phone's `+` sheet does not, both for
+ * the same reason: nothing on the phone can configure them once they exist.
+ * An inline image is an unselectable inline atom whose own click handler sets
+ * a TextSelection, so a tap raises the keyboard and the text bar instead of
+ * the block bar — its width, alt, link and source controls are unreachable by
+ * thumb. A link card has no entry in MENU_CONTENT, so the action bar offers no
+ * Style at all; its seven fields live in a node-view popover laid out for a
+ * mouse. Offering either from `+` would be a dead end; the slash menu keeps
+ * them, and a card that arrived from a desktop can still be moved and deleted.
+ * The set is explicit because `blockCatalogue()`'s "rest" fallback re-adds
+ * anything the group titles do not name.
  */
-export const PHONE_EXCLUDED_TITLES = new Set(['Inline Image']);
+export const PHONE_EXCLUDED_TITLES = new Set(['Inline Image', 'Link Card']);
 
 /** The phone's grouping of the same blocks the slash menu offers. Titles
  *  are matched, not ids, because BlockItem has no stable id for leaves. */
 export const CATALOGUE_GROUPS: Array<{ id: CatalogueGroup['id']; title: string; titles: string[] }> = [
-  { id: 'content', title: 'Content', titles: ['Text', 'Heading 1', 'Heading 2', 'Heading 3', 'Bullet List', 'Numbered List', 'Image', 'Logo', 'Button', 'Link Card', 'Hard Break', 'Blockquote', 'Footer', 'Clear Line'] },
+  { id: 'content', title: 'Content', titles: ['Text', 'Heading 1', 'Heading 2', 'Heading 3', 'Bullet List', 'Numbered List', 'Image', 'Logo', 'Button', 'Hard Break', 'Blockquote', 'Footer', 'Clear Line'] },
   { id: 'layout', title: 'Layout', titles: ['Columns', 'Section', 'Divider', 'Spacer'] },
   { id: 'logic', title: 'Logic', titles: ['Repeat', 'Custom HTML'] },
   { id: 'components', title: 'Components', titles: ['Headers', 'Footers'] },

@@ -1,4 +1,5 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
+import { isTouchEditor } from '@/editor/plugins/block-selection';
 import { Input } from '../components/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/popover';
 import { Textarea } from '../components/textarea';
@@ -17,7 +18,13 @@ export function LinkCardComponent(props: NodeViewProps) {
       draggable={editor.isEditable}
       data-drag-handle={editor.isEditable}
     >
-      <Popover open={props.selected}>
+      {/* This popover was laid out for a mouse: it is wider than a phone, it
+          anchors outside the shell's frame, and the keyboard covers its
+          fields. The phone has no settings for a link card yet — the `+`
+          sheet does not offer one for that reason — so a card tapped there
+          simply selects, and the action bar's move and delete are what it
+          gets. */}
+      <Popover open={props.selected && !isTouchEditor(editor)}>
         <PopoverTrigger asChild>
           <div
             tabIndex={-1}
