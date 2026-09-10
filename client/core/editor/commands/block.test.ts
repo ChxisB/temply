@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { TextSelection } from '@tiptap/pm/state';
 import '../test/dom';
 import { makeEditor } from '../test/make-editor';
-import { clearBlockSelection, deleteBlock, duplicateBlock, isInlineAtomSelected, moveBlock, selectBlockAt, selectedBlock } from './block';
+import { blockCommands, clearBlockSelection, deleteBlock, duplicateBlock, isInlineAtomSelected, moveBlock, selectBlockAt, selectedBlock } from './block';
 
 const para = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
 const doc = { type: 'doc', content: [para('one'), para('two'), para('three')] };
@@ -116,6 +116,19 @@ describe('a selected inline atom', () => {
     expect(isInlineAtomSelected(editor)).toBe(false);
     editor.commands.setTextSelection(2);
     expect(isInlineAtomSelected(editor)).toBe(false);
+    editor.destroy();
+  });
+
+  it('refuses to move — its siblings are text runs, not blocks, and swapping would rewrite the paragraph', () => {
+    const editor = makeEditor(pillDoc, { touch: true });
+    selectBlockAt(editor, pillPos);
+    const before = runs(editor);
+    expect(moveBlock(editor, 'up')).toBe(false);
+    expect(runs(editor)).toBe(before);
+    expect(moveBlock(editor, 'down')).toBe(false);
+    expect(runs(editor)).toBe(before);
+    expect(blockCommands.moveUp.isEnabled!(editor)).toBe(false);
+    expect(blockCommands.moveDown.isEnabled!(editor)).toBe(false);
     editor.destroy();
   });
 

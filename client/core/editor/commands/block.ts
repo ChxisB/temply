@@ -65,8 +65,14 @@ export function clearBlockSelection(editor: Editor): void {
   editor.view.dispatch(editor.state.tr.setSelection(caret).setMeta('addToHistory', false));
 }
 
-/** Swaps the block with its sibling in the same parent. False at an edge — nothing dispatched. */
+/** Swaps the block with its sibling in the same parent. False at an edge, or
+ *  when the selection is an inline atom rather than a block — a pill's
+ *  siblings are the text runs on either side of it, and swapping with one of
+ *  those merges the paragraph's two text runs into one. Nothing calls this
+ *  for a pill today (the bar leaves the buttons out), but the command has to
+ *  refuse it directly rather than trust every future caller to check first. */
 export function moveBlock(editor: Editor, direction: 'up' | 'down'): boolean {
+  if (isInlineAtomSelected(editor)) return false;
   const block = selectedBlock(editor);
   if (!block) return false;
   const $pos = editor.state.doc.resolve(block.pos);
@@ -131,6 +137,7 @@ export const blockCommands = {
     label: 'Move up',
     icon: ArrowUpIcon,
     isEnabled: (editor: Editor) => {
+      if (isInlineAtomSelected(editor)) return false;
       const block = selectedBlock(editor);
       if (!block) return false;
       return siblingIndex(editor, block.pos).index > 0;
@@ -144,6 +151,7 @@ export const blockCommands = {
     label: 'Move down',
     icon: ArrowDownIcon,
     isEnabled: (editor: Editor) => {
+      if (isInlineAtomSelected(editor)) return false;
       const block = selectedBlock(editor);
       if (!block) return false;
       const sibling = siblingIndex(editor, block.pos);
