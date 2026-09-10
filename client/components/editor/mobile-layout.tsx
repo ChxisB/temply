@@ -573,12 +573,12 @@ export function MobileEditorLayout({
         open={sheet}
         onClose={closeSheet}
         returnFocus={!dock}
+        // Selecting only. The finding names a block the canvas may have
+        // scrolled past, and bringing it into view is the sheet's to do: the
+        // scroll has to wait for the sheet that asked for it to be gone.
         onSelectBlockAt={(pos) => {
           if (!editor) return;
           selectBlockAt(editor, pos);
-          // The finding named a block the canvas may have scrolled past; the
-          // selection outline is no answer if it is off screen.
-          editor.commands.scrollIntoView();
         }}
       />
 

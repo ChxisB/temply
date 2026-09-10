@@ -1,5 +1,6 @@
 'use client';
 
+import type { Editor } from '@tiptap/core';
 import { useEffect, useMemo, useState } from 'react';
 import { BracesIcon, ChevronLeftIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -72,6 +73,21 @@ function CatalogueTile({ item, onPick }: { item: BlockItem; onPick: () => void }
 }
 
 /**
+ * Brings the canvas to the selected block once the sheet that asked for it
+ * has gone. The sheet's own scroll lock swallows any scroll asked for while
+ * it is still up, so this waits a frame — and every caller dispatches its
+ * selection before `onClose`, which is still inside the lock. Centred, not
+ * ProseMirror's own scrollIntoView: that stops as soon as the block is inside
+ * the window, which is under the bottom bar.
+ */
+function revealSelectedBlock(editor: Editor | null): void {
+  if (!editor) return;
+  requestAnimationFrame(() =>
+    editor.view.dom.querySelector('.ProseMirror-selectednode')?.scrollIntoView({ block: 'center' }),
+  );
+}
+
+/**
  * The six bottom sheets that hold everything a phone editor cannot fit
  * beside the canvas. Each one is a thin shell around a panel the desktop
  * layout already owns — the phone changes where a control lives, never what
@@ -111,16 +127,8 @@ export function MobileSheets({
     if (editor) insertBlock(editor, item);
     setSub(null);
     onClose();
-    // A block appended to the end lands below the fold, and the sheet's own
-    // scroll lock swallows any scroll asked for while it is still up — so the
-    // canvas is brought to the new block on the frame after it closes.
-    // Centred, not ProseMirror's own scrollIntoView: that stops as soon as the
-    // block is inside the window, which is under the bottom bar.
-    if (editor) {
-      requestAnimationFrame(() =>
-        editor.view.dom.querySelector('.ProseMirror-selectednode')?.scrollIntoView({ block: 'center' }),
-      );
-    }
+    // A block appended to the end lands below the fold.
+    revealSelectedBlock(editor);
   };
 
   // The tab only re-asks for a render on its own click; reopening the sheet
@@ -189,6 +197,9 @@ export function MobileSheets({
             onSelect={(pos) => {
               onSelectBlockAt(pos);
               onClose();
+              // The finding names a block the canvas may have scrolled past,
+              // and the outline is no answer if it is off screen.
+              revealSelectedBlock(model.editor);
             }}
           />
         )}
