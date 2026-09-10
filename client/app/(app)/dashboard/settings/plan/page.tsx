@@ -194,8 +194,9 @@ function PlanContent() {
     return <PageLoading label="Loading your plan…" />;
   }
 
-  // Previously a failed query fell through to `plan: 'free'`, so a paying
-  // customer was shown their account as free.
+  // A failed query must not fall through to a default plan: showing a paying
+  // customer their account as free is worse than showing them nothing, because
+  // it reads as a billing fault rather than a display one.
   if (isError || !data) {
     return (
       <div className="space-y-5">

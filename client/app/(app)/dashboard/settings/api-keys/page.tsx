@@ -298,8 +298,9 @@ curl -X POST -H "Authorization: Bearer tply_live_..." \\
         </Card>
       )}
 
-      {/* Previously a bare fixed div: no role, no focus trap, no Escape, and Tab
-          walked straight out into the page behind it. */}
+      {/* A Dialog rather than a positioned div: this needs the role, the focus
+          trap, Escape, and a Tab order that cannot walk out into the page
+          behind it — none of which a div carries on its own. */}
       <Dialog
         open={showCreate}
         onOpenChange={(open) => {

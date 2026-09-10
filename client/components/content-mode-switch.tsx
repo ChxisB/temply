@@ -20,10 +20,10 @@ const SEGMENT_STEP = 26;
 /**
  * Edit / preview / HTML for the Content section.
  *
- * Preview used to be a button in the top toolbar that opened a modal, which
- * put the thing being previewed and the way to see it in different places.
- * Controls belonging to the current view live to the left of the switch, so
- * the switch itself never moves as they appear.
+ * Previewing is a mode of this section rather than a window opened from
+ * elsewhere: the thing being previewed and the way to reach it belong in one
+ * place. Controls belonging to the current view live to the left of the
+ * switch, so the switch itself never moves as they appear.
  */
 export function ContentModeSwitch({
   mode,
