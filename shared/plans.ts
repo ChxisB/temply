@@ -1,8 +1,11 @@
 /**
  * The single source of truth for plan limits.
  *
- * Previously these lived in server/src/lib/billing.ts, so the client had no way
- * to know a limit without hardcoding it. Both sides import from here now.
+ * They live in `shared/` because both sides need the same numbers: the server
+ * enforces a limit, and the client has to state it before the request is made.
+ * A limit written down on either side separately is one that drifts, and the
+ * two disagreeing means telling a customer they may do something the API then
+ * refuses.
  */
 
 export type Plan = 'free' | 'pro' | 'enterprise';
