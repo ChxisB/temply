@@ -3,7 +3,7 @@ import { useEditorState } from '@tiptap/react';
 import { Pencil } from 'lucide-react';
 import { selectedBlock } from '@/editor/commands/block';
 import { useVariableOptions } from '@/editor/utils/node-options';
-import { knownVariableNames } from '@/editor/utils/variable';
+import { knownNames } from '@/editor/utils/variable';
 import { TextBubbleContent } from '../text-menu/text-bubble-content';
 import { Divider } from '../ui/divider';
 import { useInputDock } from '../ui/input-dock';
@@ -44,8 +44,6 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
     if (block) chain.setNodeSelection(block.pos);
     chain.run();
   };
-  const known = (query: string) => knownVariableNames(editor, variables, query, 'bubble-variable');
-
   const rowClass = 'mly:flex mly:h-11 mly:w-full mly:items-center mly:justify-between mly:gap-3 mly:rounded-md mly:border mly:border-gray-200 mly:px-3 mly:text-left mly:text-sm mly:text-midnight-gray mly:transition-colors mly:hover:bg-soft-gray';
 
   return (
@@ -58,7 +56,13 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
             dock.open({
               title: 'Variable',
               fields: [
-                { label: 'Name', value: id, placeholder: 'e.g. firstName', hint: 'The name in the data you send', options: known },
+                {
+                  label: 'Name',
+                  value: id,
+                  placeholder: 'e.g. firstName',
+                  hint: 'The name in the data you send',
+                  options: knownNames(editor, 'variables', variables, 'bubble-variable'),
+                },
                 ...(hideDefaultValue
                   ? []
                   : [{ label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }]),

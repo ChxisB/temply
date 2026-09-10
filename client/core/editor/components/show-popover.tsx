@@ -1,11 +1,10 @@
 import { Editor } from '@tiptap/core';
 import { Eye, InfoIcon } from 'lucide-react';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { collectDataKeys } from '@temply/shared/template-data';
+import { memo, useEffect, useRef, useState } from 'react';
 import { cn } from '../utils/classname';
 import { highlightShowIfKey } from '../utils/highlight-show-if';
 import { useVariableOptions } from '../utils/node-options';
-import { processVariables } from '../utils/variable';
+import { knownNames } from '../utils/variable';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { InputAutocomplete } from './ui/input-autocomplete';
 import { useInputDock } from './ui/input-dock';
@@ -25,31 +24,17 @@ function _ShowPopover(props: ShowPopoverProps) {
   const variables = opts?.variables;
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Keys already used elsewhere in this email. Nothing records them, so the
-  // document is the list — and reusing one key across blocks is the normal
-  // case (a section, its spacer, and its button all hang off `isMember`).
-  // Read on open: the document is not reactive.
-  const [keysInUse, setKeysInUse] = useState<string[]>([]);
+  // Condition keys already used elsewhere in this email, then the app's
+  // list. Nothing records them, so the document is the list — and reusing
+  // one key across blocks is the normal case (a section, its spacer, and its
+  // button all hang off `isMember`). Snapshotted at open (both below) rather
+  // than re-read per keystroke.
+  const search = useRef<(query: string) => string[]>(() => []);
   // Controlled so picking a suggestion can dismiss the panel: the choice is
   // made, leaving it open just hides the block it applies to.
   const [open, setOpen] = useState(false);
 
-  const knownVariables = useMemo(() => {
-    const fromDocument = keysInUse.map((name) => ({ name }));
-    if (!Array.isArray(variables)) return fromDocument;
-    return [
-      ...fromDocument,
-      ...variables.filter((variable) => !keysInUse.includes(variable.name)),
-    ];
-  }, [keysInUse, variables]);
-
-  const autoCompleteOptions = useMemo(() => {
-    return processVariables(knownVariables, {
-      query: showIfKey || '',
-      from: 'bubble-variable',
-      editor,
-    }).map((variable) => variable.name);
-  }, [knownVariables, showIfKey, editor]);
+  const autoCompleteOptions = search.current(showIfKey || '');
 
   // A highlight must not outlive the popover that painted it.
   useEffect(() => () => highlightShowIfKey(editor, null), [editor]);
@@ -68,11 +53,6 @@ function _ShowPopover(props: ShowPopoverProps) {
             showIfKey && 'mly:bg-accent-wash mly:text-accent-ink mly:hover:bg-accent-wash'
           )}
           onClick={() => {
-            const inUse = collectDataKeys(editor.getJSON()).conditions;
-            const known = [
-              ...inUse.map((name) => ({ name })),
-              ...(Array.isArray(variables) ? variables.filter((variable) => !inUse.includes(variable.name)) : []),
-            ];
             dock.open({
               title: 'Show if',
               fields: [
@@ -81,8 +61,7 @@ function _ShowPopover(props: ShowPopoverProps) {
                   value: showIfKey,
                   placeholder: 'e.g. isMember',
                   hint: 'Shown only when this is true in the data you send',
-                  options: (draft) =>
-                    processVariables(known, { query: draft, from: 'bubble-variable', editor }).map((variable) => variable.name),
+                  options: knownNames(editor, 'conditions', variables, 'bubble-variable'),
                 },
               ],
               onCommit: ([raw]) => onShowIfKeyValueChange?.(raw.trim()),
@@ -101,7 +80,7 @@ function _ShowPopover(props: ShowPopoverProps) {
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setKeysInUse(collectDataKeys(editor.getJSON()).conditions);
+        if (next) search.current = knownNames(editor, 'conditions', variables, 'bubble-variable');
         else highlightShowIfKey(editor, null);
       }}
     >

@@ -10,11 +10,16 @@ import { LinkInputPopover } from '~/core/editor/components/ui/link-input-popover
 import { useInputDock } from '~/core/editor/components/ui/input-dock';
 import { DEFAULT_VARIABLE_TRIGGER_CHAR } from '~/core/editor/nodes/variable/variable';
 import { useVariableOptions } from '~/core/editor/utils/node-options';
-import { knownVariableNames } from '~/core/editor/utils/variable';
+import { knownNames } from '~/core/editor/utils/variable';
 import { useTextMenuState } from '~/core/editor/components/text-menu/use-text-menu-state';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
+// These are written into the email document by setTextColor, so they are
+// content, not app chrome — an email in someone else's inbox must render the
+// same colour regardless of the reader's app theme. The app's `--ds-*`
+// tokens follow app dark mode, so they cannot stand in here; raw hex is the
+// correct fixed value, not a shortcut around one.
 const SWATCHES = [
   { hex: '#111827', name: 'Black' },
   { hex: '#374151', name: 'Slate' },
@@ -97,16 +102,16 @@ export function TextFormatBar({
   const variableOptions = useVariableOptions(editor);
   const variableChar = variableOptions?.suggestion?.char ?? DEFAULT_VARIABLE_TRIGGER_CHAR;
 
-  /** Same source the pill's own Name field reads, so a name used once is
-   *  offered from both places after. The trigger character is not part of a
-   *  name, so it is dropped from the query — the field takes it, but never
-   *  searches for it. */
-  const variableNames = (draft: string) =>
-    knownVariableNames(editor, variableOptions?.variables, draft.split(variableChar).join(''), 'content-variable');
-
   /** The same surface the pill opens, so inserting a variable and giving it a
    *  placeholder is one edit rather than an insert followed by a hunt. */
-  const openVariable = () =>
+  const openVariable = () => {
+    // Same source the pill's own Name field reads, so a name used once is
+    // offered from both places after. Snapshotting here, at open, is what
+    // keeps every keystroke in the field from re-serialising the document.
+    const search = knownNames(editor, 'variables', variableOptions?.variables, 'content-variable');
+    // The trigger character is not part of a name, so it is dropped from the
+    // query — the field takes it, but never searches for it.
+    const variableNames = (draft: string) => search(draft.split(variableChar).join(''));
     dock?.open({
       title: 'Variable',
       fields: [
@@ -115,6 +120,7 @@ export function TextFormatBar({
       ],
       onCommit: ([name, placeholder]) => void insertVariable(editor, name, placeholder, variableChar),
     });
+  };
 
   /** The same set the desktop bubble menu applies, minus the focus call: the
    *  destination is typed in the panel, and pulling focus back to the canvas

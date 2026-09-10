@@ -7,7 +7,7 @@ import { useInputDock } from './input-dock';
 import { Tooltip, TooltipTrigger, TooltipContent } from './tooltip';
 import { DEFAULT_PLACEHOLDER_URL, useMailyContext } from '@/editor/provider';
 import { InputAutocomplete } from './input-autocomplete';
-import { knownVariableNames } from '@/editor/utils/variable';
+import { knownNames } from '@/editor/utils/variable';
 import { useMemo } from 'react';
 import { Editor } from '@tiptap/core';
 import { useVariableOptions } from '@/editor/utils/node-options';
@@ -112,11 +112,14 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
 
   // The document first, the app's list after — the same shared source every
   // field that offers names reads, so a name typed into this template a
-  // moment earlier shows up here instead of an always-empty chip band.
+  // moment earlier shows up here instead of an always-empty chip band. The
+  // snapshot is taken once, when the popover or the dock opens (both below),
+  // and held here rather than retaken per keystroke — the field can call
+  // `suggestionsFor` on every character without re-serialising the document.
+  const search = useRef<(query: string) => string[]>(() => []);
   const suggestionsFor = (query: string) =>
-    knownVariableNames(editor, variables, query.replace(new RegExp(variableTriggerCharacter, 'g'), ''), 'bubble-variable');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const autoCompleteOptions = useMemo(() => suggestionsFor(draft), [variables, variableTriggerCharacter, draft, editor]);
+    search.current(query.replace(new RegExp(variableTriggerCharacter, 'g'), ''));
+  const autoCompleteOptions = useMemo(() => suggestionsFor(draft), [draft, variableTriggerCharacter]);
 
   // On the phone the field is not a popover but the shell's dock: the sheet
   // this button sits in closes, the field rises above the keyboard, and the
@@ -124,6 +127,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
   // `open` (the format bar's Link key) reaches the dock the same way.
   const dock = useInputDock();
   const openDock = () => {
+    search.current = knownNames(editor, 'variables', variables, 'bubble-variable');
     const label = showImageStatus ? 'Image source' : 'Link';
     dock?.open({
       title: label,
@@ -192,6 +196,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       onOpenChange={(open) => {
         setIsOpen(open);
         if (open) {
+          search.current = knownNames(editor, 'variables', variables, 'bubble-variable');
           setDraft(seed());
           setIsEditing(!isVariable);
           setTimeout(() => {
