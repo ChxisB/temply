@@ -4,6 +4,7 @@ import type { Editor, FocusPosition } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertTriangleIcon,
   ArrowLeftIcon,
   CheckIcon,
   CopyIcon,
@@ -323,7 +324,8 @@ export function MobileEditorLayout({
   const errors = model.preflight.issues.filter((issue) => issue.severity === 'error').length;
   const warnings = model.preflight.issues.length - errors;
   /** The draft is not on the server and the phone has to say so somewhere it
-   *  is seen: the status itself lives in the ⋯ menu, which is closed. */
+   *  is seen: the status itself lives in the ⋯ menu, which is closed — and
+   *  the ⋯ button is not even on screen while text is being edited. */
   const saveFailed = model.saveStatus === 'error';
 
   // Phone autofocus would raise the keyboard on arrival; the canvas is the
@@ -400,24 +402,8 @@ export function MobileEditorLayout({
           // unclickable behind its pointer-event guard.
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              {/* A failed save is the one status that asks for something, and
-                  the menu it asks from is a tap the author has no reason to
-                  make. The dot says so from the bar; the Retry stays inside,
-                  where there is room for a word. */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(touchTarget, 'relative')}
-                aria-label={saveFailed ? 'More — changes not saved' : 'More'}
-              >
+              <Button variant="ghost" size="icon" className={touchTarget} aria-label="More">
                 <MoreHorizontalIcon />
-                <span
-                  aria-hidden
-                  className={cn(
-                    'absolute top-2 right-2 size-2 rounded-full bg-danger transition-opacity duration-base ease-out motion-reduce:transition-none',
-                    saveFailed ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
@@ -507,6 +493,32 @@ export function MobileEditorLayout({
           </DropdownMenu>
         )}
       </header>
+
+      {/* A failed save asks for something, so it is `danger` and it is on the
+          screen rather than behind a tap: the ⋯ menu that holds the status is
+          closed, and while text is being edited that button is replaced by
+          Done, which is exactly when the work being lost is being made. The
+          row is mounted from the start — a live region has to be in the tree
+          before its content changes for the change to be announced — and
+          collapses to nothing on the rows pattern rather than unmounting, so
+          it opens and closes instead of appearing. */}
+      <div
+        role="status"
+        className={cn(
+          'z-40 grid shrink-0 transition-[grid-template-rows,opacity] duration-base ease-out motion-reduce:transition-none',
+          saveFailed ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+        )}
+      >
+        <div className="overflow-hidden" aria-hidden={!saveFailed} inert={!saveFailed}>
+          <div className="flex items-center gap-2 border-b border-line bg-danger-wash px-2 py-1.5">
+            <AlertTriangleIcon className="size-4 shrink-0 text-danger-ink" aria-hidden />
+            <span className="min-w-0 flex-1 text-xs text-danger-ink">Not saved. Your changes are on this device only.</span>
+            <Button variant="secondary" className={cn(touchTarget, 'text-sm')} onClick={() => void model.autosave?.flush()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* The canvas: the frame's one scroller. `isolate` keeps the document's
           own stacking (a spacer is z-50 in the editor's CSS) inside it, so no
