@@ -12,8 +12,8 @@ import { keepFocus } from './text-format-bar';
  *  previous field left in it and answers every keystroke twice. The coercion
  *  belongs here rather than at a call site, where one spec forgetting it is
  *  enough. */
-export function seedDrafts(fields: InputField[]): string[] {
-  return fields.map((field) => field.value ?? '');
+export function seedDrafts(fields: InputField[]): Record<string, string> {
+  return Object.fromEntries(fields.map((field) => [field.key, field.value ?? '']));
 }
 
 /**
@@ -30,7 +30,7 @@ export function seedDrafts(fields: InputField[]): string[] {
  */
 export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClose: () => void }) {
   const [shown, setShown] = useState<InputDockSpec | null>(null);
-  const [drafts, setDrafts] = useState<string[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   // A layout effect, not a passive one: reseeding after paint would let the
@@ -64,8 +64,8 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
     view?.onCommit(drafts);
     onClose();
   };
-  const setDraft = (index: number, value: string) =>
-    setDrafts((current) => current.map((draft, i) => (i === index ? value : draft)));
+  const setDraft = (key: string, value: string) =>
+    setDrafts((current) => ({ ...current, [key]: value }));
 
   return (
     // Not dead: this is the handle the browser verification and the bar's
@@ -85,11 +85,11 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
           <p className="mb-2 text-sm font-semibold text-ink">{view.title}</p>
           {view.fields.map((field, index) => (
             <FieldRow
-              key={index}
+              key={field.key}
               field={field}
               index={index}
-              draft={drafts[index] ?? ''}
-              onDraft={(value) => setDraft(index, value)}
+              draft={drafts[field.key] ?? ''}
+              onDraft={(value) => setDraft(field.key, value)}
               inputRef={(el) => {
                 inputRefs.current[index] = el;
               }}
@@ -130,7 +130,7 @@ function FieldRow({
   onNext: () => void;
   hideLabel: boolean;
 }) {
-  const id = `editor-input-dock-${index}`;
+  const id = `editor-input-dock-${field.key}`;
   const trigger = field.triggerChar ?? '';
   const chips = field.options && (draft === '' || draft.startsWith(trigger)) ? field.options(draft).slice(0, 8) : [];
   return (

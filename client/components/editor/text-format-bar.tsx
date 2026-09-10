@@ -115,10 +115,10 @@ export function TextFormatBar({
     dock?.open({
       title: 'Variable',
       fields: [
-        { label: 'Name', value: '', placeholder: 'first_name', hint: 'The name your data uses', options: variableNames },
-        { label: 'Placeholder', value: '', placeholder: 'there', hint: 'Shown when the data has no value' },
+        { key: 'name', label: 'Name', value: '', placeholder: 'first_name', hint: 'The name your data uses', options: variableNames },
+        { key: 'placeholder', label: 'Placeholder', value: '', placeholder: 'there', hint: 'Shown when the data has no value' },
       ],
-      onCommit: ([name, placeholder]) => void insertVariable(editor, name, placeholder, variableChar),
+      onCommit: (values) => void insertVariable(editor, values.name, values.placeholder, variableChar),
     });
   };
 

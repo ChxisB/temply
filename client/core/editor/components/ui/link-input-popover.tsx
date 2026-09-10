@@ -137,6 +137,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
       title: label,
       fields: [
         {
+          key: 'url',
           label,
           value: seed(),
           placeholder: placeholderUrl,
@@ -145,7 +146,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
           options: (query: string) => names(withoutTrigger(query)),
         },
       ],
-      onCommit: ([raw]) => commit(raw),
+      onCommit: (values) => commit(values.url),
     });
   };
   useEffect(() => {

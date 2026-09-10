@@ -57,6 +57,7 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
               title: 'Variable',
               fields: [
                 {
+                  key: 'name',
                   label: 'Name',
                   value: id,
                   placeholder: 'e.g. firstName',
@@ -65,10 +66,13 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
                 },
                 ...(hideDefaultValue
                   ? []
-                  : [{ label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }]),
+                  : [{ key: 'placeholder', label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }]),
               ],
-              onCommit: ([name, placeholder]) =>
-                update(hideDefaultValue ? { id: name.trim() } : { id: name.trim(), fallback: placeholder }),
+              // A pill that hides its default value is asked for no
+              // placeholder, so none comes back and none is written — the
+              // absent key is the whole test.
+              onCommit: (values) =>
+                update({ id: values.name.trim(), ...('placeholder' in values ? { fallback: values.placeholder } : {}) }),
             })
           }
         >

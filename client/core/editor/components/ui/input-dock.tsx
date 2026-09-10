@@ -1,6 +1,10 @@
 import { createContext, useContext } from 'react';
 
 export type InputField = {
+  /** How the committed draft is named back to the control. Chosen by the
+   *  control and fixed: a label is copy and can be reworded, a position moves
+   *  the moment a field is added or left out. */
+  key: string;
   label: string;
   value: string;
   placeholder?: string;
@@ -26,8 +30,10 @@ export type InputField = {
 export type InputDockSpec = {
   title: string;
   fields: InputField[];
-  /** Every field's committed draft, in the order they were declared. */
-  onCommit: (values: string[]) => void;
+  /** Every field's committed draft, under the field's own key. A key a spec
+   *  left out is absent, which is how a control tells "empty" from "not
+   *  asked for". */
+  onCommit: (values: Record<string, string>) => void;
 };
 
 export type InputDock = { open: (spec: InputDockSpec) => void };

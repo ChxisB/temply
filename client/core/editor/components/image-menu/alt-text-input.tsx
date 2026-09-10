@@ -45,14 +45,15 @@ export function AltTextInput({
                 title: 'Alt text',
                 fields: [
                   {
+                    key: 'alt',
                     label: 'Alt text',
                     value,
                     placeholder: 'What the image shows',
                     hint: 'Shown when a mail client blocks the image',
                   },
                 ],
-                onCommit: ([raw]) => {
-                  if (raw !== value) onChange(raw);
+                onCommit: (values) => {
+                  if (values.alt !== value) onChange(values.alt);
                 },
               })
             }

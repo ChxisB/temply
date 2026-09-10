@@ -57,6 +57,7 @@ function _ShowPopover(props: ShowPopoverProps) {
               title: 'Show if',
               fields: [
                 {
+                  key: 'condition',
                   label: 'Show if',
                   value: showIfKey,
                   placeholder: 'e.g. isMember',
@@ -64,7 +65,7 @@ function _ShowPopover(props: ShowPopoverProps) {
                   options: names,
                 },
               ],
-              onCommit: ([raw]) => onShowIfKeyValueChange?.(raw.trim()),
+              onCommit: (values) => onShowIfKeyValueChange?.(values.condition.trim()),
             });
           }}
         >
