@@ -165,8 +165,8 @@ export function EditorBottomBar({
               from exactly one place. */}
           <div
             className={cn(
-              'grid transition-[grid-template-rows,opacity] duration-base ease-out motion-reduce:transition-none',
-              state === 'field' ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+              'grid transition-[grid-template-rows,opacity] duration-base motion-reduce:transition-none',
+              state === 'field' ? 'grid-rows-[1fr] opacity-100 ease-out' : 'pointer-events-none grid-rows-[0fr] opacity-0 ease-in',
             )}
             inert={state !== 'field'}
           >

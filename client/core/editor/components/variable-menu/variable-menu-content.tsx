@@ -60,13 +60,13 @@ export function VariableMenuContent({ editor }: { editor: Editor }) {
                   key: 'name',
                   label: 'Name',
                   value: id,
-                  placeholder: 'e.g. firstName',
-                  hint: 'The name in the data you send',
+                  placeholder: 'first_name',
+                  hint: 'The name your data uses',
                   options: knownNames(editor, 'variables', variables, 'bubble-variable'),
                 },
                 ...(hideDefaultValue
                   ? []
-                  : [{ key: 'placeholder', label: 'Placeholder', value: fallback, placeholder: 'e.g. there', hint: 'Shown when the data has no value' }]),
+                  : [{ key: 'placeholder', label: 'Placeholder', value: fallback, placeholder: 'there', hint: 'Shown when the data has no value' }]),
               ],
               // A pill that hides its default value is asked for no
               // placeholder, so none comes back and none is written — the

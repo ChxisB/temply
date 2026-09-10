@@ -109,9 +109,7 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
 
 /**
  * One labelled field. Chips sit under the label and above the input: what can
- * be picked is worth seeing before deciding whether to type. A field with
- * nothing to offer has no chip row at all — reserving the space for an empty
- * row makes a one-field surface as tall as a two-field one.
+ * be picked is worth seeing before deciding whether to type.
  *
  * A chip fills its own field and stops there: one ✓ finishes the whole edit,
  * the rule the four controls share. A chip that committed on the spot would
@@ -141,22 +139,35 @@ function FieldRow({
         </label>
         {field.hint ? <span className="truncate text-2xs text-muted">{field.hint}</span> : null}
       </div>
-      {field.options ? (
-        <div className="mt-1 flex h-9 items-center gap-1 overflow-x-auto">
-          {chips.map((name) => (
-            <button
-              key={name}
-              type="button"
-              onMouseDown={keepFocus}
-              onPointerDown={keepFocus}
-              onClick={() => onDraft(`${trigger}${name}`)}
-              className={cn('h-8 shrink-0 rounded-full border border-line bg-surface px-3 font-mono text-xs text-ink hover:bg-hover', pressable)}
-            >
-              {name}
-            </button>
-          ))}
+      {/* Nothing to offer, no row: a band held open for chips that are not
+          coming makes a one-field surface as tall as a two-field one, and for
+          a Link that is every ordinary URL. It collapses rather than
+          vanishing, because the input below it would otherwise jump by the
+          band's height as the draft crosses the trigger character. */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows] duration-base motion-reduce:transition-none',
+          chips.length ? 'grid-rows-[1fr] ease-out' : 'grid-rows-[0fr] ease-in',
+        )}
+        inert={chips.length === 0}
+      >
+        <div className="overflow-hidden">
+          <div className="mt-1 flex h-9 items-center gap-1 overflow-x-auto">
+            {chips.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onMouseDown={keepFocus}
+                onPointerDown={keepFocus}
+                onClick={() => onDraft(`${trigger}${name}`)}
+                className={cn('h-8 shrink-0 rounded-full border border-line bg-surface px-3 font-mono text-xs text-ink hover:bg-hover', pressable)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : null}
+      </div>
       <div className="mt-1 flex items-center gap-2">
         {/* The gutter is held on every row so the inputs line up; only the
             first row fills it, and ✕ cancels the whole surface. */}
