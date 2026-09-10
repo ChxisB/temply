@@ -1,6 +1,6 @@
 'use client';
 
-import type { FocusPosition } from '@tiptap/core';
+import type { Editor, FocusPosition } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -51,6 +51,14 @@ import type { TemplateEditorModel } from './use-template-editor';
 /** The bars are thumb country: every control in them is a 44px target, which
  *  is taller than the desktop Button sizes go. */
 const touchTarget = 'h-11 min-w-11';
+
+/** setEditable emits an update on the editor, which every subscriber pays for
+ *  and the autosave hears, so it is only ever called on a real change of the
+ *  flag — the shell sets it from more than one place and releases it in a
+ *  cleanup besides. */
+function setEditable(editor: Editor | null, editable: boolean): void {
+  if (editor && editor.isEditable !== editable) editor.setEditable(editable);
+}
 
 /** Whatever actually scrolls around an element — the shell's canvas, here,
  *  but found rather than assumed so the effect below survives a change of
@@ -105,6 +113,14 @@ export function MobileEditorLayout({
         resumeAfterDock.current = { sheet, styleOpen, editing: !sheet && !styleOpen && !!editor && isEditingText(editor) };
         setSheet(null);
         setStyleOpen(false);
+        // The Aa panel goes too, and it is the one that cannot see itself out:
+        // it only clears when the selection stops being text, and a field
+        // surface over a caret leaves that selection exactly where it was. The
+        // panel then held the bar at its open height behind the field — 382px
+        // of bar for a surface that needs 149 — with no way back but closing
+        // the field. It is not restored afterwards either: the panel exists to
+        // stand in for the keyboard, and closeDock hands the keyboard back.
+        setPanelOpen(false);
         setDock(spec);
       },
     }),
@@ -127,7 +143,14 @@ export function MobileEditorLayout({
     // rAF itself (tiptap's own focus command), which is what lets it win —
     // it lands after React has committed the field face as inert and the
     // input inside it has already given up focus, rather than racing it.
-    if (resume?.editing) editor?.commands.focus();
+    // The flag has to go back by hand first: the effect below is a render
+    // late, and tiptap's focus command reaches for the DOM inside this same
+    // tap (iOS raises the keyboard only for a focus made there), which a
+    // still-read-only view would swallow.
+    if (resume?.editing) {
+      setEditable(editor, true);
+      editor?.commands.focus();
+    }
   };
 
   // The bar's face follows the selection; useEditorState re-renders on every
@@ -232,18 +255,32 @@ export function MobileEditorLayout({
   // which here would raise the keyboard under the sheet; ProseMirror only
   // gives DOM focus to an editable view, so the flag is what stops it. The
   // commands themselves still dispatch.
+  // The field surface counts as a cover too, for a different reason: its
+  // onCommit was built against the selection at open time but applies against
+  // the selection at commit time, so a tap on the canvas underneath — which
+  // moves the caret, or clears the selection outright on the page margin —
+  // landed the link on the wrong text.
   useEffect(() => {
-    editor?.setEditable(!(sheet || styleOpen));
-  }, [editor, sheet, styleOpen]);
+    const readOnly = !!(sheet || styleOpen || dock);
+    setEditable(editor, !readOnly);
+    // Read-only belongs to this effect for as long as it runs, and no longer:
+    // whatever raised the flag can go away without lowering it, and an editor
+    // left read-only answers no taps and raises no keyboard, with nothing on
+    // screen that could put it right.
+    return () => setEditable(editor, true);
+  }, [editor, sheet, styleOpen, dock]);
 
-  const closeSheet = () => {
-    // The eye sheet drives the model's mode; closing it has to put the
-    // canvas back or the screen behind the sheet stays hidden. Read from
-    // the render closure rather than a state updater: the updater is not
-    // the place to change another component's state.
-    if (sheet === 'eye') model.changeMode('edit');
-    setSheet(null);
-  };
+  // The eye sheet is the only thing that puts the model into a rendered mode,
+  // and the canvas is `hidden` while the mode is not 'edit' — so the canvas
+  // coming back hangs off the eye sheet being gone rather than off one branch
+  // of the function that used to close it. Every other route to a sheet — the
+  // armed-preflight effect above, a tab, the subject button, + — could land on
+  // top of the eye sheet and leave the editor off the screen for good.
+  useEffect(() => {
+    if (sheet !== 'eye' && model.mode !== 'edit') model.changeMode('edit');
+  }, [sheet, model]);
+
+  const closeSheet = () => setSheet(null);
 
   /** Done ends typing, not the selection: the bar drops back to the block
    *  face. A bare blur would leave a text selection behind and land on idle,
@@ -259,9 +296,11 @@ export function MobileEditorLayout({
   /** A tap on the canvas but outside the document means "nothing selected":
    *  the bar goes back to its tabs, which are otherwise unreachable once a
    *  block has been touched. ProseMirror never sees these taps — they land on
-   *  the page margin around the card — so the shell answers them. */
+   *  the page margin around the card — so the shell answers them. Not while
+   *  the editor is read-only: a sheet or the field surface is over the canvas
+   *  then, and both commit against the selection this would throw away. */
   const clearOnCanvasTap = (event: React.MouseEvent) => {
-    if (!editor || (event.target as HTMLElement).closest('.ProseMirror')) return;
+    if (!editor || !editor.isEditable || (event.target as HTMLElement).closest('.ProseMirror')) return;
     editor.commands.blur();
     clearBlockSelection(editor);
   };
