@@ -29,6 +29,20 @@ export function selectedBlock(editor: Editor): { node: Node; pos: number; depth:
   return first ? { node: first, pos: 0, depth: 1 } : null;
 }
 
+/**
+ * Whether the action bar's subject is an inline atom — a variable pill —
+ * rather than a block. The tap model selects a pill outright because it has
+ * settings of its own, but it lives among words, not among blocks: its
+ * siblings are the text runs on either side of it, so Move up, Move down and
+ * Duplicate would act on those. The bar leaves those three out for an inline
+ * atom rather than disabling them or quietly retargeting them at the
+ * paragraph around it.
+ */
+export function isInlineAtomSelected(editor: Editor): boolean {
+  const { selection } = editor.state;
+  return selection instanceof NodeSelection && selection.node.isInline && selection.node.isAtom;
+}
+
 /** Selects the node starting at `pos`. A position that is not a node start
  *  has nothing to select and NodeSelection.create throws on it, which would
  *  surface as a crash inside whatever handler asked — a Checks row, say — so
@@ -86,19 +100,20 @@ export function deleteBlock(editor: Editor): boolean {
   if (!block) return false;
   const tr = editor.state.tr.delete(block.pos, block.pos + block.node.nodeSize);
   // Something must stay selected — the action bar has nothing to act on
-  // otherwise. Prefer the block that slid into the deleted one's place,
-  // fall back to the block before it, and only fall back to a text cursor
-  // when the document is now empty of blocks to select.
+  // otherwise. Prefer the block that slid into the deleted one's place, then
+  // the block before it, and otherwise a caret at the gap the deletion left.
+  // Both neighbours are tested for being blocks: an inline atom's neighbours
+  // are the text runs of the paragraph it stood in, and selecting one of
+  // those as a node gives the bar a text run for a subject. The caret is
+  // taken from that gap rather than the start of the document so deleting a
+  // pill that opened its paragraph does not jump to the top of the email.
   const doc = tr.doc;
   const $at = doc.resolve(Math.min(block.pos, doc.content.size));
   const next = $at.nodeAfter;
-  if (next && next.isBlock) {
-    tr.setSelection(NodeSelection.create(doc, block.pos));
-  } else {
-    const before = $at.nodeBefore;
-    if (before) tr.setSelection(NodeSelection.create(doc, block.pos - before.nodeSize));
-    else tr.setSelection(TextSelection.atStart(doc));
-  }
+  const before = $at.nodeBefore;
+  if (next && next.isBlock) tr.setSelection(NodeSelection.create(doc, block.pos));
+  else if (before && before.isBlock) tr.setSelection(NodeSelection.create(doc, block.pos - before.nodeSize));
+  else tr.setSelection(TextSelection.near($at));
   editor.view.dispatch(tr.scrollIntoView());
   return true;
 }
