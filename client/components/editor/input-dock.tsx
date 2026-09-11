@@ -82,7 +82,16 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
           className="px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
           aria-label={view.title}
         >
-          <p className="mb-2 text-sm font-semibold text-ink">{view.title}</p>
+          {/* ✕ lives with the title, the way a sheet's Close does: beside a
+              field it reads as that field's clear, and cancelling the whole
+              surface is not a field's job. Negative margins let the 44px
+              target overlap the padding so the row stays the title's height. */}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-ink">{view.title}</p>
+            <Button type="button" variant="ghost" size="icon" className="-my-2 -mr-2 size-11" aria-label="Cancel" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={onClose}>
+              <XIcon />
+            </Button>
+          </div>
           {view.fields.map((field, index) => (
             <FieldRow
               key={field.key}
@@ -94,7 +103,6 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
                 inputRefs.current[index] = el;
               }}
               last={index === view.fields.length - 1}
-              onCancel={onClose}
               onNext={() => inputRefs.current[index + 1]?.focus()}
               // A field labelled exactly like the surface would say the same
               // word twice, the title and the label one under the other.
@@ -116,7 +124,7 @@ export function InputDock({ spec, onClose }: { spec: InputDockSpec | null; onClo
  * take a two-field surface with it before the second field was touched.
  */
 function FieldRow({
-  field, index, draft, onDraft, inputRef, last, onCancel, onNext, hideLabel,
+  field, index, draft, onDraft, inputRef, last, onNext, hideLabel,
 }: {
   field: InputField;
   index: number;
@@ -124,7 +132,6 @@ function FieldRow({
   onDraft: (value: string) => void;
   inputRef: (el: HTMLInputElement | null) => void;
   last: boolean;
-  onCancel: () => void;
   onNext: () => void;
   hideLabel: boolean;
 }) {
@@ -169,15 +176,6 @@ function FieldRow({
         </div>
       </div>
       <div className="mt-1 flex items-center gap-2">
-        {/* The gutter is held on every row so the inputs line up; only the
-            first row fills it, and ✕ cancels the whole surface. */}
-        <span className="size-11 shrink-0">
-          {index === 0 ? (
-            <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Cancel" onMouseDown={keepFocus} onPointerDown={keepFocus} onClick={onCancel}>
-              <XIcon />
-            </Button>
-          ) : null}
-        </span>
         <div className="relative min-w-0 flex-1">
           {/* 16px text: anything smaller makes iOS zoom the page on focus. */}
           <input
@@ -220,6 +218,8 @@ function FieldRow({
             <CircleXIcon className="size-5" />
           </button>
         </div>
+        {/* The slot is held on every row so the inputs line up; only the
+            first row fills it, and one ✓ finishes the whole surface. */}
         <span className="size-11 shrink-0">
           {index === 0 ? (
             <Button type="submit" variant="primary" size="icon" className="size-11" aria-label="Done" onMouseDown={keepFocus} onPointerDown={keepFocus}>
