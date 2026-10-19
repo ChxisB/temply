@@ -13,15 +13,16 @@ import { lift } from '~/components/ui/surfaces';
  * - Actions always sit trailing (a tile's footer, a row's right edge), always
  *   visible, and outside the primary target — their own click and tab stops,
  *   never a navigation by accident. Nothing is hidden behind hover, so touch
- *   gets the same product. The slot lifts every button and link in it to a
- *   44px target, so a caller's 28px icon button is a thumb-sized one here
- *   without each call site having to remember.
+ *   gets the same product. Under a coarse pointer the slot lifts every button
+ *   and link in it to a 44px target, so a caller's 28px icon button is a
+ *   thumb-sized one here without each call site having to remember; a fine
+ *   pointer keeps the size the caller gave, as Button itself does.
  * - A `busy` item (an upload in flight) draws dashed and does not respond.
  */
 
 // A descendant selector rather than a size on the slot: the slot's own box is
 // not the thing that gets pressed.
-const actionTargets = '[&_:is(a,button)]:min-h-11 [&_:is(a,button)]:min-w-11';
+const actionTargets = 'pointer-coarse:[&_:is(a,button)]:min-h-11 pointer-coarse:[&_:is(a,button)]:min-w-11';
 
 type Primary =
   | { href: string; onClick?: never; primaryLabel?: never }
@@ -172,7 +173,9 @@ export function Tile({
       {footer ? (
         <div className="mt-auto flex items-center justify-between gap-2 px-4 pb-3">
           <span className="min-w-0 truncate text-ui text-muted tabular-nums">{meta}</span>
-          {actions ? <div className={cn('flex shrink-0 items-center gap-1', actionTargets)}>{actions}</div> : null}
+          {/* Three thumb-sized actions outrun a half-width phone tile, so the
+              slot wraps instead of letting the clip cut the last one off. */}
+          {actions ? <div className={cn('flex min-w-0 flex-wrap items-center justify-end gap-1', actionTargets)}>{actions}</div> : null}
         </div>
       ) : null}
     </li>

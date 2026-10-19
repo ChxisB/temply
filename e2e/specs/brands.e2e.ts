@@ -21,6 +21,14 @@ test.describe('brands', () => {
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Brand created')).toBeVisible();
     await expect(page.getByRole('button', { name: `Edit ${title}` })).toBeVisible();
+    // Its three actions fit inside the tile at every width: on a phone the
+    // tile is half the screen and the targets are thumb-sized, so the last
+    // one wraps under the icons rather than being clipped off the right edge.
+    const tile = page.getByRole('listitem').filter({ has: page.getByRole('button', { name: `Edit ${title}` }) });
+    const tileBox = (await tile.boundingBox())!;
+    const setDefault = (await tile.getByRole('button', { name: 'Set as default' }).boundingBox())!;
+    expect(setDefault.x + setDefault.width).toBeLessThanOrEqual(tileBox.x + tileBox.width);
+    expect(setDefault.y + setDefault.height).toBeLessThanOrEqual(tileBox.y + tileBox.height);
     const brand = await api.brandNamed(title);
     api.trackBrand(brand.id);
     // The button fill is the colour the Warm preset is known by.

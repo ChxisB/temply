@@ -97,7 +97,7 @@ describe('Tile', () => {
     expect(subtitle).toContain('text-muted');
   });
 
-  it('lifts any button or link in its action slot to a 44px target, whatever size the caller gave it', () => {
+  it('lifts any button or link in its action slot to a 44px target under a coarse pointer, whatever size the caller gave it', () => {
     const view = render(
       <ul>
         <Tile
@@ -113,9 +113,11 @@ describe('Tile', () => {
       </ul>,
     );
     const slot = view.getByRole('button', { name: 'Delete Acme' }).parentElement as HTMLElement;
-    const classes = slot.className;
-    expect(classes).toContain('min-h-11');
-    expect(classes).toContain('min-w-11');
+    const classes = slot.className.split(/\s+/);
+    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:min-h-11');
+    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:min-w-11');
+    expect(classes).not.toContain('[&_:is(a,button)]:min-h-11');
+    expect(classes).toContain('flex-wrap');
   });
 
   it('keeps its primary link\'s focus ring wholly inside the clipped corners', () => {
@@ -239,8 +241,8 @@ describe('List and Row sizing', () => {
       </List>,
     );
     const button = view.getByRole('button', { name: 'Delete' });
-    expect(button.parentElement?.className).toContain('min-h-11');
-    expect(button.parentElement?.className).toContain('min-w-11');
+    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-h-11');
+    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-w-11');
     expect(view.getByRole('link').contains(button)).toBe(false);
   });
 });
