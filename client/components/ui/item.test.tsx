@@ -97,7 +97,7 @@ describe('Tile', () => {
     expect(subtitle).toContain('text-muted');
   });
 
-  it('lifts any button or link in its action slot to a 44px target under a coarse pointer, whatever size the caller gave it', () => {
+  it('gives any button or link in its action slot a 44px halo under a coarse pointer, whatever size the caller gave it', () => {
     const view = render(
       <ul>
         <Tile
@@ -114,8 +114,9 @@ describe('Tile', () => {
     );
     const slot = view.getByRole('button', { name: 'Delete Acme' }).parentElement as HTMLElement;
     const classes = slot.className.split(/\s+/);
-    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:min-h-11');
-    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:min-w-11');
+    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:before:absolute');
+    expect(classes).toContain('pointer-coarse:[&_:is(a,button)]:before:-inset-2');
+    expect(classes).toContain('pointer-coarse:gap-4');
     expect(classes).not.toContain('[&_:is(a,button)]:min-h-11');
     expect(classes).toContain('flex-wrap');
   });
@@ -234,15 +235,15 @@ describe('List and Row sizing', () => {
     expect(classes).toContain('group-last/row:rounded-b-[calc(var(--radius-card)-1px)]');
   });
 
-  it('lifts a row\'s actions to 44px targets too, and keeps them outside the primary link', () => {
+  it('gives a row\'s actions the 44px halo too, and keeps them outside the primary link', () => {
     const view = render(
       <List>
         <Row href="/templates/1" title="Welcome" actions={<button type="button">Delete</button>} />
       </List>,
     );
     const button = view.getByRole('button', { name: 'Delete' });
-    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-h-11');
-    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-w-11');
+    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:before:absolute');
+    expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:before:-inset-2');
     expect(button.parentElement?.className).toContain('flex-wrap');
     expect(view.getByRole('link').contains(button)).toBe(false);
   });

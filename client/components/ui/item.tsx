@@ -13,16 +13,21 @@ import { lift } from '~/components/ui/surfaces';
  * - Actions always sit trailing (a tile's footer, a row's right edge), always
  *   visible, and outside the primary target — their own click and tab stops,
  *   never a navigation by accident. Nothing is hidden behind hover, so touch
- *   gets the same product. Under a coarse pointer the slot lifts every button
- *   and link in it to a 44px target, so a caller's 28px icon button is a
- *   thumb-sized one here without each call site having to remember; a fine
- *   pointer keeps the size the caller gave, as Button itself does.
+ *   gets the same product. Under a coarse pointer the slot gives every button
+ *   and link in it a 44px target, so a caller's 28px icon button is a
+ *   thumb-sized one here without each call site having to remember. The
+ *   target is an invisible halo, not a bigger box: a 44px pill around a
+ *   14px icon reads as padding gone wrong once its hover or disabled fill
+ *   shows. A fine pointer gets the size the caller gave, as Button itself does.
  * - A `busy` item (an upload in flight) draws dashed and does not respond.
  */
 
 // A descendant selector rather than a size on the slot: the slot's own box is
-// not the thing that gets pressed.
-const actionTargets = 'pointer-coarse:[&_:is(a,button)]:min-h-11 pointer-coarse:[&_:is(a,button)]:min-w-11';
+// not the thing that gets pressed. The halo is a ::before 8px past each edge,
+// which takes a 28px control to 44px; the slot's gap widens to match so two
+// halos meet rather than overlap.
+const actionTargets =
+  'pointer-coarse:gap-4 pointer-coarse:[&_:is(a,button)]:relative pointer-coarse:[&_:is(a,button)]:before:absolute pointer-coarse:[&_:is(a,button)]:before:-inset-2';
 
 type Primary =
   | { href: string; onClick?: never; primaryLabel?: never }
