@@ -243,6 +243,7 @@ describe('List and Row sizing', () => {
     const button = view.getByRole('button', { name: 'Delete' });
     expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-h-11');
     expect(button.parentElement?.className).toContain('pointer-coarse:[&_:is(a,button)]:min-w-11');
+    expect(button.parentElement?.className).toContain('flex-wrap');
     expect(view.getByRole('link').contains(button)).toBe(false);
   });
 });

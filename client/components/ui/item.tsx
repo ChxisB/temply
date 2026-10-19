@@ -174,7 +174,8 @@ export function Tile({
         <div className="mt-auto flex items-center justify-between gap-2 px-4 pb-3">
           <span className="min-w-0 truncate text-ui text-muted tabular-nums">{meta}</span>
           {/* Three thumb-sized actions outrun a half-width phone tile, so the
-              slot wraps instead of letting the clip cut the last one off. */}
+              slot wraps instead of letting the clip cut the last one off; the
+              Row's slot wraps for the same reason. */}
           {actions ? <div className={cn('flex min-w-0 flex-wrap items-center justify-end gap-1', actionTargets)}>{actions}</div> : null}
         </div>
       ) : null}
@@ -260,7 +261,7 @@ export function Row({
         {badge ? <div className="flex shrink-0 items-center gap-1">{badge}</div> : null}
         {meta}
       </PrimaryTarget>
-      {actions ? <div className={cn('flex shrink-0 items-center gap-1 pr-3', actionTargets)}>{actions}</div> : null}
+      {actions ? <div className={cn('flex min-w-0 flex-wrap items-center justify-end gap-1 pr-3', actionTargets)}>{actions}</div> : null}
     </>
   );
 
