@@ -201,7 +201,7 @@ export default function BrandsPage() {
             }
           />
         ) : (
-          <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4.5">
             {brands.map((brand) => {
               const brandTheme = safeTheme(brand.theme);
               const isDefault = brand.id === defaultBrandId;
@@ -258,7 +258,7 @@ export default function BrandsPage() {
       {/* Built-in looks — always available in the editor, not deletable. */}
       <section aria-labelledby="presets-heading" className="space-y-3.5">
         <SectionHeading id="presets-heading">Presets</SectionHeading>
-        <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4.5">
           {BRAND_PRESETS.map((p) => {
             const isDefault = p.id === defaultBrandId;
             return (
