@@ -5,6 +5,26 @@ templates and brands in a workspace, and pull the rendered HTML into your
 own application through an API. Your app sends the mail; Temply hands you
 the markup.
 
+![The Temply email editor](client/public/temply-email-editor.webp)
+
+## What it does
+
+- **Build** receipts, welcome emails and password resets from blocks: logo,
+  headings, text, buttons, images, lists, quotes, columns, sections, custom
+  HTML, headers and footers, repeat blocks for a row per line item, and
+  show-if conditions. Temply writes the table-based HTML.
+- **Check** the email before it goes anywhere, with example data, a preflight
+  panel, test sends, and a preview of how it looks when an inbox forces dark
+  mode.
+- **Ship** by publishing a version. Your app sends a template ID and its data
+  to the API and gets back HTML and plain text for the email provider it
+  already uses. Edits stay in the draft until you publish again.
+- **Reuse** a brand saved once across every template, and placeholders filled
+  at request time.
+
+A workspace holds the templates, brands, API keys and the team. Anyone can
+try the editor at `/playground` without an account.
+
 ## Tech stack
 
 Bun 1.4.2 is the package manager, the script runner and the test runner.
