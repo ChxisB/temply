@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Typography</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 900px; box-sizing: border-box; background: #FFFFFF; color: #0B1020; font-family: 'Inter', system-ui, sans-serif; padding: 56px 64px; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 12px; max-width: 820px">
+    <div style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B">Type</div>
+    <h2 style="margin: 0; font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; color: #0B1020">One family: Inter.</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; font-weight: 400; color: #0B1020">Five weights cover the interface and documents. ExtraBold is for the wordmark and display headlines.</p>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch; flex: 1 1 0; min-height: 0">
+    <div style="width: 440px; flex: none; box-sizing: border-box; background: #0B1020; color: #FFFFFF; border-radius: 24px; padding: 28px; display: flex; flex-direction: column; justify-content: space-between">
+      <div style="font-size: 190px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em; color: #FFFFFF">Aa</div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 300">Light</span><span style="font-size: 14px; color: #94A3B8">300</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 400">Regular</span><span style="font-size: 14px; color: #94A3B8">400</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 500">Medium</span><span style="font-size: 14px; color: #94A3B8">500</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 600">Semibold</span><span style="font-size: 14px; color: #94A3B8">600</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 700">Bold</span><span style="font-size: 14px; color: #94A3B8">700</span></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-size: 22px; font-weight: 800">ExtraBold</span><span style="font-size: 14px; color: #94A3B8">800, display only</span></div>
+      </div>
+    </div>
+
+    <div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; border: 1px solid #E2E8F0; border-radius: 24px; padding: 8px 24px; display: flex; flex-direction: column; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #E2E8F0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Display</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">44 / 48 · 800<br>−0.03em</div></div>
+        <div style="font-size: 44px; line-height: 48px; font-weight: 800; letter-spacing: -0.03em; color: #0B1020">Build the email.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #E2E8F0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Heading</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">32 / 36 · 700<br>−0.02em</div></div>
+        <div style="font-size: 32px; line-height: 36px; font-weight: 700; letter-spacing: -0.02em; color: #0B1020">We handle the HTML.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #E2E8F0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Subheading</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">22 / 28 · 600</div></div>
+        <div style="font-size: 22px; line-height: 28px; font-weight: 600; color: #0B1020">Connect your app</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #E2E8F0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Body</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">17 / 26 · 400</div></div>
+        <div style="font-size: 17px; line-height: 26px; font-weight: 400; color: #0B1020">A visual transactional email template builder for developers.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid #E2E8F0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Caption</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">14 / 20 · 400</div></div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 400; color: #64748B">Rendered HTML and plain text.</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 16px; padding: 14px 0">
+        <div style="width: 124px; flex: none; display: flex; flex-direction: column; gap: 2px"><div style="font-size: 13px; font-weight: 700; color: #0B1020">Label</div><div style="font-size: 12px; line-height: 1.35; color: #64748B">12 / 16 · 600<br>+0.08em, caps</div></div>
+        <div style="font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B">API key</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch">
+    <div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; background: #F1F5F9; border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 16px; font-weight: 700; color: #0B1020">Voice</div>
+      <div style="font-size: 14px; line-height: 1.5; color: #0B1020">Sentence case and plain verbs. The same word for an action from button to toast. Counts and units beat sentences: "2 errors", "~5 KB of 102 KB".</div>
+    </div>
+    <div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; background: #F1F5F9; border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 16px; font-weight: 700; color: #0B1020">In the app today</div>
+      <div style="font-size: 14px; line-height: 1.5; color: #0B1020">The interface is set in Figtree, headings in Bricolage Grotesque and code in JetBrains Mono. Inter is the brand face for the logo, marketing and docs. Moving the app to Inter is a separate decision.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

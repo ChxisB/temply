@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contrast and the product</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 900px; box-sizing: border-box; background: #FFFFFF; color: #0B1020; font-family: 'Inter', system-ui, sans-serif; padding: 56px 64px; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 12px; max-width: 820px">
+    <div style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B">Contrast</div>
+    <h2 style="margin: 0; font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; color: #0B1020">What can sit on what.</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; font-weight: 400; color: #0B1020">WCAG 2 contrast ratios. Body text needs 4.5:1; text at 24 px and up needs 3:1. Each swatch is drawn in the pair it names.</p>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch; flex: 1 1 0; min-height: 0">
+    <div style="width: 620px; flex: none; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; gap: 10px">
+          <div style="font-size: 16px; font-weight: 700; color: #0B1020">Body text</div>
+          <div style="font-size: 13px; color: #64748B">4.5:1 and up</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #0B1020; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Navy on white</div><div style="font-size: 13px; color: #64748B">18.93:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 10px; border: 1px solid #E2E8F0; background: #F1F5F9; color: #0B1020; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Navy on light</div><div style="font-size: 13px; color: #64748B">17.28:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #FF6B4A; color: #0B1020; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Navy on coral</div><div style="font-size: 13px; color: #64748B">6.72:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #FF3D8F; color: #0B1020; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Navy on pink</div><div style="font-size: 13px; color: #64748B">5.69:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #A855FF; color: #0B1020; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Navy on purple</div><div style="font-size: 13px; color: #64748B">4.88:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #0B1020; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">White on navy</div><div style="font-size: 13px; color: #64748B">18.93:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Gray on white</div><div style="font-size: 13px; color: #64748B">4.76:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #0B1020; color: #94A3B8; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">#94A3B8 on navy</div><div style="font-size: 13px; color: #64748B">7.38:1</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; gap: 10px">
+          <div style="font-size: 16px; font-weight: 700; color: #0B1020">Large text only</div>
+          <div style="font-size: 13px; color: #64748B">24 px and up, 3:1 to 4.5:1</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Gray on light</div><div style="font-size: 13px; color: #64748B">4.34:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #0B1020; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Gray on navy</div><div style="font-size: 13px; color: #64748B">3.98:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #A855FF; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">White on purple</div><div style="font-size: 13px; color: #64748B">3.88:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #FF3D8F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">White on pink</div><div style="font-size: 13px; color: #64748B">3.32:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #0B1020; color: #7A1EFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">Violet on navy</div><div style="font-size: 13px; color: #64748B">3.12:1</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: baseline; gap: 10px">
+          <div style="font-size: 16px; font-weight: 700; color: #0B1020">Never for text</div>
+          <div style="font-size: 13px; color: #64748B">Under 3:1</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #FF6B4A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">White on coral</div><div style="font-size: 13px; color: #64748B">2.82:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #94A3B8; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">#94A3B8 on white</div><div style="font-size: 13px; color: #64748B">2.56:1</div></div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 10px; border: 1px solid #E2E8F0; background: #F1F5F9; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700">Aa</div>
+            <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 600; color: #0B1020">White on light</div><div style="font-size: 13px; color: #64748B">1.10:1</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; background: #F1F5F9; border-radius: 24px; padding: 26px 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="font-size: 20px; font-weight: 700; color: #0B1020">Where the app sits</div>
+        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #0B1020">The app keeps its own violet for controls, so every button and link stays one colour. Brand colours go on marks, artwork and display type. Values from the app's light theme:</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <div style="width: 44px; height: 44px; flex: none; border-radius: 12px; background: #5B45E0"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 700; color: #0B1020">#5B45E0 · accent</div><div style="font-size: 13px; line-height: 1.4; color: #0B1020">Buttons, links, focus. White on it is 6.23:1.</div></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <div style="width: 44px; height: 44px; flex: none; border-radius: 12px; background: #3B2C9E"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 700; color: #0B1020">#3B2C9E · accent ink</div><div style="font-size: 13px; line-height: 1.4; color: #0B1020">The accent as text: 9.8:1 on surface, 8.3:1 on the wash.</div></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 12px; border: 1px solid #E2E8F0; background: #E8E3FF"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 700; color: #0B1020">#E8E3FF · accent wash</div><div style="font-size: 13px; line-height: 1.4; color: #0B1020">Lavender behind accent text.</div></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <div style="width: 44px; height: 44px; box-sizing: border-box; flex: none; border-radius: 12px; border: 1px solid #E2E8F0; background: #FAF9FE"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 700; color: #0B1020">#FAF9FE · surface</div><div style="font-size: 13px; line-height: 1.4; color: #0B1020">The app's page background.</div></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px">
+          <div style="width: 44px; height: 44px; flex: none; border-radius: 12px; background: #0B1220"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px"><div style="font-size: 14px; font-weight: 700; color: #0B1020">#0B1220 · rail</div><div style="font-size: 13px; line-height: 1.4; color: #0B1020">The sidebar. A hair from brand navy.</div></div>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #0B1020">The app's neutrals lean violet and the brand's lean slate. Keep to one family on any one surface.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

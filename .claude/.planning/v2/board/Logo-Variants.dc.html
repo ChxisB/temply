@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dark, mono and misuse</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 960px; box-sizing: border-box; background: #FFFFFF; color: #0B1020; font-family: 'Inter', system-ui, sans-serif; padding: 56px 64px; display: flex; flex-direction: column; gap: 32px">
+  <div style="display: flex; flex-direction: column; gap: 12px; max-width: 780px">
+    <div style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B">Logo</div>
+    <h2 style="margin: 0; font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; color: #0B1020">Light, dark and one colour.</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; font-weight: 400; color: #0B1020">Colour is the default, on white or navy. When colour isn't available, use one flat colour: navy, white or gray. The wordmark is navy on light and white on dark.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px">
+    <div style="font-size: 20px; font-weight: 700; color: #0B1020">Colourways</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 32px">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Colour lockup on white" style="width: 240px; height: 63px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">Colour on white.</strong> The default.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; background: #0B1020; border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/c7f8904f1345b11598e1724bc12b4d35" alt="Colour lockup on navy" style="width: 240px; height: 63px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">Colour on navy.</strong> The wordmark turns white.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; background: #F1F5F9; border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/0124bfe9a85ad5516c2048cd99339123" alt="Stacked colour lockup on light" style="width: 130px; height: 115px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">Stacked on light.</strong> Same colours.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; background: #F1F5F9; border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/e40b0f166a47988dde0ad1fa0427cbbc" alt="Navy one-colour lockup" style="width: 240px; height: 63px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">Navy.</strong> One colour, for print and stamps.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; background: linear-gradient(135deg, #0B1020 0%, #7A1EFF 50%, #FF3D8F 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/7ba864d31e2d459b7cee935289ccc741" alt="White one-colour lockup" style="width: 240px; height: 63px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">White.</strong> On navy or the dark gradient.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 160px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 20px; display: flex; align-items: center; justify-content: center">
+          <img src="/_blob/c3514458b7139427649f3da93ff2c774" alt="Gray one-colour lockup" style="width: 240px; height: 63px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #64748B"><strong style="color: #0B1020">Gray.</strong> Quiet, for footers and partner strips.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 16px">
+    <div style="font-size: 20px; font-weight: 700; color: #0B1020">Don't</div>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: #F1F5F9; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Lockup stretched wide and flat" style="width: 100px; height: 26px; display: block; transform: scale(1.4, 0.7)">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't stretch or squash it.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: #F1F5F9; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Lockup with its colours shifted" style="width: 128px; height: 34px; display: block; filter: hue-rotate(160deg) saturate(1.4)">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't change the colours.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: #F1F5F9; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Lockup with a drop shadow" style="width: 128px; height: 34px; display: block; filter: drop-shadow(4px 6px 3px rgba(11,16,32,0.55))">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't add shadows or glows.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: #F1F5F9; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Lockup rotated off the horizontal" style="width: 120px; height: 32px; display: block; transform: rotate(-16deg)">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't rotate it.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: repeating-linear-gradient(45deg, #FF6B4A 0px, #FF6B4A 14px, #A855FF 14px, #A855FF 28px); border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/82e239f286758fff3c64f1df0b6a11b3" alt="Lockup over a busy striped background" style="width: 128px; height: 34px; display: block">
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't put it on busy colour.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="position: relative; height: 120px; background: #F1F5F9; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; overflow: hidden">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="position: absolute; left: 8px; top: 8px"><circle cx="10" cy="10" r="10" fill="#0B1020"/><path d="M6.5 6.5l7 7M13.5 6.5l-7 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>
+          <img src="/_blob/4026ddd0a6968ba5ce3d7b3e57b5e504" alt="Mark beside the name set in a serif typeface" style="width: 34px; height: 30px; display: block">
+          <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; color: #0B1020">Temply</span>
+        </div>
+        <div style="font-size: 14px; line-height: 1.4; color: #0B1020">Don't retype the name in another font.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":960}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

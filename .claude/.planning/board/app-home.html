@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head>
+<meta charset="utf-8">
+<title>Temply app home</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style></style>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:'Bricolage Grotesque','Figtree',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.015em;text-wrap:balance}
+p{text-wrap:pretty}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit}
+a:focus-visible,button:focus-visible{outline:3px solid #5B45E0;outline-offset:2px}
+.pri{transition:background-color 150ms ease-out}
+.pri:hover{background:#4B36C9 !important}
+.sec{transition:background-color 150ms ease-out}
+.sec:hover{background:#F3F1FA !important}
+.nav{transition:background-color 150ms ease-out,color 150ms ease-out}
+.nav:hover{background:#F3F1FA;color:#26213F !important}
+.lift{transition:transform 200ms ease-out,box-shadow 200ms ease-out}
+.lift:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(60,40,140,0.10) !important}
+@media (prefers-reduced-motion:reduce){.pri,.sec,.nav,.lift{transition:none}.lift:hover{transform:none}}
+</style>
+</helmet>
+<div style="display:flex;min-height:1000px;background:#FAF9FE;color:#26213F;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.5">
+
+<aside style="width:248px;flex:none;box-sizing:border-box;background:#FFFFFF;border-right:1.5px solid #E4E0F1;padding:24px 16px;display:flex;flex-direction:column;gap:28px">
+  <a href="#" aria-label="Temply home" style="display:flex;align-items:center;gap:10px;padding:0 8px;color:#5B45E0">
+    <svg/>
+    <span style="font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.015em;color:#26213F">Temply</span>
+  </a>
+  <nav aria-label="App" style="display:flex;flex-direction:column;gap:4px">
+    <a href="#" aria-current="page" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;background:#E8E3FF;color:#3B2C9E;font-size:15px;font-weight:700"><svg/>Home</a>
+    <a class="nav" href="#" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;color:#645E7E;font-size:15px;font-weight:600"><svg/>Templates</a>
+    <a class="nav" href="#" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;color:#645E7E;font-size:15px;font-weight:600"><svg/>Brands</a>
+    <a class="nav" href="#" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;color:#645E7E;font-size:15px;font-weight:600"><svg/>Assets</a>
+    <a class="nav" href="#" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;color:#645E7E;font-size:15px;font-weight:600"><svg/>Connect your app</a>
+  </nav>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px">
+    <div style="background:#D6F2E4;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:700;color:#0B6B42">Free trial</span><span style="font-size:14px;font-weight:600;color:#0B6B42">9 days left</span></div>
+      <div style="height:8px;border-radius:999px;background:#FFFFFF;overflow:hidden"><div style="width:36%;height:100%;border-radius:999px;background:#2E9E6B"></div></div>
+      <a href="#" style="font-size:14px;font-weight:700;color:#074A2E;text-decoration:underline;text-underline-offset:3px">Choose a plan</a>
+    </div>
+    <a class="nav" href="#" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;border-radius:14px;color:#645E7E;font-size:15px;font-weight:600"><svg/>Settings</a>
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 8px 0;border-top:1.5px solid #EFECF8">
+      <span style="width:40px;height:40px;border-radius:999px;background:#FFE4D3;color:#9A4616;display:grid;place-items:center;font-weight:700">S</span>
+      <span style="display:flex;flex-direction:column;line-height:1.25"><span style="font-size:15px;font-weight:700">Sam Rivers</span><span style="font-size:14px;color:#645E7E">Northwind</span></span>
+    </div>
+  </div>
+</aside>
+
+<main style="flex:1;min-width:0;padding:44px 52px 56px;display:flex;flex-direction:column;gap:36px">
+
+  <header style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h1 style="font-size:44px;line-height:1.05;font-weight:700">Welcome back, Sam</h1>
+      <p style="font-size:18px;color:#645E7E">Your emails, your team, and a clear next step.</p>
+    </div>
+    <a class="pri" href="#" style="display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px 0 20px;border-radius:999px;background:#5B45E0;color:#FFFFFF;font-size:16px;font-weight:600;box-shadow:0 8px 20px rgba(91,69,224,0.28)"><svg/>New template</a>
+  </header>
+
+  <section aria-label="Next step" style="background:#E8E3FF;border-radius:28px;padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <span style="flex:none;width:56px;height:56px;border-radius:18px;background:#FFFFFF;color:#5B45E0;display:grid;place-items:center"><svg/></span>
+    <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:2px">
+      <span style="font-size:13px;font-weight:700;letter-spacing:0.08em;color:#3B2C9E">NEXT STEP</span>
+      <span style="font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:24px;font-weight:700;letter-spacing:-0.015em">Password reset is ready for your sign-off</span>
+      <span style="font-size:15px;color:#3A3556">Priya moved it to sign-off yesterday. Check it, then it can go live.</span>
+    </div>
+    <a class="pri" href="#" style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:#5B45E0;color:#FFFFFF;font-size:16px;font-weight:600">Review</a>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <h2 style="font-size:24px;font-weight:700">Start from a starter</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <sc-for list="{{starters}}" as="s" hint-placeholder-count="7"><a class="sec" href="#" style="display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px 0 14px;border-radius:999px;background:#FFFFFF;border:1.5px solid #DDD8EE;font-size:15px;font-weight:600;color:#26213F"><svg/>{{s.name}}</a></sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <h2 style="font-size:24px;font-weight:700">Recent templates</h2>
+      <a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:15px;font-weight:700;color:#4632BC">View all<svg/></a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px">
+      <a class="lift" href="#" style="background:#FFFFFF;border-radius:24px;padding:12px 12px 18px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:14px">
+        <div style="height:140px;border-radius:16px;background:#E8E3FF;display:grid;place-items:center"><div style="width:96px;background:#FFFFFF;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px"><div style="height:7px;width:55%;border-radius:4px;background:#5B45E0"></div><div style="height:5px;border-radius:3px;background:#E4E0F1"></div><div style="height:5px;width:70%;border-radius:3px;background:#E4E0F1"></div><div style="height:10px;width:50%;border-radius:5px;background:#5B45E0;margin-top:4px"></div></div></div>
+        <div style="padding:0 6px;display:flex;flex-direction:column;gap:8px"><span style="font-size:18px;font-weight:700">Welcome email</span>
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:999px;background:#D6F2E4;color:#0B6B42;font-size:13px;font-weight:700"><span style="width:7px;height:7px;border-radius:999px;background:currentColor"></span>Published</span><span style="font-size:14px;color:#645E7E">2 hours ago</span></span></div>
+      </a>
+      <a class="lift" href="#" style="background:#FFFFFF;border-radius:24px;padding:12px 12px 18px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:14px">
+        <div style="height:140px;border-radius:16px;background:#FFF0BF;display:grid;place-items:center"><div style="width:96px;background:#FFFFFF;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px"><div style="height:7px;width:62%;border-radius:4px;background:#26213F"></div><div style="height:5px;border-radius:3px;background:#E4E0F1"></div><div style="height:5px;width:60%;border-radius:3px;background:#E4E0F1"></div><div style="height:10px;width:60%;border-radius:5px;background:#D97706;margin-top:4px"></div></div></div>
+        <div style="padding:0 6px;display:flex;flex-direction:column;gap:8px"><span style="font-size:18px;font-weight:700">Password reset</span>
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:999px;background:#FFF0BF;color:#765200;font-size:13px;font-weight:700"><span style="width:7px;height:7px;border-radius:999px;background:currentColor"></span>In sign-off</span><span style="font-size:14px;color:#645E7E">Yesterday</span></span></div>
+      </a>
+      <a class="lift" href="#" style="background:#FFFFFF;border-radius:24px;padding:12px 12px 18px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:14px">
+        <div style="height:140px;border-radius:16px;background:#D9EAFF;display:grid;place-items:center"><div style="width:96px;background:#FFFFFF;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px"><div style="height:7px;width:50%;border-radius:4px;background:#1E4C94"></div><div style="height:5px;border-radius:3px;background:#E4E0F1"></div><div style="height:5px;border-radius:3px;background:#E4E0F1"></div><div style="height:5px;width:45%;border-radius:3px;background:#E4E0F1"></div></div></div>
+        <div style="padding:0 6px;display:flex;flex-direction:column;gap:8px"><span style="font-size:18px;font-weight:700">Receipt</span>
+          <span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:999px;background:#E8E3FF;color:#3B2C9E;font-size:13px;font-weight:700"><span style="width:7px;height:7px;border-radius:999px;background:currentColor"></span>Unpublished changes</span><span style="font-size:14px;color:#645E7E">3 days ago</span></span></div>
+      </a>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:baseline;gap:12px"><h2 style="font-size:24px;font-weight:700">Usage</h2><span style="font-size:15px;color:#645E7E">This month</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px">
+      <div style="background:#FFFFFF;border-radius:24px;padding:22px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:15px;color:#645E7E">API calls</span>
+        <span style="font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:34px;line-height:1;font-weight:700">4,210 <span style="font-family:'Figtree',sans-serif;font-size:15px;font-weight:500;color:#645E7E">of 10,000</span></span>
+        <div style="height:10px;border-radius:999px;background:#E8E3FF;overflow:hidden"><div style="width:42%;height:100%;border-radius:999px;background:#5B45E0"></div></div>
+      </div>
+      <div style="background:#FFFFFF;border-radius:24px;padding:22px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:15px;color:#645E7E">Templates</span>
+        <span style="font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:34px;line-height:1;font-weight:700">6 <span style="font-family:'Figtree',sans-serif;font-size:15px;font-weight:500;color:#645E7E">of 10</span></span>
+        <div style="height:10px;border-radius:999px;background:#D6F2E4;overflow:hidden"><div style="width:60%;height:100%;border-radius:999px;background:#2E9E6B"></div></div>
+      </div>
+      <div style="background:#FFFFFF;border-radius:24px;padding:22px;box-shadow:0 1px 3px rgba(60,40,140,0.08);display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:15px;color:#645E7E">Storage</span>
+        <span style="font-family:'Bricolage Grotesque','Figtree',sans-serif;font-size:34px;line-height:1;font-weight:700">120 MB <span style="font-family:'Figtree',sans-serif;font-size:15px;font-weight:500;color:#645E7E">of 1 GB</span></span>
+        <div style="height:10px;border-radius:999px;background:#FFE4D3;overflow:hidden"><div style="width:12%;height:100%;border-radius:999px;background:#E08A5B"></div></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+renderVals() {
+return {
+starters: [
+{ name: 'Blank' },
+{ name: 'Welcome' },
+{ name: 'Verify email' },
+{ name: 'Password reset' },
+{ name: 'Receipt' },
+{ name: 'Team invite' },
+{ name: 'Product update' }
+]
+};
+}
+}
+</script>
+
+
+</body></html>

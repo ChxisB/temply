@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 860px; box-sizing: border-box; background: #FFFFFF; color: #0B1020; font-family: 'Inter', system-ui, sans-serif; padding: 56px 64px; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 12px; max-width: 820px">
+    <div style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #64748B">Social card and API</div>
+    <h2 style="margin: 0; font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; color: #0B1020">One card. One call.</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.5; font-weight: 400; color: #0B1020">The share image carries the tagline. The request on the right is the product behind it.</p>
+  </div>
+
+  <div style="display: flex; gap: 20px; align-items: stretch; flex: 1 1 0; min-height: 0">
+    <div style="width: 600px; flex: none; display: flex; flex-direction: column; justify-content: space-between; gap: 20px">
+      <img src="/_blob/0662552eb4487129199e53cbe7924130" alt="Temply social card: Build the email. We handle the HTML." style="width: 600px; height: 315px; display: block; border-radius: 20px">
+      <div style="flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 20px">
+        <div style="flex: 1 1 0; box-sizing: border-box; background: #F1F5F9; border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 16px; font-weight: 700; color: #0B1020">Formats</div>
+          <div style="font-size: 14px; line-height: 1.5; color: #0B1020">SVG as the source, and a PNG at 1200 × 630 for posting. Both are in the pack.</div>
+        </div>
+        <div style="flex: 1 1 0; box-sizing: border-box; background: #F1F5F9; border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 8px">
+          <div style="font-size: 16px; font-weight: 700; color: #0B1020">Type on the card</div>
+          <div style="font-size: 14px; line-height: 1.5; color: #0B1020">Inter ExtraBold, outlined to paths, so the card looks the same wherever it is opened, with or without the font installed.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex: 1 1 0; min-width: 0; box-sizing: border-box; background: #0B1020; color: #FFFFFF; border-radius: 24px; padding: 26px 28px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8">API</div>
+        <div style="font-size: 26px; line-height: 30px; font-weight: 800; letter-spacing: -0.02em; color: #FFFFFF">Render with one call.</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8">Request</div>
+        <div style="box-sizing: border-box; background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px 16px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; line-height: 20px; color: #FFFFFF; white-space: pre; overflow: hidden"><span style="color: #FF3D8F">POST</span> https://temply.tacklabs.co.uk
+  /api/public/v1/templates/&lt;shortCode&gt;/render
+<span style="color: #94A3B8">Authorization:</span> Bearer <span style="color: #FF6B4A">tply_live_…</span>
+<span style="color: #94A3B8">Content-Type:</span> application/json
+
+&#123; <span style="color: #FF6B4A">"data"</span>: &#123; … &#125; &#125;</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8">Response</div>
+        <div style="box-sizing: border-box; background: rgba(255,255,255,0.06); border-radius: 14px; padding: 14px 16px; font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 13px; line-height: 20px; color: #FFFFFF; white-space: pre; overflow: hidden"><span style="color: #94A3B8">200 OK</span>
+&#123; <span style="color: #FF6B4A">"html"</span>: "…", <span style="color: #FF6B4A">"text"</span>: "…" &#125;</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #94A3B8">What the recipient gets</div>
+        <div style="box-sizing: border-box; background: #FFFFFF; color: #0B1020; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px">
+          <img src="/_blob/4026ddd0a6968ba5ce3d7b3e57b5e504" alt="Temply mark" style="width: 32px; height: 28px; display: block; margin-bottom: 6px">
+          <div style="font-size: 17px; line-height: 22px; font-weight: 700; letter-spacing: -0.01em; color: #0B1020">Your order is confirmed</div>
+          <div style="font-size: 14px; line-height: 20px; color: #64748B">Order A-1042 ships on Thursday.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
