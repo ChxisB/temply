@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head>
+<meta charset="utf-8">
+<title>Temply editor, panels collapsed</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style></style>
+<style>
+body{margin:0}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:'Bricolage Grotesque','Figtree',ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.015em;text-wrap:balance}
+p{text-wrap:pretty}
+a{text-decoration:none;color:inherit}
+button,input{font-family:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #5B45E0;outline-offset:2px}
+.pri{transition:background-color 150ms ease-out}
+.pri:hover{background:#4B36C9 !important}
+.sec{transition:background-color 150ms ease-out}
+.sec:hover{background:#F3F1FA !important}
+.chip{transition:background-color 150ms ease-out,border-color 150ms ease-out}
+.chip:hover{background:#E8E3FF !important;border-color:#C9BFFF !important}
+.tab{transition:color 150ms ease-out}
+.tab:hover{color:#26213F !important}
+@media (prefers-reduced-motion:reduce){.pri,.sec,.chip,.tab{transition:none}}
+</style>
+</helmet>
+<div style="display:flex;flex-direction:column;min-height:1100px;background:#FAF9FE;color:#26213F;font-family:'Figtree',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.5">
+
+<header style="background:#FFFFFF;border-bottom:1.5px solid #E4E0F1;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:14px;min-width:0">
+    <a class="sec" href="#" aria-label="Back to templates" style="flex:none;width:44px;height:44px;border-radius:999px;border:1.5px solid #DDD8EE;display:grid;place-items:center;color:#26213F"><svg/></a>
+    <h1 style="font-size:26px;line-height:1.1;font-weight:700;white-space:nowrap">Welcome email</h1>
+    <span style="display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 14px;border-radius:999px;background:#E8E3FF;color:#3B2C9E;font-size:14px;font-weight:700"><span style="width:7px;height:7px;border-radius:999px;background:currentColor"></span>Unpublished changes</span>
+    <span style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:#0B6B42;font-weight:600"><svg/>Saved</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <button class="sec" type="button" style="display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#4A4466;font-size:16px;font-weight:600;cursor:pointer"><svg/>History</button>
+    <button class="sec" type="button" style="height:48px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#4A4466;font-size:16px;font-weight:600;cursor:pointer">Share</button>
+    <button class="sec" type="button" style="display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 22px;border-radius:999px;border:1.5px solid #DDD8EE;background:#FFFFFF;color:#26213F;font-size:16px;font-weight:600;cursor:pointer"><svg/>Send a test</button>
+    <button class="pri" type="button" style="height:48px;padding:0 28px;border-radius:999px;border:0;background:#5B45E0;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(91,69,224,0.28)">Publish</button>
+  </div>
+</header>
+
+<div style="background:#FFFFFF;border-bottom:1.5px solid #E4E0F1;padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <nav aria-label="Template sections" style="display:flex;gap:6px;flex-wrap:wrap">
+    <a href="#" aria-current="page" style="position:relative;display:inline-flex;align-items:center;height:54px;padding:0 14px;font-size:16px;font-weight:700;color:#26213F">Edit email<span style="position:absolute;left:14px;right:14px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:#5B45E0"></span></a>
+    <a class="tab" href="#" style="display:inline-flex;align-items:center;height:54px;padding:0 14px;font-size:16px;font-weight:600;color:#645E7E">Variables</a>
+    <a class="tab" href="#" style="display:inline-flex;align-items:center;height:54px;padding:0 14px;font-size:16px;font-weight:600;color:#645E7E">Versions</a>
+    <a class="tab" href="#" style="display:inline-flex;align-items:center;height:54px;padding:0 14px;font-size:16px;font-weight:600;color:#645E7E">Review &amp; release</a>
+    <a class="tab" href="#" style="display:inline-flex;align-items:center;height:54px;padding:0 14px;font-size:16px;font-weight:600;color:#645E7E">Connect your app</a>
+  </nav>
+  <div role="group" aria-label="View" style="display:inline-flex;background:#EFECF8;border-radius:999px;padding:4px;gap:2px">
+    <button type="button" aria-pressed="true" style="height:40px;padding:0 18px;border-radius:999px;border:0;background:#FFFFFF;box-shadow:0 1px 3px rgba(60,40,140,0.12);color:#26213F;font-size:15px;font-weight:700;cursor:pointer">Edit</button>
+    <button type="button" aria-pressed="false" style="height:40px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#4A4466;font-size:15px;font-weight:600;cursor:pointer">Preview</button>
+    <button type="button" aria-pressed="false" style="height:40px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#4A4466;font-size:15px;font-weight:600;cursor:pointer">HTML</button>
+    <button type="button" aria-pressed="false" style="height:40px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#4A4466;font-size:15px;font-weight:600;cursor:pointer">Text</button>
+  </div>
+</div>
+
+<div style="flex:1;display:flex;min-height:0">
+
+  <aside aria-label="Components, collapsed" style="width:72px;flex:none;box-sizing:border-box;background:#FFFFFF;border-right:1.5px solid #E4E0F1;padding:20px 0 24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+    <button class="sec" type="button" aria-label="Expand components panel" aria-expanded="false" style="width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:#645E7E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <span style="width:32px;height:1.5px;background:#EFECF8;margin:4px 0"></span>
+    <button class="chip" type="button" aria-label="Add text" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#3B2C9E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <button class="chip" type="button" aria-label="Add heading" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#3B2C9E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <button class="chip" type="button" aria-label="Add image" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#3B2C9E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <button class="chip" type="button" aria-label="Add button" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#3B2C9E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <button class="chip" type="button" aria-label="Add columns" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#1E4C94;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <button class="chip" type="button" aria-label="Add divider" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#1E4C94;display:grid;place-items:center;cursor:pointer"><svg/></button>
+  </aside>
+
+  <main style="flex:1;min-width:0;background:#F3F1FA;padding:32px 40px 48px;display:flex;flex-direction:column;align-items:center">
+    <article aria-label="Email canvas" style="width:100%;max-width:680px;box-sizing:border-box;background:#FFFFFF;border-radius:28px;padding:48px 52px 44px;box-shadow:0 8px 32px rgba(60,40,140,0.10);display:flex;flex-direction:column;gap:22px">
+      <div style="width:44px;height:44px;border-radius:14px;background:#5B45E0;color:#FFFFFF;display:grid;place-items:center;font-weight:700;font-size:19px">A</div>
+      <h2 style="font-size:38px;line-height:1.1;font-weight:700">Welcome to Temply</h2>
+      <p style="font-size:18px;line-height:1.6;color:#3A3556">Hi <span style="background:#E8E3FF;color:#3B2C9E;border-radius:8px;padding:1px 8px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:16px">{{ph.firstName}}</span>, your workspace is ready. Everything you build here goes out looking exactly like this.</p>
+      <div style="position:relative;margin-top:10px;border:2px solid #5B45E0;border-radius:18px;padding:34px 16px 22px;display:flex;justify-content:center">
+        <div style="position:absolute;left:12px;top:-20px;display:flex;align-items:center;gap:2px;background:#26213F;border-radius:999px;padding:4px 6px 4px 14px;color:#FFFFFF;font-size:13px;font-weight:600">
+          <span style="margin-right:8px">Button</span>
+          <button type="button" aria-label="Move block up" style="width:32px;height:32px;border-radius:999px;border:0;background:transparent;color:#FFFFFF;display:grid;place-items:center;cursor:pointer"><svg/></button>
+          <button type="button" aria-label="Move block down" style="width:32px;height:32px;border-radius:999px;border:0;background:transparent;color:#FFFFFF;display:grid;place-items:center;cursor:pointer"><svg/></button>
+          <button type="button" aria-label="Delete block" style="width:32px;height:32px;border-radius:999px;border:0;background:transparent;color:#FFB4BF;display:grid;place-items:center;cursor:pointer"><svg/></button>
+        </div>
+        <span style="display:inline-flex;align-items:center;height:52px;padding:0 32px;border-radius:999px;background:#5B45E0;color:#FFFFFF;font-size:18px;font-weight:600">Open the dashboard</span>
+      </div>
+      <p style="font-size:16px;line-height:1.6;color:#645E7E">Need a hand? Reply to this email and a real person will get back to you.</p>
+      <div style="border-top:1.5px solid #EFECF8;padding-top:16px;font-size:13px;color:#8B86A3">Sent by Temply · <span style="text-decoration:underline">Unsubscribe</span></div>
+    </article>
+  </main>
+
+  <aside aria-label="Email settings, collapsed" style="width:72px;flex:none;box-sizing:border-box;background:#FFFFFF;border-left:1.5px solid #E4E0F1;padding:20px 0 24px;display:flex;flex-direction:column;align-items:center;gap:12px">
+    <button class="sec" type="button" aria-label="Expand email settings panel" aria-expanded="false" style="width:44px;height:44px;border-radius:999px;border:0;background:transparent;color:#645E7E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <span style="width:32px;height:1.5px;background:#EFECF8;margin:4px 0"></span>
+    <button class="chip" type="button" aria-label="Email settings: subject, sender and preview text" style="width:48px;height:48px;border-radius:16px;border:1.5px solid #E4E0F1;background:#FFFFFF;color:#3B2C9E;display:grid;place-items:center;cursor:pointer"><svg/></button>
+    <span role="img" aria-label="All clear, 0 errors, 0 warnings" style="margin-top:auto;width:48px;height:48px;border-radius:999px;background:#D6F2E4;color:#0B6B42;display:grid;place-items:center"><svg/></span>
+  </aside>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:1100}}">
+class Component extends DCLogic {
+renderVals() {
+return {
+ph: { firstName: '{{first_name}}' }
+};
+}
+}
+</script>
+
+
+</body></html>
