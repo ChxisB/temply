@@ -1,11 +1,10 @@
 'use client';
 
-import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { BaseButton } from '../base-button';
 import { TooltipLabel } from './tooltip';
 import { cn } from '@/editor/utils/classname';
-import { COLOR_PRESETS } from '~/lib/color-presets';
+import { ColorPickerPanel } from '~/components/ui/color-picker-popover';
 import { ReactNode } from 'react';
 
 type ColorPickerProps = {
@@ -88,72 +87,19 @@ export function ColorPicker(props: ColorPickerProps) {
         popoverButton
       )}
 
+      {/* The app's colour panel (components/ui/color-picker-popover.tsx) in
+          the editor's popover: w-58 less p-4 is the 200px the picker draws. */}
       <PopoverContent
         aria-label={tooltip || 'Colour'}
-        className="mly:w-max mly:max-w-[calc(100vw-2rem)] mly:rounded-none mly:border-0 mly:bg-transparent! mly:p-0! mly:shadow-none"
-        sideOffset={8}
+        className="mly:w-58 mly:p-4"
+        sideOffset={12}
       >
-        <div className="mly:min-w-[260px] mly:rounded-xl mly:bg-panel mly:p-4 mly:shadow-lg">
-          <HexColorPicker
-            color={color}
-            onChange={handleColorChange}
-            className="mly:flex mly:w-full! mly:flex-col mly:gap-4"
-          />
-          <HexColorInput
-            alpha={true}
-            color={color}
-            onChange={handleColorChange}
-            className="mly:mt-4 mly:w-full mly:min-w-0 mly:rounded-lg mly:border mly:border-gray-200 mly:bg-panel mly:px-2 mly:py-1.5 mly:text-sm mly:uppercase mly:focus-visible:border-gray-400 "
-            prefixed
-          />
-
-          <div className="mly:mt-4 mly:flex mly:flex-wrap mly:gap-0.5">
-            {COLOR_PRESETS.map((preset) => (
-              <BaseButton
-                key={preset}
-                variant="ghost"
-                size="sm"
-                className="!mly:size-7 mly:shrink-0"
-                type="button"
-                aria-label={`Use ${preset}`}
-                onClick={() => handleColorChange(preset)}
-              >
-                <div
-                  className="mly:h-4 mly:w-4 mly:shrink-0 mly:rounded mly:border mly:border-gray-200"
-                  style={{ backgroundColor: preset }}
-                />
-              </BaseButton>
-            ))}
-          </div>
-
-          {suggestedColors.length > 0 && (
-            <div>
-              <div className="-mly:mx-4 mly:my-4 mly:h-px mly:bg-gray-200" />
-
-              <h2 className="mly:text-xs mly:text-gray-500">Recently used</h2>
-
-              <div className="mly:mt-2 mly:flex mly:flex-wrap mly:gap-0.5">
-                {suggestedColors.map((suggestedColor) => (
-                  <BaseButton
-                    key={suggestedColor}
-                    variant="ghost"
-                    size="sm"
-                    className="!mly:size-7 mly:shrink-0"
-                    type="button"
-                    onClick={() => handleColorChange(suggestedColor)}
-                  >
-                    <div
-                      className="mly:h-4 mly:w-4 mly:shrink-0 mly:rounded"
-                      style={{
-                        backgroundColor: suggestedColor,
-                      }}
-                    />
-                  </BaseButton>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <ColorPickerPanel
+          label={tooltip || 'Colour'}
+          value={color}
+          onChange={handleColorChange}
+          recent={suggestedColors}
+        />
       </PopoverContent>
     </Popover>
   );

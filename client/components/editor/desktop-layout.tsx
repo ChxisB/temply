@@ -1,7 +1,7 @@
 'use client';
 
 import type { FocusPosition } from '@tiptap/core';
-import { LayoutTemplateIcon, MailIcon } from 'lucide-react';
+
 import Link from 'next/link';
 import { useRef } from 'react';
 import { cn } from '~/lib/classname';
@@ -28,8 +28,9 @@ import { useRailCollapse } from './use-rail-collapse';
 
 // The playground's panels: the card's corners on a hairline, since each one's
 // content brings its own padding, and a bold line for the heading.
-const panelClass = 'overflow-hidden rounded-card border border-line bg-raised shadow-sm';
-const panelHeading = 'flex items-center gap-2 text-base font-bold text-ink';
+// The Add content card's box: no hairline, the heading inside the padding.
+const panelClass = 'overflow-hidden rounded-card border border-transparent bg-raised shadow-sm';
+const panelHeading = 'font-display text-xl font-bold tracking-display text-ink';
 
 // The two rails of the framed editor are slots, not content: each is a box
 // whose width comes from a custom property on the layout root, and what sits
@@ -105,9 +106,8 @@ export function DesktopEditorLayout({
             <ClickHint />
             {/* Editor — same section/header shape as Email details and Brand */}
             <section className={panelClass}>
-              <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+              <header className="flex items-center justify-between gap-2 px-5 pt-5 pb-4">
                 <h2 className={panelHeading}>
-                  <LayoutTemplateIcon className="size-4 text-muted" />
                   Your email
                   {mode !== 'edit' && (
                     <span className="font-normal text-muted">
@@ -352,13 +352,10 @@ function SettingsAside({ model }: { model: TemplateEditorModel }) {
       </div>
       {/* Email fields card — same section/header shape as the Brand panel */}
       <section className={panelClass}>
-        <header className="border-b border-line px-4 py-2.5">
-          <h2 className={panelHeading}>
-            <MailIcon className="size-4 text-muted" />
-            Email details
-          </h2>
+        <header className="px-5 pt-5">
+          <h2 className={panelHeading}>Email details</h2>
         </header>
-        <div className="p-4">
+        <div className="p-5 pt-2">
         <p className="mb-4 text-base leading-relaxed text-muted">The subject and preview text appear in the inbox. From name, To and Reply to are used for your test email.</p>
         <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-col gap-2">

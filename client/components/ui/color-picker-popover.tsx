@@ -64,49 +64,88 @@ export function ColorPickerPopover({
           touch popover is widened to fit a row of five 44px targets instead,
           and stretches the picker to match. */}
       <PopoverContent align="start" className={cn('p-4', touch ? 'w-[18rem]' : 'w-58')}>
-        <div className="grid grid-cols-5 gap-1.5">
-          {COLOR_PRESETS.map((preset) => {
-            const active = value.toUpperCase() === preset;
-            return (
-              <button
-                key={preset}
-                type="button"
-                aria-label={`Use ${preset}`}
-                aria-pressed={active}
-                onClick={() => onChange(preset)}
-                className={cn('grid place-items-center rounded-sm', pressable, touch ? 'size-11' : 'size-8')}
-              >
-                {/* The disc keeps its 32px whatever the target around it is. */}
-                <span
-                  aria-hidden
-                  className={cn(
-                    'block rounded-sm border',
-                    touch ? 'size-8' : 'size-full',
-                    active ? 'border-accent ring-2 ring-accent/40' : 'border-line',
-                  )}
-                  style={{ backgroundColor: preset }}
-                />
-              </button>
-            );
-          })}
-        </div>
-        <div className="my-3 h-px bg-line" />
-        <HexColorPicker
-          color={value}
-          onChange={(next) => onChange(next.toUpperCase())}
-          style={touch ? { width: '100%' } : undefined}
-        />
-        <HexColorInput
-          prefixed
-          color={value}
-          onChange={(next) => onChange(next.toUpperCase())}
-          aria-label={`${label} hex value`}
-          className={cn(
-            'mt-3 w-full rounded-md border-[1.5px] border-line-strong bg-raised px-2.5 font-mono text-ink uppercase',
-            touch ? 'h-11 text-base' : 'h-8 text-sm',
-          )}
-        />
+        <ColorPickerPanel label={label} value={value} onChange={onChange} touch={touch} />
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * The body of the colour popover, on its own so the editor's bubble menus can
+ * open the same panel from their own triggers: presets first, then the
+ * free-form picker and the hex field.
+ */
+export function ColorPickerPanel({
+  label,
+  value,
+  onChange,
+  touch = false,
+  recent = [],
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  touch?: boolean;
+  /** Colours picked earlier in this document, offered after the presets. */
+  recent?: string[];
+}) {
+  const current = (value ?? '').toUpperCase();
+  const swatches = (colors: readonly string[], prefix: string) => (
+    <div className="grid grid-cols-5 gap-1.5">
+      {colors.map((preset) => {
+        const active = current === preset.toUpperCase();
+        return (
+          <button
+            key={preset}
+            type="button"
+            aria-label={`${prefix} ${preset}`}
+            aria-pressed={active}
+            onClick={() => onChange(preset)}
+            className={cn('grid place-items-center rounded-sm', pressable, touch ? 'size-11' : 'size-8')}
+          >
+            {/* The disc keeps its 32px whatever the target around it is. */}
+            <span
+              aria-hidden
+              className={cn(
+                'block rounded-sm border',
+                touch ? 'size-8' : 'size-full',
+                active ? 'border-accent ring-2 ring-accent/40' : 'border-line',
+              )}
+              style={{ backgroundColor: preset }}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+  return (
+    <>
+      {swatches(COLOR_PRESETS, 'Use')}
+      {recent.length > 0 && (
+        <>
+          <div className="my-3 h-px bg-line" />
+          <p className="mb-1.5 text-xs text-muted">Recently used</p>
+          {swatches(recent, 'Use recent')}
+        </>
+      )}
+      <div className="my-3 h-px bg-line" />
+      {/* The strip sits off the square, not flush against it. */}
+      <HexColorPicker
+        color={value}
+        onChange={(next) => onChange(next.toUpperCase())}
+        className="flex flex-col gap-3"
+        style={touch ? { width: '100%' } : undefined}
+      />
+      <HexColorInput
+        prefixed
+        color={value}
+        onChange={(next) => onChange(next.toUpperCase())}
+        aria-label={`${label} hex value`}
+        className={cn(
+          'mt-3 w-full rounded-md border-[1.5px] border-line-strong bg-raised px-2.5 font-mono text-ink uppercase',
+          touch ? 'h-11 text-base' : 'h-8 text-sm',
+        )}
+      />
+    </>
   );
 }

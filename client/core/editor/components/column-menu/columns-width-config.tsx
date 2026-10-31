@@ -32,7 +32,7 @@ export function ColumnsWidthConfig(props: ColumnsWidthConfigProps) {
         aria-label="Columns and widths"
         className="mly:w-[300px] mly:rounded-lg mly:p-0.5!"
         side="top"
-        sideOffset={8}
+        sideOffset={12}
         align="center"
         onOpenAutoFocus={(e) => {
           e.preventDefault();

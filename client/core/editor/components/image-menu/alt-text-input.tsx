@@ -97,7 +97,7 @@ export function AltTextInput({
         aria-label="Alt text"
         align="end"
         side="top"
-        sideOffset={8}
+        sideOffset={12}
         className="mly:w-64 mly:rounded-xl mly:bg-panel mly:p-3 mly:shadow-lg"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >

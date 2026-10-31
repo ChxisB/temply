@@ -74,7 +74,7 @@ function ShowPopoverBase(props: ShowPopoverProps) {
         >
           <Eye className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
         </TooltipTrigger>
-        <TooltipContent sideOffset={8}>Show block conditionally</TooltipContent>
+        <TooltipContent sideOffset={12}>Show block conditionally</TooltipContent>
       </Tooltip>
     );
   }
@@ -103,9 +103,9 @@ function ShowPopoverBase(props: ShowPopoverProps) {
       </TooltipLabel>
       <PopoverContent
         aria-label="Show if"
-        className="mly:flex mly:w-max mly:rounded-lg mly:p-0.5!"
+        className="mly:flex mly:w-max mly:p-1"
         side="top"
-        sideOffset={8}
+        sideOffset={12}
         align="end"
         onOpenAutoFocus={(e) => {
           // Put the caret in the key field rather than on the panel, so the

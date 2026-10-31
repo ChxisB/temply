@@ -55,7 +55,7 @@ export function TextDirectionSwitch(props: TextDirectionSwitchProps) {
         aria-label="Text direction"
         className="mly:flex mly:w-max mly:gap-0.5 mly:rounded-lg mly:p-0.5!"
         side="top"
-        sideOffset={8}
+        sideOffset={12}
         align="center"
         onOpenAutoFocus={(e) => {
           e.preventDefault();

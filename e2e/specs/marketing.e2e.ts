@@ -142,6 +142,11 @@ test.describe('marketing', () => {
     // under the header — that banner is the mark that the editor mounted.
     if (onPhone()) await expect(page.getByText('Open on a desktop to try the editor.')).toBeVisible();
     else await expect(page.getByRole('heading', { name: 'Your email', exact: true })).toBeVisible();
+    // The playground's panels are the Add content card: no hairline.
+    if (!onPhone()) {
+      const panel = page.getByRole('heading', { name: 'Your email', exact: true }).locator('xpath=ancestor::section[1]');
+      expect(await panel.evaluate((el) => getComputedStyle(el).borderTopColor), 'the Your email panel').toBe('rgba(0, 0, 0, 0)');
+    }
     await expect(page.locator('.ProseMirror')).toContainText('Welcome to Temply');
     await context.close();
   });

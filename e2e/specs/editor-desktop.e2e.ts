@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures/test';
 import type { makeApi } from '../fixtures/api';
 import { bubbleMenu, docOf, expectOnScreen, hoverControl, insertHere, insertViaSlash, newLine, openEditor, slashMenu, slashRow } from '../fixtures/canvas';
@@ -118,6 +118,13 @@ test.describe('editor on the desktop', () => {
     pm = await open('button');
     await insertViaSlash(page, 'Button');
     await expect(pm.locator('[data-type="button"]').getByRole('button', { name: 'Button' })).toBeVisible();
+    // A new button has no padding of its own, so its Size reads Brand: the
+    // renderer takes the theme's padding, and the menu says so.
+    await pm.locator('[data-type="button"]').getByRole('button', { name: 'Button' }).click();
+    const buttonMenu = page.getByRole('dialog', { name: 'Button' });
+    await expectOnScreen(page, buttonMenu, 'the button menu');
+    await expect(buttonMenu.getByRole('button', { name: 'Size', exact: true }), 'Size reads the brand').toHaveText('Brand');
+    await page.keyboard.press('Escape');
 
     pm = await open('custom html');
     await insertViaSlash(page, 'Custom HTML');
@@ -271,6 +278,62 @@ test.describe('editor on the desktop', () => {
     await expectOnScreen(page, turnInto, 'the Turn into popover');
     await turnInto.getByRole('button', { name: 'Heading 1', exact: true }).click();
     await expect(pm.locator('h1')).toHaveText('Line 12');
+  });
+
+  test('the text menu’s popovers and the block menu wear one surface', async ({ page, api, name }) => {
+    // Every popover in the editor comes off one panel: 16px corners, no
+    // hairline, lifted by its shadow alone. The link and colour popovers used
+    // to strip that panel and draw their own boxes with a border, and the
+    // block menu took tighter corners, so three surfaces showed where a
+    // customer sees one control. The surface is read off each panel's box.
+    const lines = Array.from({ length: 12 }, (_, i) => `Line ${i + 1}`);
+    const content = JSON.stringify({
+      type: 'doc',
+      content: lines.map((text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })),
+    });
+    const t = await api.createTemplate({ title: name('popover surface'), content });
+    const pm = await openEditor(page, t.id);
+    const surface = (box: Locator) => box.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { border: s.borderTopWidth, radius: s.borderTopLeftRadius };
+    });
+    const panel = { border: '0px', radius: '16px' };
+
+    await pm.getByText('Line 6', { exact: true }).click({ clickCount: 3 });
+    const menu = bubbleMenu(page, 'Text formatting');
+    // The toolbar itself wears a hairline; its popovers do not.
+    expect((await surface(menu.getByRole('toolbar', { name: 'Text formatting', exact: true }))).border, 'the toolbar').toBe('1px');
+    await menu.getByRole('button', { name: 'Text colour', exact: true }).click();
+    const colour = menu.getByRole('dialog', { name: 'Text colour' });
+    await expectOnScreen(page, colour, 'the Text colour popover');
+    await expect(colour.getByRole('button', { name: 'Use #000000' }), 'the presets lead the panel').toBeVisible();
+    expect(await surface(colour), 'the colour popover').toEqual(panel);
+    // The panel stands off the toolbar rather than against it.
+    const trigger = await menu.getByRole('button', { name: 'Text colour', exact: true }).boundingBox();
+    const box = await colour.boundingBox();
+    const gap = Math.min(Math.abs(trigger!.y - (box!.y + box!.height)), Math.abs(box!.y - (trigger!.y + trigger!.height)));
+    expect(gap, 'the popover stands off the toolbar').toBeGreaterThanOrEqual(12);
+    await page.keyboard.press('Escape');
+
+    await menu.getByRole('button', { name: 'Link address', exact: true }).click();
+    const link = menu.getByRole('dialog', { name: 'Link address' });
+    await expectOnScreen(page, link, 'the Link address popover');
+    expect(await surface(link), 'the link popover').toEqual(panel);
+    await page.keyboard.press('Escape');
+
+    await pm.getByText('Line 6', { exact: true }).hover();
+    await page.getByRole('button', { name: 'Block actions' }).first().click();
+    const actions = page.getByRole('dialog', { name: 'Block actions' });
+    await expectOnScreen(page, actions, 'the block menu');
+    expect(await surface(actions), 'the block menu').toEqual(panel);
+    // Delete is the quiet danger row: red text, no fill until the pointer.
+    const del = actions.getByRole('button', { name: 'Delete' });
+    expect(await del.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+
+    // The rail's Brand section is a heading over its controls, like the
+    // Components rail's groups, not a card with a hairline.
+    const brand = page.getByRole('complementary', { name: 'Email settings' }).getByRole('heading', { name: 'Brand', exact: true }).locator('xpath=ancestor::section[1]');
+    expect((await surface(brand)).border, 'the Brand section').toBe('0px');
   });
 
   test('on a one-line template the Turn into rows a customer wants can be pressed', async ({ page, api, name }) => {

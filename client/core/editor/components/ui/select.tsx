@@ -55,6 +55,7 @@ export function Select(props: SelectProps) {
       iconClassName={iconClassName}
       className={className}
       keepFocus
+      sideOffset={12}
     />
   );
 

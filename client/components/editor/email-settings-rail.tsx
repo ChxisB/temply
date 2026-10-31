@@ -16,7 +16,6 @@ import { Button, pressable } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
-import { Card } from '../ui/surfaces';
 import { TemplateThemePanel } from '../template-theme-panel';
 import { summarisePreflight, type PreflightStatus, type PreflightTone } from './preflight-status';
 import { RailFrame, RailToggle, useRailExpand } from './rail-frame';
@@ -172,11 +171,11 @@ export function EmailSettingsRail({
             </div>
 
             <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0">
-              <TemplateThemePanel theme={theme} onChange={setTheme} />
+              <TemplateThemePanel theme={theme} onChange={setTheme} bare />
             </fieldset>
 
             {template?.short_code ? (
-              <Card inset={false} className="p-4">
+              <div className="pl-1">
                 <p className="text-base font-bold text-ink">Ready to use this email?</p>
                 <p className="mt-1 text-sm text-muted">
                   Publish your changes, then follow the steps to connect it to your app.
@@ -192,7 +191,7 @@ export function EmailSettingsRail({
                     Connect your app →
                   </Link>
                 </Button>
-              </Card>
+              </div>
             ) : null}
           </div>
 

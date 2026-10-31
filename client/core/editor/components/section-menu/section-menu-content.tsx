@@ -199,7 +199,7 @@ export function SectionMenuContent({ editor }: { editor: Editor }) {
               aria-label="Column"
               className="mly:w-max mly:rounded-lg mly:p-0.5!"
               side="top"
-              sideOffset={8}
+              sideOffset={12}
               align="end"
               onOpenAutoFocus={(e) => {
                 e.preventDefault();

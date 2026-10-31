@@ -42,6 +42,7 @@ export function DropdownSelect({
   align = 'start',
   touch = false,
   keepFocus = false,
+  sideOffset,
 }: {
   /** Accessible name; the trigger has no visible label of its own. */
   label: string;
@@ -75,6 +76,9 @@ export function DropdownSelect({
    *  Escape still closes; only the keyboard walk from the trigger is given
    *  up, and the bubble menu never had one. */
   keepFocus?: boolean;
+  /** How far the menu stands off the trigger; the editor's toolbars ask for
+   *  more than a form field's 4px. */
+  sideOffset?: number;
 }) {
   const selected = options.find((option) => option.value === value);
   // The form field is already a thumb's height, so `touch` only changes the
@@ -117,6 +121,7 @@ export function DropdownSelect({
           the form one takes the menu's own card and rows. */}
       <DropdownMenuContent
         align={align}
+        sideOffset={sideOffset}
         className={cn(
           'max-h-72 w-[var(--radix-dropdown-menu-trigger-width)] min-w-[11rem] overflow-y-auto',
           dense && 'rounded-xl p-1.5',

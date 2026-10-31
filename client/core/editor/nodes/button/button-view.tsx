@@ -129,12 +129,13 @@ export function ButtonView(props: NodeViewProps) {
             </button>
           </div>
         </PopoverTrigger>
+        {/* A toolbar in a popover: the bubble menus' hairline and padding. */}
         <PopoverContent
           aria-label="Button"
           align="end"
           side="top"
-          className="mly:w-max mly:rounded-lg mly:p-0.5!"
-          sideOffset={8}
+          className="mly:w-max mly:border mly:border-gray-200 mly:p-[3px]"
+          sideOffset={12}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
@@ -187,15 +188,24 @@ export function ButtonView(props: NodeViewProps) {
                   className="mly:capitalize"
                 />
 
+                {/* No padding of its own means the brand's: the renderer reads
+                    the theme's button padding then, as "smooth" reads its radius.
+                    Padding that matches no preset (an imported template) has
+                    no size until one is picked. */}
                 <Select
                   label="Size"
-                  value={size ?? ''}
+                  value={size ?? (paddingTop == null && paddingRight == null ? 'brand' : '')}
                   options={[
+                    { value: 'brand', label: 'Brand' },
                     { value: 'small', label: 'Small' },
                     { value: 'medium', label: 'Medium' },
                     { value: 'large', label: 'Large' },
                   ]}
                   onValueChange={(value) => {
+                    if (value === 'brand') {
+                      updateAttributes({ paddingTop: null, paddingRight: null, paddingBottom: null, paddingLeft: null });
+                      return;
+                    }
                     const { paddingX, paddingY } = BUTTON_SIZES[value as ButtonSize];
 
                     updateAttributes({

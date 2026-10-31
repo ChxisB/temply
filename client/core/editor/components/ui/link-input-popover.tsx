@@ -220,8 +220,8 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
         aria-label={tooltip || 'Link address'}
         align="end"
         side="top"
-        className="mly:w-max mly:rounded-none mly:border-none mly:bg-transparent mly:p-0! mly:shadow-none"
-        sideOffset={8}
+        className="mly:w-max mly:p-1"
+        sideOffset={12}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <form
@@ -235,7 +235,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
         >
           <div className="mly:isolate mly:flex mly:rounded-lg">
             {!isEditing && (
-              <div className="mly:flex mly:h-8 mly:items-center mly:rounded-lg mly:border mly:border-gray-300 mly:bg-panel mly:px-0.5 mly:shadow-lg">
+              <div className="mly:flex mly:h-8 mly:items-center mly:px-0.5">
                 {/* The pill is the way to a different destination — a URL
                     or another variable — so it has to read as a control:
                     a pointer, a name, and a pencil beside it. type=button
@@ -280,7 +280,7 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
                   autoCompleteOptions={autoCompleteOptions}
                   ref={linkInputRef}
                   placeholder={placeholderUrl}
-                  className="-mly:ms-px mly:block mly:h-8 mly:w-56 mly:rounded-lg mly:border mly:border-gray-300 mly:px-2 mly:py-1.5 mly:pl-6 mly:pr-6 mly:text-sm mly:shadow-lg mly:placeholder:text-gray-400"
+                  className="mly:h-8 mly:w-56 mly:rounded-lg mly:pl-6 mly:pr-6 mly:placeholder:text-gray-400"
                   triggerChar={variableTriggerCharacter}
                   onSelectOption={(value) => {
                     setDraft(`${variableTriggerCharacter}${value}`);
@@ -294,11 +294,8 @@ export function LinkInputPopover(props: LinkInputPopoverProps) {
           </div>
 
           {statusMessage && isEditing ? (
-            // The popover itself is transparent — it was built to float a bare
-            // input — so this message carries its own surface, or it would read
-            // through onto whatever sits behind the popover.
             <p
-              className={`mly:mt-1.5 mly:max-w-56 mly:rounded-lg mly:bg-panel mly:px-2.5 mly:py-1.5 mly:text-xs mly:shadow-lg ${
+              className={`mly:max-w-56 mly:px-2 mly:pb-1 mly:pt-1.5 mly:text-xs ${
                 statusMessage.tone === 'warn'
                   ? 'mly:text-rose-600'
                   : 'mly:text-gray-500'

@@ -47,7 +47,7 @@ export function TurnIntoBlock(props: TurnIntoBlockProps) {
         aria-label="Turn into"
         align="start"
         side="bottom"
-        sideOffset={8}
+        sideOffset={12}
         // The list is taller than the room under a menu that sits near the
         // foot of the window, so it flips; the padding keeps the row it
         // flips onto off the very edge of the viewport.

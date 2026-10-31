@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { RendererThemeOptions } from '@temply/shared/theme';
 import { DEFAULT_RENDERER_THEME } from '@temply/shared/theme';
 import { applyKnobs, knobsFromTheme } from '@temply/shared/brand-knobs';
-import { ChevronDownIcon, PaletteIcon, RotateCcwIcon } from 'lucide-react';
+import { ChevronDownIcon, RotateCcwIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { BrandSelect } from '~/components/brand/brand-select';
@@ -40,6 +40,7 @@ export function TemplateThemePanel({
   onChange,
   className,
   touch,
+  bare = false,
 }: {
   theme: Theme;
   onChange: (next: Theme) => void;
@@ -49,6 +50,9 @@ export function TemplateThemePanel({
    *  wrapper class cannot reach past a portal. Everything else the panel draws
    *  is in the sheet's own subtree and is grown there. */
   touch?: boolean;
+  /** No box: the heading and the controls stand in the rail the way the
+   *  Components rail's groups do. The sandbox keeps the card. */
+  bare?: boolean;
 }) {
   const { data, isError } = useQuery(brandsQueryOptions());
   const brands = data?.brands ?? [];
@@ -132,12 +136,11 @@ export function TemplateThemePanel({
   };
 
   return (
-    // The same panel as the card under it in the Email settings rail: the
-    // card's corners on a hairline, since its content brings its own padding.
-    <section className={cn('rounded-card border border-line bg-raised', className)}>
-      <header className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-        <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-          <PaletteIcon className="size-4 text-muted" />
+    // The sandbox's card, the Add content card's box: no hairline, the
+    // heading inside the padding.
+    <section className={cn(bare ? 'flex flex-col gap-2.5' : 'rounded-card border border-transparent bg-raised shadow-sm', className)}>
+      <header className={cn('flex items-center justify-between gap-2', bare ? 'pl-1' : 'px-5 pt-5')}>
+        <h2 className={bare ? 'text-sm font-bold tracking-widest text-muted uppercase' : 'font-display text-xl font-bold tracking-display text-ink'}>
           Brand
         </h2>
         <Button
@@ -150,7 +153,7 @@ export function TemplateThemePanel({
         </Button>
       </header>
 
-      <div className="space-y-4 p-4">
+      <div className={cn('space-y-4', bare ? 'pl-1' : 'p-5 pt-3')}>
         <div className="space-y-1.5">
           <span className="block text-sm font-semibold text-ink">Brand</span>
           <BrandSelect
