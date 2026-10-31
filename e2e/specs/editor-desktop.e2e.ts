@@ -1233,6 +1233,11 @@ test.describe('editor on the desktop', () => {
     // reach the Section.
     await expect(pm, 'autofocus has landed in the canvas').toHaveClass(/ProseMirror-focused/);
     await expect(pm.locator('table[data-type="section"] p').first()).toHaveText('Inside');
+    // The first preflight check lands a 75px banner above the email a moment
+    // after the editor attaches, with no transition (see the handle case
+    // above): a pointer resting on Delete when it lands is left 75px above
+    // it, and the tooltip it was waiting for never arms.
+    await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
 
     const menu = bubbleMenu(page, 'Section');
     // The menu is down until it is asked for, so raising it is what the click
