@@ -62,16 +62,19 @@ export function publicPageMetadata(path: PublicPath): Metadata {
   };
 }
 
-export function publicPageSchema(path: PublicPath) {
+export function publicPageSchema(path: PublicPath, extra: Record<string, unknown>[] = []) {
   const page = PUBLIC_PAGES[path];
   const url = `${PRODUCTION_SITE_URL}${path === '/' ? '' : path}`;
-  const graph: Record<string, unknown>[] = [{
-    '@type': 'WebPage',
-    name: page.title,
-    headline: page.title,
-    description: page.description,
-    url,
-    inLanguage: 'en-GB',
-  }];
+  const graph: Record<string, unknown>[] = [
+    {
+      '@type': 'WebPage',
+      name: page.title,
+      headline: page.title,
+      description: page.description,
+      url,
+      inLanguage: 'en-GB',
+    },
+    ...extra,
+  ];
   return { '@context': 'https://schema.org', '@graph': graph };
 }

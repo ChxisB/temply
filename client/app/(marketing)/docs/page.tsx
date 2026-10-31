@@ -10,6 +10,7 @@ import {
   Introduction,
   UsingBrands,
 } from '~/components/docs/docs-content';
+import { DOCS_FAQ, Faq } from '~/components/docs/faq';
 
 export const metadata = publicPageMetadata('/docs');
 
@@ -39,6 +40,7 @@ const sections = [
       { id: 'api-errors', label: 'Errors and limits' },
     ],
   },
+  { id: 'faq', label: 'Common questions' },
   {
     id: 'editor',
     label: 'The editor',
@@ -58,10 +60,22 @@ const sections = [
   },
 ];
 
+// The FAQ is a WebPage with an FAQPage beside it in the graph, built from the
+// same DOCS_FAQ the page renders, so the structured data and the visible
+// answers are the one text.
+const faqSchema = {
+  '@type': 'FAQPage',
+  mainEntity: DOCS_FAQ.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a },
+  })),
+};
+
 export default function DocsPage() {
   return (
     <div className="overflow-x-clip">
-      <JsonLd data={publicPageSchema('/docs')} />
+      <JsonLd data={publicPageSchema('/docs', [faqSchema])} />
       <div className="mx-auto max-w-5xl px-5 pt-16 pb-24 sm:pt-20">
         <header className="max-w-2xl">
           <p className="font-mono text-2xs tracking-[0.16em] text-accent-ink uppercase">
@@ -95,6 +109,7 @@ export default function DocsPage() {
             <DarkMode />
             <YourTeam />
             <ApiReference />
+            <Faq />
             <Editor />
           </div>
         </div>

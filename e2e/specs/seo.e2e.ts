@@ -90,6 +90,41 @@ test('the sitemap lists canonical public pages and allows noindex to be read', a
   expect(robots).toContain('Disallow: /api/');
 });
 
+test('llms.txt maps the site in plain text for assistants', async ({ request }) => {
+  const response = await request.get('/llms.txt');
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toContain('text/plain');
+  const body = await response.text();
+  expect(body.startsWith('# Temply')).toBe(true);
+  // The one fact an assistant most often gets wrong about a template tool.
+  expect(body).toContain('does not send it');
+  // Every public page the sitemap lists is linked here too, on the canonical host.
+  for (const path of publicPaths) {
+    expect(body).toContain(`${origin}${path === '/' ? '' : path})`);
+  }
+});
+
+test('the docs FAQ is on the page and in the FAQPage schema, word for word', async ({ page }) => {
+  await page.goto('/docs');
+  await expect(page.getByRole('heading', { name: 'Common questions', level: 2 })).toBeVisible();
+
+  const graphs = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const nodes = graphs.flatMap((json) => (JSON.parse(json) as { '@graph'?: Record<string, unknown>[] })['@graph'] ?? []);
+  const faq = nodes.find((node) => node['@type'] === 'FAQPage') as
+    | { mainEntity: { name: string; acceptedAnswer: { text: string } }[] }
+    | undefined;
+  expect(faq, 'the docs page carries an FAQPage').toBeTruthy();
+  expect(faq!.mainEntity.length).toBeGreaterThanOrEqual(5);
+
+  // The structured answer must be the answer a reader sees, or the schema
+  // describes a page that is not there.
+  for (const { name, acceptedAnswer } of faq!.mainEntity) {
+    expect(acceptedAnswer.text.length, name).toBeGreaterThan(40);
+    await expect(page.getByRole('heading', { name, level: 3 })).toBeVisible();
+    await expect(page.getByText(acceptedAnswer.text, { exact: false })).toBeVisible();
+  }
+});
+
 test('the Temply social card has the declared dimensions', async ({ request }) => {
   const image = await request.get(socialCard);
   expect(image.status()).toBe(200);
