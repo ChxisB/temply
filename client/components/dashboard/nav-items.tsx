@@ -14,8 +14,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { pressable } from '~/components/ui/button';
+import { LinkPending } from '~/components/ui/link-pending';
 import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
@@ -77,14 +78,16 @@ export function navRow(active: boolean, washed = true) {
  *  single template. */
 export function SettingsLink({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
   const pathname = usePathname();
-  const isActive = pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/');
+  const [pending, setPending] = useState<string | null>(null);
+  const isPage = pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/');
   return (
     <Link
       href="/dashboard/settings"
       onClick={onNavigate}
-      aria-current={isActive ? 'page' : undefined}
-      className={cn(navRow(isActive), className)}
+      aria-current={isPage ? 'page' : undefined}
+      className={cn(navRow(isPage || pending !== null), className)}
     >
+      <LinkPending href="/dashboard/settings" onChange={setPending} />
       <SettingsIcon aria-hidden className="size-5 shrink-0" />
       Settings
     </Link>
@@ -99,7 +102,10 @@ export function NavLinks({ onNavigate, platformAdmin = false }: { onNavigate?: (
     ? [...NAV_SECTIONS, { label: 'Temply', items: [{ href: '/dashboard/admin', label: 'Admin', icon: ShieldCheckIcon }] }]
     : NAV_SECTIONS;
   const list = useRef<HTMLElement>(null);
-  const wash = useActiveIndicator(list, pathname, { axis: 'y' });
+  // The row a click is taking the reader to counts as current from the click.
+  const [pending, setPending] = useState<string | null>(null);
+  const current = pending ?? pathname;
+  const wash = useActiveIndicator(list, current, { axis: 'y' });
 
   return (
     <nav ref={list} aria-label="Dashboard" className="relative">
@@ -121,22 +127,25 @@ export function NavLinks({ onNavigate, platformAdmin = false }: { onNavigate?: (
           <div className="flex flex-col gap-1">
             {section.items.map((item) => {
               const Icon = item.icon;
-              const isActive = item.external
-                ? false
-                : item.exact
-                  ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const holds = (path: string) =>
+                item.external
+                  ? false
+                  : item.exact
+                    ? path === item.href
+                    : path === item.href || path.startsWith(`${item.href}/`);
+              const isActive = holds(current);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={onNavigate}
-                  aria-current={isActive ? 'page' : undefined}
+                  aria-current={holds(pathname) ? 'page' : undefined}
                   data-active={isActive ? '' : undefined}
                   {...(item.external ? { target: '_blank', rel: 'noreferrer' } : {})}
                   className={navRow(isActive, !wash.ready)}
                 >
+                  {item.external ? null : <LinkPending href={item.href} onChange={setPending} />}
                   <Icon aria-hidden className="size-5 shrink-0" />
                   {item.label}
                   {item.external ? <ArrowUpRightIcon aria-hidden className="ml-auto size-4 shrink-0" /> : null}

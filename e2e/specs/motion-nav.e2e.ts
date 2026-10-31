@@ -60,6 +60,66 @@ test('the sidebar has one wash that slides down to the section chosen', async ({
   expect(Math.round((await box(after)).y)).not.toBe(Math.round(before.y));
 });
 
+// The app router moves the URL only once the server's first chunk lands, so
+// a strip paints the clicked link as current from the click: the indicator
+// leaves at once and the page follows. The payload is held back here so the
+// click and the landing come apart far enough to read. `aria-current` stays
+// with the URL throughout. The phone's drawer closes on the click, so the row
+// is not there to read; the strip is the same component on both.
+
+/** Holds a path's RSC payload back so a click's own motion can be read before the page lands. A production
+ *  build prefetches a link in view and a prefetched page lands on the click, so the prefetch is held back
+ *  twice as long; refusing it instead makes the router fall back to a full page load. */
+const holdPage = (page: Page, pathname: string, ms: number) =>
+  page.route(
+    (url) => url.pathname === pathname && url.searchParams.has('_rsc'),
+    async (route) => {
+      const prefetch = Boolean(route.request().headers()['next-router-prefetch']);
+      await new Promise((resolve) => setTimeout(resolve, prefetch ? ms * 2 : ms));
+      await route.continue();
+    },
+  );
+
+test('the sidebar wash leaves on the click, before the page lands', async ({ page }) => {
+  test.skip(onPhone(), 'the drawer closes on the click');
+  await holdPage(page, '/dashboard/brands', 1500);
+  await page.goto('/dashboard/templates');
+  const nav = page.getByRole('navigation', { name: 'Dashboard' });
+  const templates = nav.getByRole('link', { name: 'Templates', exact: true });
+  const brands = nav.getByRole('link', { name: 'Brands', exact: true });
+  await expect(templates).toHaveAttribute('data-active', '');
+
+  await brands.click();
+  await expect(brands).toHaveAttribute('data-active', '');
+  await expect(templates).not.toHaveAttribute('data-active', '');
+  await expect(page, 'the page has not landed yet').toHaveURL(/\/dashboard\/templates$/);
+  await expect(templates, 'aria-current waits for the URL').toHaveAttribute('aria-current', 'page');
+  await expect.poll(async () => Math.round((await box(indicator(nav))).y) - Math.round((await box(brands)).y)).toBe(0);
+
+  await expect(page).toHaveURL(/\/dashboard\/brands$/);
+  await expect(brands).toHaveAttribute('aria-current', 'page');
+  await expect(brands).toHaveAttribute('data-active', '');
+});
+
+test('a settings tab is current from the click, before its page lands', async ({ page }) => {
+  test.skip(onPhone(), 'the strip is the same component as on the desktop');
+  await holdPage(page, '/dashboard/settings/team', 1500);
+  await page.goto('/dashboard/settings');
+  const strip = page.getByRole('navigation', { name: 'Settings' });
+  const account = strip.getByRole('link', { name: 'Account' });
+  const team = strip.getByRole('link', { name: 'Team' });
+  await expect(account).toHaveAttribute('data-active', '');
+
+  await team.click();
+  await expect(team).toHaveAttribute('data-active', '');
+  await expect(account).not.toHaveAttribute('data-active', '');
+  await expect(page, 'the page has not landed yet').toHaveURL(/\/dashboard\/settings$/);
+  await expect(account, 'aria-current waits for the URL').toHaveAttribute('aria-current', 'page');
+
+  await expect(page).toHaveURL(/\/dashboard\/settings\/team$/);
+  await expect(team).toHaveAttribute('aria-current', 'page');
+});
+
 test('the template tabs have one underline that slides to the tab opened', async ({ page, api, name }) => {
   test.skip(onPhone(), 'the phone editor has a shell of its own, with no tab row');
   const t = await api.createTemplate({ title: name('tabs') });

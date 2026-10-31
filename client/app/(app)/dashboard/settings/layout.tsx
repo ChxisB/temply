@@ -3,9 +3,10 @@
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { PageHeader } from '~/components/ui/surfaces';
 import { pressable } from '~/components/ui/button';
+import { LinkPending } from '~/components/ui/link-pending';
 import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
@@ -31,7 +32,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const isAdmin = orgRole === 'org:admin';
   const tabs = TABS.filter((tab) => isAdmin || !tab.adminOnly);
   const strip = useRef<HTMLElement>(null);
-  const bar = useActiveIndicator(strip, pathname, { inset: 14 });
+  // The tab a click is taking the reader to counts as current from the click.
+  const [pending, setPending] = useState<string | null>(null);
+  const current = pending ?? pathname;
+  const bar = useActiveIndicator(strip, current, { inset: 14 });
 
   return (
     <div className="space-y-5">
@@ -58,18 +62,19 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           // — so a tab owns its path and everything below it. Matching Team
           // exactly left every Clerk page under it with no current tab at
           // all, since Account's catch-all rule stands down there too.
-          const isActive =
+          const holds = (path: string) =>
             tab.href === '/dashboard/settings'
-              ? pathname === tab.href ||
-                (pathname.startsWith('/dashboard/settings/') &&
-                  !TABS.some((other) => other.href !== tab.href && isUnder(pathname, other.href)))
-              : isUnder(pathname, tab.href);
+              ? path === tab.href ||
+                (path.startsWith('/dashboard/settings/') &&
+                  !TABS.some((other) => other.href !== tab.href && isUnder(path, other.href)))
+              : isUnder(path, tab.href);
+          const isActive = holds(current);
 
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              aria-current={isActive ? 'page' : undefined}
+              aria-current={holds(pathname) ? 'page' : undefined}
               data-active={isActive ? '' : undefined}
               className={cn(
                 'relative inline-flex h-12 shrink-0 items-center rounded-field px-3.5 text-lg font-semibold',
@@ -77,6 +82,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 isActive ? 'text-ink' : 'text-muted hover:text-ink',
               )}
             >
+              <LinkPending href={tab.href} onChange={setPending} />
               {tab.label}
               {isActive && !bar.ready ? (
                 <span aria-hidden="true" className="absolute inset-x-3.5 bottom-0 h-[3px] rounded-t-[3px] bg-accent" />

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { LinkPending } from '~/components/ui/link-pending';
 import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { useGuardedLink } from '~/hooks/use-guarded-link';
 import { cn } from '~/lib/classname';
@@ -39,7 +40,10 @@ export function TemplateNavigation({ id, beforeNavigate, trailing }: {
   const pathname = usePathname();
   const guarded = useGuardedLink(beforeNavigate);
   const strip = useRef<HTMLElement>(null);
-  const bar = useActiveIndicator(strip, pathname, { inset: BAR_INSET, memoryKey: 'template-tabs' });
+  // The tab a click is taking the reader to counts as current from the click.
+  const [pending, setPending] = useState<string | null>(null);
+  const current = pending ?? pathname;
+  const bar = useActiveIndicator(strip, current, { inset: BAR_INSET, memoryKey: 'template-tabs' });
   return (
     <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 border-b-[1.5px] border-line bg-raised px-4 sm:px-7">
       {/* The padding and the equal negative margin give the focus ring room: a
@@ -57,21 +61,22 @@ export function TemplateNavigation({ id, beforeNavigate, trailing }: {
         />
         {sections.map(({ path, label }) => {
           const href = `/templates/${id}${path}`;
-          const current = pathname === href;
+          const active = current === href;
           return (
             <Link
               key={path}
               href={href}
               onClick={guarded(href)}
-              aria-current={current ? 'page' : undefined}
-              data-active={current ? '' : undefined}
+              aria-current={pathname === href ? 'page' : undefined}
+              data-active={active ? '' : undefined}
               className={cn(
                 'relative inline-flex h-[54px] shrink-0 items-center rounded-field px-3.5 text-lg font-semibold transition-colors duration-fast ease-out motion-reduce:transition-none',
-                current ? 'text-ink' : 'text-muted hover:text-ink',
+                active ? 'text-ink' : 'text-muted hover:text-ink',
               )}
             >
+              <LinkPending href={href} onChange={setPending} />
               {label}
-              {current && !bar.ready ? (
+              {active && !bar.ready ? (
                 <span aria-hidden="true" className="absolute inset-x-3.5 bottom-0 h-[3px] rounded-t-[3px] bg-accent" />
               ) : null}
             </Link>
