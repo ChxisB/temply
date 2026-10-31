@@ -7,7 +7,6 @@ import { timingSafeEqual } from 'node:crypto';
  * Without it an `x-user-id` header is just an unauthenticated string, so it is
  * ignored and the request falls through to real Clerk verification.
  */
-const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? '';
 
 /** Compared in constant time, so how long a refusal takes says nothing
  *  about how much of a guess was right. An unset secret matches nothing. */
@@ -19,8 +18,12 @@ export function matchesSecret(presented: string | null, secret: string): boolean
   return timingSafeEqual(a, b);
 }
 
+// Read per request, not captured at import. The secret is set in the
+// environment before the server starts, so production reads the same value
+// either way; a module-level constant, though, bound whichever test file
+// imported this plugin first, and the suite's file order is not fixed.
 function proxyTokenIsValid(presented: string | null): boolean {
-  return matchesSecret(presented, INTERNAL_API_SECRET);
+  return matchesSecret(presented, process.env.INTERNAL_API_SECRET ?? '');
 }
 
 export type OrgRole = 'admin' | 'member';
