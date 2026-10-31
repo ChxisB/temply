@@ -5,6 +5,7 @@ import { cn } from '~/lib/classname';
 const links = [
   { href: '/docs', label: 'Docs' },
   { href: '/playground', label: 'Try the editor' },
+  { href: '/compare', label: 'Compare' },
   { href: '/#pricing', label: 'Pricing' },
   { href: '/#contact', label: 'Contact' },
   { href: '/terms', label: 'Terms' },

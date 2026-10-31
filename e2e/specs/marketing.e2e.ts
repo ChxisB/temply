@@ -86,7 +86,7 @@ test.describe('marketing', () => {
     // the page and the legal facts, and git says when they last changed.
     const sitemap = await (await request.get('/sitemap.xml')).text();
     const entries = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g)].map((m) => [m[1], new Date(m[2])] as const);
-    expect(entries.length).toBe(5);
+    expect(entries.length).toBe(6);
     const terms = entries.find(([loc]) => loc.endsWith('/terms'))![1];
     const committed = new Date(execFileSync('git', ['log', '-1', '--format=%cI', '--', 'app/(marketing)/terms', 'lib/legal.ts'], { cwd: join(import.meta.dirname, '..', '..', 'client'), encoding: 'utf8' }).trim());
     expect(terms.getTime()).toBe(committed.getTime());

@@ -20,6 +20,11 @@ export const PUBLIC_PAGES = {
     description: 'Learn how to create email templates, manage brands and render HTML with the Temply API. Includes code examples, variables and team permissions.',
     sources: ['app/(marketing)/docs', 'components/docs'],
   },
+  '/compare': {
+    title: 'How Temply fits your email stack',
+    description: 'Temply builds and renders email templates but does not send them. How it sits beside a sender like Resend or Postmark, and how a marketing tool differs.',
+    sources: ['app/(marketing)/compare'],
+  },
   '/terms': {
     title: 'Terms of service',
     description: 'Read the terms for using Temply, including accounts, email templates, API access, billing, cancellation and ownership of your content.',

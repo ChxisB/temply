@@ -13,12 +13,13 @@ describe('the site footer', () => {
     for (const token of container.split(' ')) expect(row.className.split(/\s+/)).toContain(token);
   });
 
-  it('offers the six links, in order, each a 44px target', () => {
+  it('offers the seven links, in order, each a 44px target', () => {
     const view = render(<SiteFooter />);
     const links = Array.from(view.getByRole('navigation', { name: 'Site links' }).querySelectorAll('a'));
     expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
       ['Docs', '/docs'],
       ['Try the editor', '/playground'],
+      ['Compare', '/compare'],
       ['Pricing', '/#pricing'],
       ['Contact', '/#contact'],
       ['Terms', '/terms'],

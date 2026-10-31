@@ -164,7 +164,7 @@ export default function HomeContent() {
                 className="hero-enter max-w-125 text-18 text-pretty text-ink-soft md:text-xl"
                 style={enterAt(150)}
               >
-                Build receipts, welcome emails and password resets from simple blocks. Your team edits the words, and your app fills in each customer’s details and sends the finished email.
+                Temply is an email template builder for developers. Build receipts, welcome emails and password resets from simple blocks. Your team edits the words, and your app fills in each customer’s details and sends the finished email.
               </p>
               <div
                 className="hero-enter flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3"
@@ -206,7 +206,7 @@ export default function HomeContent() {
               A clear path from idea to inbox
             </h2>
             <p className="mt-4 max-w-155 text-lg text-pretty text-ink-soft md:text-18">
-              Build the email, try it with example details, then publish a version your app can use. Changes stay in your draft until you’re ready to share them.
+              Temply is an email template editor your team writes in and an API your app reads from. Build the email, try it with example details, then publish a version your app can use. Changes stay in your draft until you’re ready to share them.
             </p>
           </RevealSection>
 
@@ -285,9 +285,10 @@ export default function HomeContent() {
               One price per person, after a free trial
             </h2>
             <p className="mt-4 max-w-155 text-lg text-pretty text-ink-soft md:text-18">
-              Every workspace gets {TRIAL_DAYS} days free. No card needed. After
-              that you pay for the people on the team, and the calls, templates
-              and history most teams need come with them.
+              Temply pricing is {formatUsd(PRICES_USD.seat)} per person a month,
+              after a free trial. Every workspace gets {TRIAL_DAYS} days free. No
+              card needed. After that you pay for the people on the team, and the
+              calls, templates and history most teams need come with them.
             </p>
           </div>
 

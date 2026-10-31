@@ -28,6 +28,7 @@ Temply generates the email; it does not send it. The render endpoint returns the
 ${link('/')}
 ${link('/docs')}
 ${link('/playground')}
+${link('/compare')}
 
 ## Terms
 ${link('/terms')}

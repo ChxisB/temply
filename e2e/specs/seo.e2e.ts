@@ -3,7 +3,7 @@ import { PRODUCTION_SITE_URL } from '../../shared/site';
 
 // The canonical host the pages print, from the module that names it.
 const origin = PRODUCTION_SITE_URL;
-const publicPaths = ['/', '/docs', '/playground', '/terms', '/privacy'];
+const publicPaths = ['/', '/docs', '/playground', '/compare', '/terms', '/privacy'];
 const socialCard = '/brand/temply-social-card-1200x630.png';
 
 for (const path of publicPaths) {
@@ -102,6 +102,19 @@ test('llms.txt maps the site in plain text for assistants', async ({ request }) 
   for (const path of publicPaths) {
     expect(body).toContain(`${origin}${path === '/' ? '' : path})`);
   }
+});
+
+test('pricing.md is a machine-readable pricing sheet for buying agents', async ({ request }) => {
+  const response = await request.get('/pricing.md');
+  expect(response.status()).toBe(200);
+  expect(response.headers()['content-type']).toContain('text/markdown');
+  const body = await response.text();
+  expect(body.startsWith('# Pricing')).toBe(true);
+  // The tiers an agent compares on, and the fact that sets Temply apart.
+  expect(body).toContain('no per-email fee');
+  for (const tier of ['Free trial', 'Team', 'Enterprise']) expect(body).toContain(`## ${tier}`);
+  // A real dollar figure, so the sheet is parseable, not a "contact sales" wall.
+  expect(body).toMatch(/\$\d/);
 });
 
 test('the docs FAQ is on the page and in the FAQPage schema, word for word', async ({ page }) => {
