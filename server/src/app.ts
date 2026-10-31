@@ -1,6 +1,6 @@
 import { captureException } from '@sentry/core';
 import { Elysia } from 'elysia';
-import { errorResponse } from './lib/errors';
+import { HttpError, errorResponse } from './lib/errors';
 import { authPlugin } from './plugins/auth';
 import { dbPlugin } from './plugins/db';
 import { templatesRoutes } from './routes/templates';
@@ -33,10 +33,15 @@ export const app = new Elysia()
   // added after .use() never sees errors raised inside the mounted modules,
   // so validation failures would fall back to Elysia's own 422.
   .onError({ as: 'global' }, ({ error, code }) => {
-    console.error(`Error [${code}]:`, error);
-    // A miss, a bad body or a failed schema is the caller's doing and
-    // already answered; anything else is ours to know about.
-    if (code !== 'NOT_FOUND' && code !== 'VALIDATION' && code !== 'PARSE') captureException(error);
+    // An HttpError is a client error a route raised on purpose (401, 404,
+    // 409…): it is already answered and is not ours to log or to page us
+    // about. A miss, a bad body or a failed schema is the caller's doing too,
+    // answered and not worth paging on. Anything else is a fault we log and
+    // send on.
+    if (!(error instanceof HttpError)) {
+      console.error(`Error [${code}]:`, error);
+      if (code !== 'NOT_FOUND' && code !== 'VALIDATION' && code !== 'PARSE') captureException(error);
+    }
     return errorResponse(code, error);
   })
   .use(authPlugin)

@@ -9,7 +9,7 @@ import { checkBurst } from '../lib/rate-limit';
 import { render } from '../render/render';
 import { MissingVariablesError, RepeatNotListError } from '../render/engine';
 import type { EngineConfig } from '../render/engine';
-import { gone, json, notFound, paymentRequired, tooManyRequests, unauthorized, unprocessable } from '../lib/errors';
+import { HttpError, gone, json, notFound, paymentRequired, tooManyRequests, unauthorized, unprocessable } from '../lib/errors';
 import { liveVersion, liveVersionOf, notePin } from '../lib/versions';
 import { authPlugin } from '../plugins/auth';
 import { PUBLIC_PREVIEW_ROUTE, PUBLIC_RENDER_ROUTE, PUBLIC_TEMPLATE_ROUTE, PUBLIC_TEMPLATES_ROUTE } from '@temply/shared/api';
@@ -24,19 +24,15 @@ type Key = { id: string; user_id: string; org_id: string | null; mode: 'live' | 
 
 /** `version` is the number the served copy went live as; null for a draft,
  *  and for a live copy from before versions were snapshotted. */
-type Resolved =
-  | { error: Response }
-  | { key: Key; template: Row; served: Served; version: number | null };
+type Resolved = { key: Key; template: Row; served: Served; version: number | null };
 
 /**
  * The key behind a request, with its fuse and its quota checked: what every
  * public endpoint needs before it looks at anything else.
  */
-async function resolveKey(ctx: { request: Request; db: Db }): Promise<{ error: Response } | { key: Key }> {
+async function resolveKey(ctx: { request: Request; db: Db }): Promise<Key> {
   const authHeader = ctx.request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { error: unauthorized('Missing or invalid Authorization header') };
-  }
+  if (!authHeader?.startsWith('Bearer ')) unauthorized('Missing or invalid Authorization header');
 
   const keyHash = hashApiKey(authHeader.slice(7));
   const [key] = await ctx.db
@@ -44,18 +40,16 @@ async function resolveKey(ctx: { request: Request; db: Db }): Promise<{ error: R
     .from(apiKeysTable)
     .where(and(eq(apiKeysTable.key_hash, keyHash), isNull(apiKeysTable.revoked_at)))
     .limit(1);
-  if (!key) return { error: unauthorized('Invalid or revoked API key') };
+  if (!key) unauthorized('Invalid or revoked API key');
 
   // The fuse comes before the quota: a runaway loop must not spend the
   // month's budget while it burns.
   const burst = await checkBurst(ctx.db, key.id, key.mode);
   if (!burst.allowed) {
-    return {
-      error: tooManyRequests(
-        `This key may make ${burst.limit} calls a minute. Try again in ${burst.retryAfterSeconds}s.`,
-        burst.retryAfterSeconds,
-      ),
-    };
+    tooManyRequests(
+      `This key may make ${burst.limit} calls a minute. Try again in ${burst.retryAfterSeconds}s.`,
+      burst.retryAfterSeconds,
+    );
   }
 
   const scope = key.org_id ?? key.user_id;
@@ -64,16 +58,14 @@ async function resolveKey(ctx: { request: Request; db: Db }): Promise<{ error: R
   if (key.org_id) await ensureAccount(ctx.db, key.org_id, key.user_id);
   const account = key.mode === 'live' ? await getPlan(ctx.db, scope) : undefined;
   if (account?.plan === 'lapsed') {
-    return { error: paymentRequired("This workspace's trial or plan has ended, so its live keys are paused. Subscribe on the Plan page to resume them.") };
+    paymentRequired("This workspace's trial or plan has ended, so its live keys are paused. Subscribe on the Plan page to resume them.");
   }
 
   const quota = await checkApiQuota(ctx.db, scope, new Date(), key.mode, account);
-  if (!quota.allowed) {
-    return {
-      error: json({ status: 429, message: quota.message!, errors: [quota.message!] }, 429),
-    };
-  }
-  return { key };
+  // A month's quota resets at the month boundary, not in N seconds, so no
+  // Retry-After: the integrator upgrades or waits for the reset, not a sleep.
+  if (!quota.allowed) throw new HttpError(429, quota.message!);
+  return key;
 }
 
 /** The key's organization is the scope. A key from before organizations
@@ -112,7 +104,7 @@ function versionStamp(created: string | null): string | null {
  * help, and the app should move to a newer one. A version's theme is null when
  * it was snapshotted before themes were captured, and renders unthemed.
  */
-async function pinnedCopy(db: Db, template: Row, number: number): Promise<{ error: Response } | { served: Served }> {
+async function pinnedCopy(db: Db, template: Row, number: number): Promise<Served> {
   const [found] = await db
     .select()
     .from(templateVersions)
@@ -120,15 +112,15 @@ async function pinnedCopy(db: Db, template: Row, number: number): Promise<{ erro
     .limit(1);
   if (!found) {
     const newest = await liveVersion(db, template.id);
-    if (newest === null) return { error: notFound('This template has not been published yet') };
+    if (newest === null) notFound('This template has not been published yet');
     // Numbers are handed out one after another, so a gap below the newest is a prune.
     if (number < newest) {
-      return { error: gone(`Version ${number} was removed to make room for newer ones. Pin a newer version, or leave version out to get the live copy.`) };
+      gone(`Version ${number} was removed to make room for newer ones. Pin a newer version, or leave version out to get the live copy.`);
     }
-    return { error: notFound(`Version ${number} does not exist. The newest is ${newest}.`) };
+    notFound(`Version ${number} does not exist. The newest is ${newest}.`);
   }
   await notePin(db, found);
-  return { served: { content: found.content, theme: found.theme, previewText: found.preview_text, stamp: versionStamp(found.created_at) } };
+  return { content: found.content, theme: found.theme, previewText: found.preview_text, stamp: versionStamp(found.created_at) };
 }
 
 /**
@@ -138,16 +130,14 @@ async function pinnedCopy(db: Db, template: Row, number: number): Promise<{ erro
  * guessing one.
  */
 async function resolve(ctx: { request: Request; params: { shortCode: string }; db: Db }, pin?: number): Promise<Resolved> {
-  const resolved = await resolveKey(ctx);
-  if ('error' in resolved) return resolved;
-  const { key } = resolved;
+  const key = await resolveKey(ctx);
 
   const [template] = await ctx.db
     .select()
     .from(mails)
     .where(and(eq(mails.short_code, ctx.params.shortCode), scopeOf(key)))
     .limit(1);
-  if (!template) return { error: notFound('Template not found') };
+  if (!template) notFound('Template not found');
   // A live key serves the published copy only: a draft that has never been
   // published is the author's, not the integrator's, and a template whose
   // draft is mid-edit keeps serving what was last published. A test key is
@@ -157,16 +147,14 @@ async function resolve(ctx: { request: Request; params: { shortCode: string }; d
   let served: Served;
   let version: number | null;
   if (pin !== undefined) {
-    const copy = await pinnedCopy(ctx.db, template, pin);
-    if ('error' in copy) return copy;
-    served = copy.served;
+    served = await pinnedCopy(ctx.db, template, pin);
     version = pin;
   } else if (key.mode === 'test') {
     served = { content: template.content, theme: template.theme, previewText: template.preview_text, stamp: template.updated_at };
     version = null;
   } else {
     if (template.published_at === null || template.published_content === null) {
-      return { error: notFound('This template has not been published yet') };
+      notFound('This template has not been published yet');
     }
     served = { content: template.published_content, theme: template.published_theme, previewText: template.published_preview_text, stamp: template.published_at };
     version = await liveVersion(ctx.db, template.id);
@@ -217,9 +205,7 @@ export const publicRoutes = new Elysia()
    * what the render is for.
    */
   .get(PUBLIC_TEMPLATES_ROUTE, async (ctx) => {
-    const resolved = await resolveKey(ctx);
-    if ('error' in resolved) return resolved.error;
-    const { key } = resolved;
+    const key = await resolveKey(ctx);
     const live = key.mode === 'live';
     const rows = await ctx.db
       .select({
@@ -253,9 +239,7 @@ export const publicRoutes = new Elysia()
   })
 
   .get(PUBLIC_TEMPLATE_ROUTE, async (ctx) => {
-    const resolved = await resolve(ctx);
-    if ('error' in resolved) return resolved.error;
-    const { template, served, key, version } = resolved;
+    const { template, served, key, version } = await resolve(ctx);
 
     // updatedAt is the time the served copy last changed: the publish time
     // on a live key, the draft's on a test key. It is the field an
@@ -282,9 +266,7 @@ export const publicRoutes = new Elysia()
   .post(
     PUBLIC_RENDER_ROUTE,
     async (ctx) => {
-      const resolved = await resolve(ctx, ctx.body?.version);
-      if ('error' in resolved) return resolved.error;
-      const { template, served, key, version } = resolved;
+      const { template, served, key, version } = await resolve(ctx, ctx.body?.version);
 
       let content: unknown;
       try {

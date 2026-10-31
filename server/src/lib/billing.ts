@@ -112,7 +112,7 @@ const READS = new Set(['GET', 'HEAD', 'OPTIONS']);
 export async function refuseWhenLapsed(ctx: { request: Request; db: Db; orgId: string | null; orgRole: OrgRole | null }) {
   if (READS.has(ctx.request.method) || ctx.request.method === 'DELETE' || !ctx.orgId) return;
   const { plan } = await getPlan(ctx.db, ctx.orgId);
-  if (plan === 'lapsed') return paymentRequired(readOnlyMessage(ctx.orgRole));
+  if (plan === 'lapsed') paymentRequired(readOnlyMessage(ctx.orgRole));
 }
 
 export async function getUsage(db: Db, orgId: string) {

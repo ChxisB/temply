@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+import { HttpError } from './errors';
 import { eq } from 'drizzle-orm';
 import { apiKeysTable, assets, brands, mails, subscriptions } from '@temply/shared/schema';
 import { INCLUDED, limitsFor, MAX_TEMPLATE_PACKS, TRIAL_DAYS } from '@temply/shared/plans';
@@ -125,11 +126,12 @@ describe('refuseWhenLapsed', () => {
 
   it('refuses a lapsed workspace’s writes with 402, telling a member to ask an admin', async () => {
     await lapse(db, 'org_1');
-    const admin = await refuseWhenLapsed(ctx('POST'));
-    expect(admin?.status).toBe(402);
-    expect((await admin!.json()).message).toBe(readOnlyMessage('admin'));
-    const member = await refuseWhenLapsed(ctx('PUT', 'member'));
-    expect((await member!.json()).message).toBe(readOnlyMessage('member'));
+    const admin = await refuseWhenLapsed(ctx('POST')).catch((error) => error);
+    expect(admin).toBeInstanceOf(HttpError);
+    expect(admin.status).toBe(402);
+    expect(admin.message).toBe(readOnlyMessage('admin'));
+    const member = await refuseWhenLapsed(ctx('PUT', 'member')).catch((error) => error);
+    expect(member.message).toBe(readOnlyMessage('member'));
   });
 
   it('lets a trial or a paying workspace write', async () => {
