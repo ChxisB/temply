@@ -22,7 +22,7 @@ export const PUBLIC_PAGES = {
   },
   '/compare': {
     title: 'How Temply fits your email stack',
-    description: 'Temply builds and renders email templates but does not send them. How it sits beside a sender like Resend or Postmark, and how a marketing tool differs.',
+    description: 'Temply builds transactional email templates and keeps the sender you already use. How its one job compares with an all-in-one email platform.',
     sources: ['app/(marketing)/compare'],
   },
   '/terms': {

@@ -8,34 +8,22 @@ import { publicPageMetadata, publicPageSchema } from '~/lib/seo';
 export const metadata = publicPageMetadata('/compare');
 
 /**
- * Where Temply sits among email tools, by category rather than by vendor.
- * The named products are examples of a category, not the subject of a claim:
- * every cell is a fact about what that kind of tool does, so the page stays
- * true when a vendor adds a feature or changes a price. An answer engine that
- * cites a page like this cites the categories, which is the honest answer to
- * "Temply vs X" anyway: Temply is not a sender, and it is not a marketing
- * platform, so it replaces neither.
+ * Where Temply sits among email tools. The comparison a buyer actually weighs
+ * is against an all-in-one platform that also has an editor, so that is the
+ * table: Temply does the one job and keeps your stack, the platform does far
+ * more at a price that grows with your list. A sending provider is a
+ * complement, not a rival, so it is prose, not a column. Named products are
+ * examples of a category, never the subject of a claim, so the page stays true
+ * when a vendor adds a feature or changes a price.
  */
-const COLUMNS = ['Temply', 'A sending provider', 'A marketing platform'] as const;
+const COLUMNS = ['Temply', 'An all-in-one platform'] as const;
 
-const ROWS: Array<{ what: string; cells: readonly [string, string, string] }> = [
-  { what: 'Sends the email', cells: ['No', 'Yes', 'Yes'] },
-  {
-    what: 'Where the email is designed',
-    cells: ['The Temply editor', 'Your code, or its own template feature', 'Its own editor'],
-  },
-  {
-    what: 'Who delivers it',
-    cells: ['A provider you choose', 'Itself', 'Itself'],
-  },
-  {
-    what: 'Subscriber lists and campaigns',
-    cells: ['No', 'Not the main job', 'Yes'],
-  },
-  {
-    what: 'How your app gets the finished HTML',
-    cells: ['One API call per send', 'You pass the HTML in', 'You usually do not; it sends for you'],
-  },
+const ROWS: Array<{ what: string; cells: readonly [string, string] }> = [
+  { what: 'What it does', cells: ['Builds and renders the email template', 'An editor, plus sending, lists and campaigns'] },
+  { what: 'Your sending provider', cells: ['Keep the one you use', 'Replaced by its own'] },
+  { what: 'Transactional email', cells: ['Its whole job', 'One feature among many'] },
+  { what: 'Price', cells: ['Flat, per person', 'Grows with your contact list'] },
+  { what: 'A marketer edits the words, no deploy', cells: ['Yes', 'Yes'] },
 ];
 
 // Each answer is one self-contained paragraph, because it feeds the FAQPage
@@ -43,11 +31,11 @@ const ROWS: Array<{ what: string; cells: readonly [string, string, string] }> = 
 const FAQ: { q: string; a: string }[] = [
   {
     q: 'Is Temply an alternative to Resend, Postmark or Amazon SES?',
-    a: 'No. Those are sending providers; they deliver the email. Temply builds the template and renders the HTML and plain text, and your app hands that to the provider you already use. The two sit side by side, and you keep your deliverability, domains and sending history where they are.',
+    a: 'No, and it does not try to be. Those are sending providers; they deliver the email. Temply builds the template and renders the HTML and plain text, and your app hands that to the provider you already use. You keep your deliverability, domains and sending history where they are.',
   },
   {
-    q: 'Is Temply an alternative to Mailchimp, Loops or customer.io?',
-    a: 'Not for marketing. A marketing platform manages lists, campaigns and journeys, and sends from its own infrastructure. Temply is for the transactional email your app sends one at a time: receipts, welcome emails, password resets. If you need audiences and broadcasts, a marketing platform is the right tool.',
+    q: 'Is Temply cheaper than a marketing platform like Mailchimp or Loops?',
+    a: 'For transactional email, usually, and simpler. A marketing platform prices by contacts and bundles lists, campaigns and its own sender. Temply is a flat price per person and does one thing: the email your app sends one at a time. If you need audiences and broadcasts, that is a different tool.',
   },
   {
     q: 'Can I use Temply with the provider I already have?',
@@ -79,9 +67,9 @@ export default function ComparePage() {
             How Temply fits your email stack
           </h1>
           <p className="mt-4 max-w-xl text-lg text-pretty text-muted">
-            Temply builds and renders email templates. It does not send email,
-            and it does not run campaigns. Here is what that means next to the
-            tools you may already be weighing it against.
+            Temply does one thing: it turns your content into the email your app
+            sends, and it keeps the stack you already have. Here is how that
+            focus compares with the bigger tools you might weigh it against.
           </p>
         </header>
 
@@ -96,22 +84,20 @@ export default function ComparePage() {
               your values in place, ready to send.
             </P>
             <P>
-              Temply stops at the finished email; your provider delivers it.
-              That line is the whole comparison. Anything on the sending side
-              of it belongs to another tool, and Temply is built to sit beside
-              that tool rather than to replace it.
+              That is the whole product. There is no sending to configure, no
+              list to manage and no campaign builder to learn, so there is less
+              to set up and less to pay for. The one job is the feature.
             </P>
           </section>
 
           <section aria-labelledby="sending-provider">
-            <H2 id="sending-provider">Temply and your sending provider</H2>
+            <H2 id="sending-provider">Temply keeps your sending provider</H2>
             <P>
               A sending provider such as Resend, Postmark or Amazon SES takes an
               email and delivers it: domains, reputation, bounces and the
-              sending history live there. Temply hands it the HTML. You keep
-              the provider you have, and Temply replaces the part where the
-              email&apos;s markup was written by hand and shipped with a
-              deploy.
+              sending history live there. Temply hands it the HTML, so you keep
+              the provider you have. Nothing migrates, and switching providers
+              later does not touch your templates.
             </P>
             <P>
               In practice your send code changes by one call. Where it built an
@@ -122,20 +108,19 @@ export default function ComparePage() {
           </section>
 
           <section aria-labelledby="marketing-platform">
-            <H2 id="marketing-platform">Temply vs a marketing platform</H2>
+            <H2 id="marketing-platform">Temply vs an all-in-one platform</H2>
             <P>
-              A marketing platform such as Mailchimp, Loops or customer.io is a
-              different category again. It holds your audience, runs campaigns
-              and journeys, has its own editor, and sends from its own
+              An all-in-one platform such as Mailchimp, Loops or customer.io
+              bundles an editor with sending, lists, campaigns and its own
               infrastructure. It is the right tool when the job is a newsletter
-              or a lifecycle series to a list.
+              or a lifecycle series to an audience, and you want one account to
+              run it from.
             </P>
             <P>
-              Temply is for the email your own app sends to one person because
-              of something they did: a receipt, a welcome, a password reset.
-              There is no list to manage and no campaign to schedule. The
-              platform owns the broadcast; Temply owns the template your code
-              renders per send.
+              For the email your own app sends to one person because of
+              something they did, that is more tool than the job takes, at a
+              price that grows with your list. Temply does only that email, at a
+              flat price, and leaves the sending where it is.
             </P>
           </section>
 
@@ -147,9 +132,7 @@ export default function ComparePage() {
               one product&apos;s feature list.
             </P>
             <div className={cn(docsPanelRows, 'mt-5 overflow-x-auto')}>
-              {/* Four columns squeezed to a phone read as a list of syllables;
-                  the wrapper scrolls instead. */}
-              <table className="w-full min-w-[40rem] text-ui">
+              <table className="w-full min-w-[32rem] text-ui">
                 <thead>
                   <tr className="border-b border-line text-left text-2xs font-medium tracking-wide text-muted uppercase">
                     <th className="px-4 py-3 font-medium">
@@ -169,7 +152,7 @@ export default function ComparePage() {
                         {row.what}
                       </th>
                       {row.cells.map((cell, i) => (
-                        <td key={COLUMNS[i]} className="px-4 py-3 text-muted">
+                        <td key={COLUMNS[i]} className={cn('px-4 py-3', i === 0 ? 'text-ink-soft' : 'text-muted')}>
                           {cell}
                         </td>
                       ))}
@@ -191,12 +174,11 @@ export default function ComparePage() {
             </P>
             <H3 id="who-not-for">Who Temply is not for</H3>
             <P>
-              A team that needs to send newsletters or run drip campaigns to a
-              list, because Temply has no audience and no scheduler. A team
-              with no sending provider yet, because Temply does not deliver.
-              And a team happy with the templates their provider already
-              offers; the gap Temply fills is the one between code and the
-              person who wants to change the words.
+              A team whose job is newsletters or drip campaigns to a list: that
+              wants an audience and a scheduler, which an all-in-one platform
+              has and Temply leaves out on purpose. A team with no sending
+              provider yet needs one first, since Temply keeps your sender
+              rather than being one.
             </P>
           </section>
 

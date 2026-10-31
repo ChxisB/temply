@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { ArrowRightIcon, CheckIcon, XIcon } from 'lucide-react';
+import { ArrowRightIcon, CheckIcon } from 'lucide-react';
 import Link from 'next/link';
 import { formatBytes } from '@temply/shared/bytes';
 import {
@@ -289,49 +289,46 @@ export default function HomeContent() {
           <div className="mx-auto max-w-2xl text-center">
             <Kicker>Where it fits</Kicker>
             <h2 className="mt-4 max-w-160 font-display text-38 font-bold tracking-display text-balance text-ink md:text-48">
-              Where Temply fits
+              One job, done well
             </h2>
             <p className="mt-4 max-w-155 text-lg text-pretty text-ink-soft md:text-18">
-              Temply builds the email and renders it; your provider sends it, and a marketing platform is a different tool again. The one line that tells them apart is who puts the email in the inbox.
+              Temply builds the email and nothing else. It keeps the sender you already use, at a flat price. An all-in-one platform does far more, and most of it is more than transactional email needs.
             </p>
           </div>
 
-          {/* The full table lives on /compare. Here it is the one row that
-              places Temply: whether the tool sends. Temply does not, which is
-              why it sits beside the sender you already have rather than
-              replacing it. */}
-          <ul className="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3 md:mt-12">
-            {[
-              { name: 'Temply', eg: 'This tool', role: 'Builds and renders the template, then hands your app the HTML and plain text.', sends: false, you: true },
-              { name: 'A sending provider', eg: 'Resend, Postmark, Amazon SES', role: 'Takes the HTML and delivers it to the inbox.', sends: true, you: false },
-              { name: 'A marketing platform', eg: 'Mailchimp, Loops, customer.io', role: 'Owns subscriber lists and campaigns, and sends from its own tools.', sends: true, you: false },
-            ].map((tool) => (
-              <li
-                key={tool.name}
-                className={cn(
-                  'flex flex-col gap-2.5 rounded-panel border p-6 text-left',
-                  tool.you ? 'border-accent bg-accent-wash' : 'border-line bg-raised',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-sm font-semibold',
-                    tool.you ? 'bg-raised text-accent-ink' : 'bg-sunken text-muted',
-                  )}
-                >
-                  {tool.sends ? (
-                    <CheckIcon aria-hidden className="size-4" />
-                  ) : (
-                    <XIcon aria-hidden className="size-4" />
-                  )}
-                  {tool.sends ? 'Sends the email' : 'Does not send'}
-                </span>
-                <p className="font-display text-lg font-bold tracking-display text-ink">{tool.name}</p>
-                <p className="text-sm text-muted">{tool.eg}</p>
-                <p className="mt-1 text-base text-pretty text-ink-soft">{tool.role}</p>
-              </li>
-            ))}
-          </ul>
+          {/* Temply against an all-in-one platform, on what a team sending
+              transactional email weighs. Temply's column is every row a check:
+              the point is that doing one thing is the feature. The platform is
+              not wrong, it is more tool than this job takes. The full table and
+              where a sending provider fits are on /compare. */}
+          <div className="mx-auto mt-10 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2 md:mt-12">
+            <div className="flex flex-col gap-3 rounded-panel border border-accent bg-accent-wash p-6 text-left">
+              <p className="font-display text-lg font-bold tracking-display text-ink">Temply</p>
+              <ul className="flex flex-col gap-2.5">
+                {['Builds and renders your template', 'Keeps the sender you already use', 'One flat price per person'].map((point) => (
+                  <li key={point} className="flex items-start gap-2 text-base text-pretty text-ink-soft">
+                    <CheckIcon aria-hidden className="mt-0.5 size-4.5 shrink-0 text-accent-ink" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-3 rounded-panel border border-line bg-raised p-6 text-left">
+              <p className="font-display text-lg font-bold tracking-display text-ink">An all-in-one platform</p>
+              <ul className="flex flex-col gap-2.5">
+                {['An editor, sending, lists and campaigns', 'Its own sender to move onto', 'A price that grows with your contact list'].map((point) => (
+                  <li key={point} className="flex items-start gap-2 text-base text-pretty text-muted">
+                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-line-strong" />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <p className="mx-auto mt-6 max-w-155 text-center text-base text-pretty text-muted">
+            Temply hands the finished email to the sending provider you already have, so there is nothing to migrate.
+          </p>
 
           <div className="mt-8 text-center">
             <Button asChild variant="secondary" size="lg">
