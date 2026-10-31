@@ -54,13 +54,24 @@ describe('TemplateNavigation', () => {
     }
   });
 
-  it('draws the underline under the current tab and nowhere else', () => {
+  it('draws one underline for the row, measured onto the current tab and nowhere else', () => {
     pathname = '/templates/abc/versions';
     const view = render(<TemplateNavigation id="abc" />);
-    const underlined = [...tabs(view)]
-      .filter((tab) => tab.querySelector('span[aria-hidden="true"]'))
-      .map((tab) => tab.textContent);
-    expect(underlined).toEqual(['Versions']);
+    const nav = view.getByRole('navigation', { name: 'Template' });
+    const bars = nav.querySelectorAll(':scope > span[aria-hidden="true"]');
+    expect(bars).toHaveLength(1);
+    expect(bars[0]?.className).toContain('bg-accent');
+    expect(bars[0]?.className).toContain('motion-reduce:transition-none');
+    const marked = [...tabs(view)].filter((tab) => tab.hasAttribute('data-active')).map((tab) => tab.textContent);
+    expect(marked).toEqual(['Versions']);
+    // Once the bar has measured, no tab paints a fallback of its own.
+    expect([...tabs(view)].filter((tab) => tab.querySelector('span[aria-hidden="true"]'))).toEqual([]);
+  });
+
+  it('keeps one weight for every tab, so the row never nudges as the current tab changes', () => {
+    const view = render(<TemplateNavigation id="abc" />);
+    for (const tab of tabs(view)) expect(tab.className).toContain('font-semibold');
+    expect(view.container.innerHTML).not.toContain('font-bold');
   });
 
   it('keeps the underline out of the link name, so a spec finds the tab by its label alone', () => {

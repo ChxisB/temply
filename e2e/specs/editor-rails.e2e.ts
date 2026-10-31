@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures/test';
 import { onPhone } from '../fixtures/editor';
-import { canvas, openEditor } from '../fixtures/canvas';
+import { canvas, openEditor, preflightSettled } from '../fixtures/canvas';
 
 // The framed editor's two rails: the Components rail on the left and the
 // Email settings rail on the right. Each folds to a 72px strip and back, and
@@ -279,7 +279,7 @@ test.describe('editor rails', () => {
         // where they were), and the check on the canvas not moving would be
         // measuring that rather than the rail. This document has no preview
         // text, so the banner is always there to wait for.
-        await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+        await preflightSettled(page);
 
         const port = scroller(page);
         await port.evaluate((el) => { el.scrollTop = (el.scrollHeight - el.clientHeight) / 2; });
@@ -334,7 +334,7 @@ test.describe('editor rails', () => {
       const { id } = await api.createTemplate({ title: name('canvas scroll'), previewText: '', content: TALL_DOC });
       await openEditor(page, id);
       // See the laptop case: the banner lands after the editor and moves what is under it.
-      await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+      await preflightSettled(page);
 
       const extent = (selector: string) => page.locator(selector).first().evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
       const windowFit = await page.evaluate(() => ({ scroll: document.documentElement.scrollHeight, client: window.innerHeight }));
@@ -358,7 +358,7 @@ test.describe('editor rails', () => {
     test('the template is in view without scrolling, under a bar that is short', async ({ page, api, name }) => {
       const { id } = await api.createTemplate({ title: name('no scroll to template') });
       const pm = await openEditor(page, id);
-      await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+      await preflightSettled(page);
 
       await expect(pm.getByText('Hello from e2e')).toBeInViewport({ ratio: 1 });
       // The bar was three stacked boxes tall enough to push the email off a

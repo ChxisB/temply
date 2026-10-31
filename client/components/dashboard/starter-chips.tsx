@@ -4,6 +4,7 @@ import { Loader2Icon, PlusIcon } from 'lucide-react';
 import { SectionHeading } from '~/components/dashboard/section-heading';
 import { Button } from '~/components/ui/button';
 import { useCreateFromStarter } from '~/hooks/use-create-from-starter';
+import { cn } from '~/lib/classname';
 
 /**
  * The first-run path and the shortcut after it: each chip makes a template
@@ -32,11 +33,10 @@ export function StarterChips({ disabled = false }: { disabled?: boolean }) {
                 onClick={() => create(starter)}
                 className="group h-11 pr-4.5 pl-3.5 text-ui"
               >
-                {working ? (
-                  <Loader2Icon aria-hidden="true" className="animate-spin text-accent-ink motion-reduce:animate-none" />
-                ) : (
-                  <PlusIcon aria-hidden="true" className="text-accent-ink group-disabled:text-disabled" />
-                )}
+                <span className="relative size-4 shrink-0 [&_svg]:absolute [&_svg]:inset-0 [&_svg]:transition-opacity [&_svg]:duration-base [&_svg]:ease-out [&_svg]:motion-reduce:transition-none">
+                  <PlusIcon aria-hidden="true" className={cn('text-accent-ink group-disabled:text-disabled', working ? 'opacity-0' : 'opacity-100')} />
+                  <Loader2Icon aria-hidden="true" className={cn('animate-spin text-accent-ink motion-reduce:animate-none', working ? 'opacity-100' : 'opacity-0')} />
+                </span>
                 {starter.name}
               </Button>
             </li>

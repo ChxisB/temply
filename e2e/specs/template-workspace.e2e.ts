@@ -128,13 +128,19 @@ test('the editor is one full-height frame: header, tab row, view switch and a su
   await expect(current).toHaveAttribute('aria-current', 'page');
   await expect(tabs.locator('[aria-current]')).toHaveCount(1);
   expect((await current.boundingBox())!.height).toBeCloseTo(54, 0);
-  const underline = current.locator('span[aria-hidden="true"]');
-  await expect(underline, 'the underline has finished fading in').toHaveCSS('opacity', '1');
+  // The underline is the strip's one sliding element, laid under the current
+  // tab once it has measured it; no tab draws its own.
+  const underline = tabs.locator(':scope > span[aria-hidden="true"]');
+  await expect(underline).toHaveCount(1);
+  await expect(underline, 'the underline has landed under the current tab').toHaveCSS('opacity', '1');
   await expect(underline).toHaveCSS('background-color', await painted(page, 'background-color', '--ds-accent'));
   const mark = (await underline.boundingBox())!;
   const tab = (await current.boundingBox())!;
   expect(mark.height).toBeCloseTo(3, 0);
   expect(mark.y + mark.height, 'the underline sits on the foot of the tab').toBeCloseTo(tab.y + tab.height, 0);
+  expect(mark.x, 'the underline starts inside the tab').toBeGreaterThanOrEqual(tab.x);
+  expect(mark.x + mark.width, 'the underline ends inside the tab').toBeLessThanOrEqual(tab.x + tab.width + 0.5);
+  await expect(current.locator('span[aria-hidden="true"]')).toHaveCount(0);
   await expect(tabs.getByRole('link', { name: 'Variables' }).locator('span[aria-hidden="true"]')).toHaveCount(0);
 
   // The view switch: four text segments, one pressed.

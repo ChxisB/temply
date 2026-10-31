@@ -108,7 +108,7 @@ export default function AssetsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       {/* The whole window is the drop target (see useFileDrop); this is the
           sheet that says so while a file is in the air. */}
       <div

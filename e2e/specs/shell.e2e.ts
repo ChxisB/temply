@@ -113,10 +113,21 @@ test.describe('the sidebar', () => {
     const idle = nav.getByRole('link', { name: 'Brands', exact: true });
 
     await expect(current).toHaveAttribute('aria-current', 'page');
-    await expect(current).toHaveCSS('background-color', await painted(page, 'background-color', '--ds-accent-wash'));
     await expect(current).toHaveCSS('color', await painted(page, 'color', '--ds-accent-ink'));
     await expect(idle).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(idle).toHaveCSS('color', await painted(page, 'color', '--ds-muted'));
+    // The wash is the nav's one sliding element, laid under the current row:
+    // the row itself stays bare so the wash can travel to the next one.
+    const wash = nav.locator(':scope > span[aria-hidden]');
+    await expect(wash).toHaveCount(1);
+    await expect(wash).toHaveCSS('background-color', await painted(page, 'background-color', '--ds-accent-wash'));
+    await expect(current).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect
+      .poll(async () => {
+        const [mark, row] = await Promise.all([wash.boundingBox(), current.boundingBox()]);
+        return mark && row ? [Math.round(mark.y - row.y), Math.round(mark.height - row.height)] : null;
+      }, { message: 'the wash sits under the current row' })
+      .toEqual([0, 0]);
   });
 
   test('keeps Settings and the theme toggle in the foot, apart from the nav', async ({ page }) => {

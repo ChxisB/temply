@@ -110,6 +110,14 @@ export function ImageView(props: NodeViewProps) {
     }
   );
 
+  // The frame and its handles stay mounted and fade with the selection, so
+  // they arrive and leave on a transition instead of appearing. Hidden, they
+  // take no pointer and no Tab stop.
+  const selectionChrome = cn(
+    'mly:bg-rose-500 mly:transition-opacity mly:duration-fast mly:ease-out',
+    selected ? 'mly:opacity-100' : 'mly:pointer-events-none mly:opacity-0'
+  );
+
   const dragCornerButton = useCallback(
     (direction: string) => {
       if (isPlaceholderImage) {
@@ -119,10 +127,11 @@ export function ImageView(props: NodeViewProps) {
       return (
         <div
           role="button"
-          tabIndex={0}
+          tabIndex={selected ? 0 : -1}
+          aria-hidden={!selected}
           onMouseDown={handleMouseDown}
           data-direction={direction}
-          className="mly:bg-rose-500"
+          className={selectionChrome}
           style={{
             position: 'absolute',
             height: '10px',
@@ -134,7 +143,7 @@ export function ImageView(props: NodeViewProps) {
         />
       );
     },
-    [handleMouseDown, isPlaceholderImage]
+    [handleMouseDown, isPlaceholderImage, selected, selectionChrome]
   );
 
   let {
@@ -397,7 +406,7 @@ export function ImageView(props: NodeViewProps) {
             )}
           />
 
-          {selected && editor.isEditable && !isPlaceholderImage && (
+          {editor.isEditable && !isPlaceholderImage && (
             <>
               {/* Don't use a simple border as it pushes other content around. */}
               {[
@@ -408,7 +417,7 @@ export function ImageView(props: NodeViewProps) {
               ].map((style, i) => (
                 <div
                   key={i}
-                  className="mly:bg-rose-500"
+                  className={selectionChrome}
                   style={{
                     position: 'absolute',
                     ...style,

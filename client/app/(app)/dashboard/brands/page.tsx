@@ -22,7 +22,7 @@ import {
 } from '~/components/ui/dialog';
 import { PageLoading } from '~/components/ui/page-loading';
 import { Tile } from '~/components/ui/item';
-import { Badge, EmptyState, ErrorState, PageHeader } from '~/components/ui/surfaces';
+import { Badge, EmptyState, ErrorState, PageHeader, Reveal } from '~/components/ui/surfaces';
 import { PlanLimitBanner } from '~/components/dashboard/plan-limit-banner';
 import { SectionHeading } from '~/components/dashboard/section-heading';
 import { BrandEditor } from '~/components/brand/brand-editor';
@@ -160,7 +160,7 @@ export default function BrandsPage() {
   const isSaving = isCreating || isUpdating;
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       <PageHeader
         title="Brands"
         description="Reusable looks you apply to templates."
@@ -173,13 +173,18 @@ export default function BrandsPage() {
       />
 
       {/* Brands are capped the same on every plan short of Enterprise, so
-          the way out is freeing a slot, not a button to the plan page. */}
-      {atLimit && !readOnly ? (
-        <PlanLimitBanner
-          title={`You've saved all ${limit} brand${limit === 1 ? '' : 's'}.`}
-          detail="Delete one you no longer use to save another."
-        />
-      ) : null}
+          the way out is freeing a slot, not a button to the plan page. The
+          banner opens and closes as the count crosses the cap; its gap sits
+          inside what closes, and the negative margin cancels the one the
+          list spacing would leave behind. */}
+      <Reveal open={atLimit && !readOnly} className="-mt-5">
+        <div className="pt-5">
+          <PlanLimitBanner
+            title={`You've saved all ${limit} brand${limit === 1 ? '' : 's'}.`}
+            detail="Delete one you no longer use to save another."
+          />
+        </div>
+      </Reveal>
 
       {/* The user's own saved brands. */}
       <section aria-labelledby="brands-heading" className="space-y-3.5">

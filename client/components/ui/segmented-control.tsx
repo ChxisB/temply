@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
 export interface SegmentedOption<T extends string> {
@@ -14,8 +15,8 @@ export interface SegmentedOption<T extends string> {
 
 /**
  * One choice out of a few, shown side by side: a filter, a view switch. The
- * chosen option is a raised, bolder pill sitting in a track cut into the
- * page.
+ * chosen option sits on a raised pill in a track cut into the page; the pill
+ * is one element that slides to whichever option is chosen.
  *
  * It is a radiogroup: one option is checked, arrow keys move focus and choose
  * in the same step (Home and End jump to the ends), and both ends wrap. Focus
@@ -28,7 +29,8 @@ export interface SegmentedOption<T extends string> {
  *
  * It shrinks before it overflows: an option gives up its label to an
  * ellipsis, never its count, so a narrow screen never scrolls sideways.
- * Transitions are colour, background and shadow only — the pill does not slide.
+ * Both states share a weight: a bolder choice would widen it and nudge its
+ * neighbours each time the pill moved.
  */
 export function SegmentedControl<T extends string>({
   value,
@@ -48,6 +50,8 @@ export function SegmentedControl<T extends string>({
   className?: string;
 }) {
   const radios = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const track = React.useRef<HTMLDivElement>(null);
+  const pill = useActiveIndicator(track, value);
 
   const enabled = options.flatMap((option, index) => (option.disabled ? [] : [index]));
   const chosen = options.findIndex((option) => option.value === value && !option.disabled);
@@ -75,10 +79,21 @@ export function SegmentedControl<T extends string>({
 
   return (
     <div
+      ref={track}
       role="radiogroup"
       aria-label={label}
-      className={cn('inline-flex max-w-full gap-0.5 rounded-full bg-track p-1', className)}
+      className={cn('relative inline-flex max-w-full gap-0.5 rounded-full bg-track p-1', className)}
     >
+      {/* Inset by the track's padding at top and bottom, so its height is the
+          options' own, 44px on a coarse pointer included. */}
+      <span
+        aria-hidden="true"
+        style={pill.style}
+        className={cn(
+          'absolute inset-y-1 left-0 rounded-full bg-raised shadow-sm transition-[transform,width] duration-base ease-out motion-reduce:transition-none',
+          pill.ready ? 'opacity-100' : 'opacity-0',
+        )}
+      />
       {options.map((option, index) => {
         const selected = option.value === value;
         return (
@@ -90,6 +105,7 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="radio"
             aria-checked={selected}
+            data-active={selected ? '' : undefined}
             disabled={option.disabled}
             tabIndex={index === tabStop ? 0 : -1}
             onClick={() => onValueChange(option.value)}
@@ -102,16 +118,15 @@ export function SegmentedControl<T extends string>({
               }
             }}
             className={cn(
-              'inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full whitespace-nowrap pointer-coarse:h-11',
+              'relative inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full font-semibold whitespace-nowrap pointer-coarse:h-11',
               size === 'sm' ? 'h-8 px-3.5 text-sm' : 'h-10 px-5 text-ui',
-              'transition-[background-color,color,box-shadow,outline-color] duration-fast ease-out motion-reduce:transition-none',
+              'transition-[background-color,color,box-shadow,outline-color,outline-offset] duration-fast ease-out motion-reduce:transition-none',
               'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus',
               'disabled:pointer-events-none disabled:text-disabled',
-              // The chosen pill rests on the track by its fill and shadow,
-              // which are faint in the light theme, so it takes a heavier
-              // weight as well. Bold is a hair wider than semibold, so a
-              // choice nudges its neighbours by a pixel or two.
-              selected ? 'bg-raised font-bold text-ink shadow-sm' : 'font-semibold text-ink-soft hover:text-ink',
+              selected ? 'text-ink' : 'text-ink-soft hover:text-ink',
+              // The chosen option paints its own pill until the sliding one
+              // has measured it, so the server's HTML shows the choice.
+              selected && !pill.ready && 'bg-raised shadow-sm',
             )}
           >
             <span className="min-w-0 truncate" title={typeof option.label === 'string' ? option.label : undefined}>

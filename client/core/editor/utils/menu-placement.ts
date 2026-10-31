@@ -23,3 +23,15 @@ export const PLACED_INSIDE_THE_PANE: Modifiers = [
   { name: 'flip', enabled: false },
   { name: 'preventOverflow', options: { altAxis: true, padding: 8 } },
 ];
+
+/**
+ * How every tippy surface arrives and leaves — the bubble menus, the drag
+ * handle, the block and variable menus. The fade and the 4px rise are the
+ * `.tippy-box` rule in core/styles/_editor.css; what tippy needs from here
+ * is how long each takes, because it writes the duration inline and waits
+ * on `transitionend` before it unmounts, so a surface given no duration is
+ * removed on the same frame it is asked to leave. Tippy takes milliseconds
+ * as a number, so the two values are --ds-motion-base and --ds-motion-fast
+ * from app/globals.css written out; keep them in step.
+ */
+export const TIPPY_MOTION = { duration: [200, 150] as [number, number] };

@@ -13,6 +13,7 @@ import { Card } from '../ui/surfaces';
 import { ReadOnlyNotice } from '../dashboard/billing-banner';
 import { AssetPickerDialog } from '../assets/asset-picker-dialog';
 import { EmailEditor } from '../email-editor';
+import type { ContentMode } from '../content-mode-switch';
 import { ContentPreview } from '../content-preview';
 import { ContentSource } from '../content-source';
 import { PreflightPanel } from '../preflight-panel';
@@ -270,11 +271,30 @@ function ContentPanes({
 }) {
   const {
     readOnly, subject, previewText, fromName, pageStyle, cardStyle,
-    setEditor, editorContent, editorPaneRef, paneClass, paneHeight,
+    setEditor, editorContent, editorPaneRef, paneClass, paneHeight, leaving,
     imageUploader, pickFromLibrary,
     mode, forceDark, previewHtml, isPreviewPending, htmlSource, textSource,
     preflight, preflightExpanded, setPreflightExpanded,
   } = model;
+  // The pane a switch leaves stays for its out animation, laid over the one
+  // coming in and out of the way of the pointer and of readers; the hook lets
+  // it go once the animation has played.
+  const leavingPane = 'absolute inset-0 overflow-hidden pointer-events-none content-pane-out';
+  const rendered = (which: Exclude<ContentMode, 'edit'>, className: string) =>
+    which === 'preview' ? (
+      <ContentPreview
+        className={className}
+        minHeight={paneHeight}
+        html={previewHtml}
+        isPending={isPreviewPending}
+        forceDark={forceDark}
+        subject={subject}
+        previewText={previewText}
+        from={fromName}
+      />
+    ) : (
+      <ContentSource className={className} minHeight={paneHeight} source={which === 'html' ? htmlSource : textSource} wrap={which === 'text'} />
+    );
   return (
     <>
       <PreflightPanel
@@ -292,49 +312,41 @@ function ContentPanes({
           over the canvas rather than a filter on it: a filter would also
           dim the bubble menus drawn inside, leaving them a shade darker
           than the menus that float on the page. */}
-      <div
-        ref={editorPaneRef}
-        className={cn(mode !== 'edit' ? 'hidden' : paneClass, 'relative')}
-        style={pageStyle}
-      >
+      <div className="relative">
+        {/* The pane is positioned either way — `relative` for the veil while
+            it is the view, absolute over the next view while it leaves. */}
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-10 hidden rounded-[inherit] bg-black/10 dark:block"
-        />
-        <div style={cardStyle}>
-          <EmailEditor
-            allowedMimeTypes={UPLOAD_MIME_TYPES}
-            autofocus={autofocus}
-            defaultContent={editorContent}
-            editable={!readOnly}
-            onImageUpload={imageUploads && !readOnly ? imageUploader : undefined}
-            onPickImage={imageUploads && !readOnly ? pickFromLibrary : undefined}
-            isLibraryImage={isLibraryUrl}
-            setEditor={setEditor}
+          ref={editorPaneRef}
+          className={mode === 'edit' ? cn('relative', paneClass) : leaving === 'edit' ? leavingPane : 'hidden'}
+          style={pageStyle}
+          aria-hidden={mode !== 'edit' || undefined}
+          inert={mode !== 'edit'}
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-10 hidden rounded-[inherit] bg-black/10 dark:block"
           />
+          <div style={cardStyle}>
+            <EmailEditor
+              allowedMimeTypes={UPLOAD_MIME_TYPES}
+              autofocus={autofocus}
+              defaultContent={editorContent}
+              editable={!readOnly}
+              onImageUpload={imageUploads && !readOnly ? imageUploader : undefined}
+              onPickImage={imageUploads && !readOnly ? pickFromLibrary : undefined}
+              isLibraryImage={isLibraryUrl}
+              setEditor={setEditor}
+            />
+          </div>
         </div>
+
+        {mode !== 'edit' && rendered(mode, cn(paneClass, 'bg-raised'))}
+        {leaving && leaving !== 'edit' && (
+          <div className={leavingPane} aria-hidden inert>
+            {rendered(leaving, 'bg-raised')}
+          </div>
+        )}
       </div>
-
-      {mode === 'preview' && (
-        <ContentPreview
-          className={cn(paneClass, 'bg-raised')}
-          minHeight={paneHeight}
-          html={previewHtml}
-          isPending={isPreviewPending}
-          forceDark={forceDark}
-          subject={subject}
-          previewText={previewText}
-          from={fromName}
-        />
-      )}
-
-      {mode === 'html' && (
-        <ContentSource className={cn(paneClass, 'bg-raised')} minHeight={paneHeight} source={htmlSource} />
-      )}
-
-      {mode === 'text' && (
-        <ContentSource className={cn(paneClass, 'bg-raised')} minHeight={paneHeight} source={textSource} wrap />
-      )}
     </>
   );
 }

@@ -9,7 +9,7 @@ import { MenuToolbar } from '../ui/menu-toolbar';
 import { getClosestNodeByName } from '@/editor/utils/columns';
 import { RepeatMenuContent } from './repeat-menu-content';
 import { useEditorGesture } from '@/editor/utils/use-editor-gesture';
-import { PLACED_INSIDE_THE_PANE } from '@/editor/utils/menu-placement';
+import { PLACED_INSIDE_THE_PANE, TIPPY_MOTION } from '@/editor/utils/menu-placement';
 
 export function RepeatBubbleMenu(props: EditorBubbleMenuProps) {
   const { appendTo, editor } = props;
@@ -67,6 +67,7 @@ export function RepeatBubbleMenu(props: EditorBubbleMenuProps) {
       return editor.isActive('repeat');
     },
     tippyOptions: {
+      ...TIPPY_MOTION,
       offset: [0, 8],
       onCreate: (instance: Instance) => {
         tippyRef.current = instance;

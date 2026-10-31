@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useRef } from 'react';
 import { pressable } from '~/components/ui/button';
+import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
 type NavItem = {
@@ -56,13 +58,16 @@ export const NAV_SECTIONS: NavSection[] = [
  * The shape of one row in the sidebar, for the nav and for the Settings row in
  * its foot, so a row is the same row wherever it sits. It is 44px tall for
  * every pointer, which is also the touch target, so there is no coarse step to
- * keep in line.
+ * keep in line. One weight for both states, so a change of page never nudges
+ * the labels. The current row's lavender wash is its own unless `washed` is
+ * off, which the nav list does once its sliding wash has taken over.
  */
-export function navRow(active: boolean) {
+export function navRow(active: boolean, washed = true) {
   return cn(
-    'flex h-11 items-center gap-3 rounded-field px-3.5 text-ui',
+    'relative flex h-11 items-center gap-3 rounded-field px-3.5 text-ui font-semibold',
     pressable,
-    active ? 'bg-accent-wash font-bold text-accent-ink' : 'font-semibold text-muted hover:bg-hover hover:text-ink',
+    active ? 'text-accent-ink' : 'text-muted hover:bg-hover hover:text-ink',
+    active && washed && 'bg-accent-wash',
   );
 }
 
@@ -93,9 +98,21 @@ export function NavLinks({ onNavigate, platformAdmin = false }: { onNavigate?: (
   const sections: NavSection[] = platformAdmin
     ? [...NAV_SECTIONS, { label: 'Temply', items: [{ href: '/dashboard/admin', label: 'Admin', icon: ShieldCheckIcon }] }]
     : NAV_SECTIONS;
+  const list = useRef<HTMLElement>(null);
+  const wash = useActiveIndicator(list, pathname, { axis: 'y' });
 
   return (
-    <nav aria-label="Dashboard">
+    <nav ref={list} aria-label="Dashboard" className="relative">
+      {/* The current row's wash, one element that slides down the list to the
+          row the page is in; the rows sit over it. */}
+      <span
+        aria-hidden="true"
+        style={wash.style}
+        className={cn(
+          'absolute inset-x-0 top-0 rounded-field bg-accent-wash transition-[transform,height] duration-base ease-out motion-reduce:transition-none',
+          wash.ready ? 'opacity-100' : 'opacity-0',
+        )}
+      />
       {sections.map((section, index) => (
         <div key={section.label ?? index}>
           {section.label ? (
@@ -116,8 +133,9 @@ export function NavLinks({ onNavigate, platformAdmin = false }: { onNavigate?: (
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={isActive ? 'page' : undefined}
+                  data-active={isActive ? '' : undefined}
                   {...(item.external ? { target: '_blank', rel: 'noreferrer' } : {})}
-                  className={navRow(isActive)}
+                  className={navRow(isActive, !wash.ready)}
                 >
                   <Icon aria-hidden className="size-5 shrink-0" />
                   {item.label}

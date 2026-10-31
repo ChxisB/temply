@@ -203,6 +203,27 @@
   }
 }
 
+/* Every floating surface tippy positions — the bubble menus, the drag handle,
+   the block and variable menus — fades and rises 4px to its anchor. Tippy
+   writes transition-duration inline from the `duration` it is given
+   (TIPPY_MOTION in utils/menu-placement.ts) and unmounts on transitionend,
+   so only the properties and the curve live here: a duration would be
+   overridden anyway, and a transition on anything but the box itself would
+   not be the one tippy waits for. Visibility is in the list because tippy
+   hides the popper outright the moment a hide starts, and a box that
+   transitions the inherited value stays visible until its fade has run. */
+.tippy-box {
+  transition-property: opacity, transform, visibility;
+  transition-timing-function: var(--ds-ease-out);
+}
+.tippy-box[data-state='hidden'] {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* The pseudo-element is created on selection and removed on deselection, so a
+   transition alone has no earlier value to run from; @starting-style gives
+   the entrance one. The exit still cuts, because the element is gone. */
 .mly-editable .ProseMirror-selectednode::after {
   content: '';
   position: absolute;
@@ -210,6 +231,10 @@
   pointer-events: none;
   border-radius: 6px;
   background: rgba(35, 131, 226, 0.14);
+  transition: opacity var(--ds-motion-fast) var(--ds-ease-out);
+  @starting-style {
+    opacity: 0;
+  }
 }
 
 /* `.mly-editable` only exists when `editor.isEditable` — the phone's canvas
@@ -421,7 +446,7 @@
     border-radius: 4px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--ds-motion-base) var(--ds-ease-out);
   }
 
   .mly-image-drop-zone.mly-drag-over::after {

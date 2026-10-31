@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader2Icon } from 'lucide-react';
 import { pressable } from '~/components/ui/button';
+import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
 export type ContentMode = 'edit' | 'preview' | 'html' | 'text';
@@ -42,6 +43,8 @@ export function ContentModeSwitch({
   useEffect(() => {
     if (viewControls) setHeld(viewControls);
   }, [viewControls]);
+  const track = useRef<HTMLDivElement>(null);
+  const pill = useActiveIndicator(track, mode);
 
   return (
     <div className="flex items-center gap-2">
@@ -56,12 +59,23 @@ export function ContentModeSwitch({
         {held}
       </div>
 
-      <div role="group" aria-label="Content view" className="flex items-center gap-0.5 rounded-full bg-track p-1">
+      <div ref={track} role="group" aria-label="Content view" className="relative flex items-center gap-0.5 rounded-full bg-track p-1">
+        {/* The current segment's pill, one element that slides to whichever
+            is chosen; the segments sit over it. */}
+        <span
+          aria-hidden="true"
+          style={pill.style}
+          className={cn(
+            'absolute inset-y-1 left-0 rounded-full bg-raised shadow-xs transition-[transform,width] duration-base ease-out motion-reduce:transition-none',
+            pill.ready ? 'opacity-100' : 'opacity-0',
+          )}
+        />
         {MODES.map((entry) => (
           <Segment
             key={entry.value}
             label={entry.label}
             active={entry.value === mode}
+            raised={!pill.ready}
             pending={entry.value === pending}
             onClick={() => onModeChange(entry.value)}
           />
@@ -74,11 +88,14 @@ export function ContentModeSwitch({
 function Segment({
   label,
   active,
+  raised,
   pending,
   onClick,
 }: {
   label: string;
   active: boolean;
+  /** Paint the active segment's own pill: until the sliding one has measured it, so the server's HTML shows the mode. */
+  raised: boolean;
   pending: boolean;
   onClick: () => void;
 }) {
@@ -86,15 +103,17 @@ function Segment({
     <button
       type="button"
       aria-pressed={active}
+      data-active={active ? '' : undefined}
       aria-busy={pending || undefined}
       onClick={onClick}
       className={cn(
         // One weight for both states: a bolder current segment would widen it
-        // and nudge its neighbours each time the mode changed. The fill and
+        // and nudge its neighbours each time the mode changed. The pill and
         // the ink carry the state.
         'relative inline-flex h-10 items-center justify-center rounded-full px-[18px] text-ui font-semibold',
         pressable,
-        active ? 'bg-raised text-ink shadow-xs' : 'bg-transparent text-ink-soft hover:text-ink'
+        active ? 'text-ink' : 'text-ink-soft hover:text-ink',
+        active && raised && 'bg-raised shadow-xs',
       )}
     >
       {label}

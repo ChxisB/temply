@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { PageLoading } from '~/components/ui/page-loading';
-import { Badge, Card, EmptyState, ErrorState } from '~/components/ui/surfaces';
+import { Badge, Card, EmptyState, ErrorState, Reveal } from '~/components/ui/surfaces';
 
 type ApiKeyMode = 'live' | 'test';
 
@@ -134,7 +134,7 @@ export default function ApiKeysPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       {/* The layout's header carries the title now, so the one action the page
           owns sits on its own row rather than being dropped with it. The empty
           states below carry their own call to action, so the row only appears
@@ -149,13 +149,18 @@ export default function ApiKeysPage() {
       ) : null}
 
       {/* Live keys can't be bought past on any plan short of Enterprise, so
-          the way out is freeing a slot, not a button to the plan page. */}
-      {atLimit && !readOnly ? (
-        <PlanLimitBanner
-          title={`You've used all ${apiKeyLimit} live API keys.`}
-          detail="Revoke a key you no longer use to make another. Test keys don't count."
-        />
-      ) : null}
+          the way out is freeing a slot, not a button to the plan page. The
+          banner opens and closes as the count crosses the cap; its gap sits
+          inside what closes, and the negative margin cancels the one the
+          list spacing would leave behind. */}
+      <Reveal open={atLimit && !readOnly} className="-mt-5">
+        <div className="pt-5">
+          <PlanLimitBanner
+            title={`You've used all ${apiKeyLimit} live API keys.`}
+            detail="Revoke a key you no longer use to make another. Test keys don't count."
+          />
+        </div>
+      </Reveal>
 
       {newlyCreatedKey ? (
         <Card className="border-accent bg-accent-wash">

@@ -519,11 +519,15 @@
      defined focus styles in 24% of files and left the rest on the browser
      default.
 
-     Focusable elements carry the outline at rest, transparent, and focus only
-     recolours it — outline-style cannot animate, outline-color can, so the
-     ring fades in on the same beat as a hover tint instead of switching on.
-     Tailwind's transition-colors lists outline-color too, so a control that
-     already eases its hover keeps this fade.
+     Focusable elements carry the outline at rest, transparent and on the
+     control's edge, and focus recolours it and moves it out to its 2px
+     offset — outline-style cannot animate, outline-color and outline-offset
+     can, so the ring blooms in on the base beat instead of switching on. A
+     fade alone on the fast beat is still a flash: the ease-out curve has it
+     at full strength by 50ms. Tailwind's transition-colors lists
+     outline-color but not outline-offset, so a control that eases its hover
+     that way keeps the fade and skips the travel; a control that lists its
+     own properties names both.
 
      The ring is 3px and held 2px off the control, in the `focus` token, which
      clears 3:1 on the page, every wash and a track in both themes. A control
@@ -534,8 +538,10 @@
   summary,
   [tabindex]:not([tabindex='-1']) {
     outline: 3px solid transparent;
-    outline-offset: 2px;
-    transition: outline-color var(--ds-motion-fast) var(--ds-ease-out);
+    outline-offset: 0;
+    transition:
+      outline-color var(--ds-motion-base) var(--ds-ease-out),
+      outline-offset var(--ds-motion-base) var(--ds-ease-out);
   }
   :focus-visible {
     outline: 3px solid var(--ds-focus);
@@ -543,22 +549,26 @@
     border-radius: var(--radius-xs);
   }
 
-  /* Text fields draw the same ring and fade it in the same way, so focus reads
-     as a state change rather than a flash while typing. The rule above names
-     links, buttons and tabbable elements, not fields, and a field's transition
-     list is its own, so the transparent resting ring and outline-color in the
-     list are stated here again. The border moves to accent on the same beat.
-     Range inputs keep the plain outline — a ring around the whole track looks
+  /* Text fields draw the same ring, but a ring that only fades is still a
+     flash: on the fast beat the ease-out curve has it at full strength by
+     50ms. So a field's ring takes the base beat and blooms, resting on the
+     border and moving out to the 2px offset as it colours, which reads as
+     focus arriving rather than switching on. The rule above names links,
+     buttons and tabbable elements, not fields, and a field's transition list
+     is its own, so the transparent resting ring and outline-color in the list
+     are stated here again. The border moves to accent on the same beat. Range
+     inputs keep the plain outline — a ring around the whole track looks
      broken. */
   input:not([type='range']),
   textarea,
   select {
     outline: 3px solid transparent;
-    outline-offset: 2px;
+    outline-offset: 0;
     transition:
-      border-color var(--ds-motion-fast) var(--ds-ease-out),
-      box-shadow var(--ds-motion-fast) var(--ds-ease-out),
-      outline-color var(--ds-motion-fast) var(--ds-ease-out);
+      border-color var(--ds-motion-base) var(--ds-ease-out),
+      box-shadow var(--ds-motion-base) var(--ds-ease-out),
+      outline-color var(--ds-motion-base) var(--ds-ease-out),
+      outline-offset var(--ds-motion-base) var(--ds-ease-out);
   }
   input:not([type='range']):focus-visible,
   textarea:focus-visible,
@@ -620,8 +630,11 @@
   to { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
 }
 
-/* The dimmed backdrop just fades. */
-.overlay-fade[data-state='open'] {
+/* The dimmed backdrop just fades, and so does a tooltip, which Radix marks
+   delayed-open or instant-open rather than open. */
+.overlay-fade[data-state='open'],
+.overlay-fade[data-state='delayed-open'],
+.overlay-fade[data-state='instant-open'] {
   animation: overlay-in var(--ds-motion-base) var(--ds-ease-out);
 }
 .overlay-fade[data-state='closed'] {
@@ -691,7 +704,10 @@
 
 /* Edit ↔ preview in the Content section. The editor is only hidden, never
    unmounted, so a CSS transition would have nothing to run on when it comes
-   back — the class is applied on the switch and removed once it has played. */
+   back — the class is applied on the switch and removed once it has played.
+   The pane being left plays the reverse over the top of the one arriving;
+   `forwards` keeps it gone for the frames between the animation's end and
+   the hook taking it off the screen. */
 @keyframes content-pane-in {
   from {
     opacity: 0;
@@ -704,6 +720,19 @@
 }
 .content-pane-in {
   animation: content-pane-in var(--ds-motion-base) var(--ds-ease-out);
+}
+@keyframes content-pane-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.content-pane-out {
+  animation: content-pane-out var(--ds-motion-fast) var(--ds-ease-in) forwards;
 }
 
 /* Page loading — the Temply app icon with the mark's three shapes breathing in
@@ -1044,3 +1073,21 @@ html [data-sonner-toast][data-type='warning'] [data-icon] {
   color: var(--ds-warn-ink);
 }
 
+
+/* ---------------------------------------------------------------------------
+   Route loading bar
+
+   NProgress ships its own stylesheet (imported by navigation-loader.tsx) with
+   a hard-coded blue, so the bar is repainted here on the accent token: one
+   accent line along the top of the page in both themes, as tall as the focus
+   ring. `html` in front lifts each rule above NProgress's own regardless of
+   import order. Its travel is configured in JS from the motion tokens, in the
+   same component.
+--------------------------------------------------------------------------- */
+html #nprogress .bar {
+  background: var(--ds-accent);
+  height: 3px;
+}
+html #nprogress .peg {
+  box-shadow: 0 0 10px var(--ds-accent), 0 0 5px var(--ds-accent);
+}

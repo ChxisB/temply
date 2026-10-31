@@ -19,7 +19,13 @@ export function ThemeToggle() {
       aria-label="Dark theme"
       aria-pressed={isDark}
     >
-      {isDark ? <SunIcon /> : <MoonIcon />}
+      {/* Both icons share the box; the one leaving fades as it turns a
+          quarter away and the other turns in, so the switch reads as one
+          motion rather than a swap. */}
+      <span className="relative size-4 [&_svg]:absolute [&_svg]:inset-0 [&_svg]:transition-[opacity,rotate] [&_svg]:duration-base [&_svg]:ease-out [&_svg]:motion-reduce:transition-none">
+        <SunIcon className={isDark ? 'rotate-0 opacity-100' : 'rotate-90 opacity-0'} />
+        <MoonIcon className={isDark ? '-rotate-90 opacity-0' : 'rotate-0 opacity-100'} />
+      </span>
     </Button>
   );
 }

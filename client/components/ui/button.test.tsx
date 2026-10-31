@@ -268,6 +268,7 @@ describe('Button', () => {
 
   it('settles the focus outline and the danger hover instead of snapping them', () => {
     expect(pressable).toContain('outline-color');
+    expect(pressable).toContain('outline-offset');
     expect(pressable).toContain('filter');
     expect(pressable).toContain('motion-reduce:transition-none');
     expect(pressable).toContain('motion-reduce:active:scale-100');

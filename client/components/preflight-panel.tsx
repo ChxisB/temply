@@ -20,10 +20,10 @@ import { Badge } from '~/components/ui/surfaces';
  * This is app-UI chrome. It colours itself from the --ds-* tokens like the
  * rest of the dashboard and must never read the template's theme.
  *
- * It arrives and leaves the way the rest of the app does: a fade on first
- * appearance, and a slide shut when the last finding clears — the previous
- * findings stay on screen while the row collapses, so the banner does not
- * blank a frame before it goes.
+ * It arrives and leaves the way the rest of the app does: mounted shut from
+ * the start so the first finding slides the row open, and a slide shut when
+ * the last finding clears — the previous findings stay on screen while the
+ * row collapses, so the banner does not blank a frame before it goes.
  */
 export function PreflightPanel({
   issues,
@@ -51,8 +51,6 @@ export function PreflightPanel({
   const lastIssues = useRef(issues);
   if (shown) lastIssues.current = issues;
   const display = shown ? issues : lastIssues.current;
-  // Never had a finding: nothing to collapse, so nothing is mounted.
-  if (display.length === 0) return null;
 
   const Header = collapsible ? 'button' : 'div';
   const errors = display.filter((issue) => issue.severity === 'error');
@@ -71,7 +69,7 @@ export function PreflightPanel({
         shown ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
       )}
     >
-      <div className="overflow-hidden">
+      <div className="overflow-hidden" inert={!shown}>
         <div className="border-b border-line p-3">
           {/* A step inside the email's own corner, which the 12px around it
               leaves at 16. */}
@@ -189,7 +187,7 @@ export function PreflightPanel({
                       <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-sunken">
                         <div
                           className={cn(
-                            'h-full rounded-full',
+                            'h-full rounded-full transition-[width,background-color] duration-base ease-out motion-reduce:transition-none',
                             bytes >= GMAIL_CLIP_BYTES
                               ? 'bg-danger'
                               : bytes >= SIZE_WARN_BYTES

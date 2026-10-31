@@ -75,7 +75,7 @@ export default async function TemplatesPage() {
           };
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       <PageHeader
         title="Templates"
         description="Every email you have built here."

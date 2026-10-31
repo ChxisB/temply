@@ -5,7 +5,7 @@ import { TooltipProvider } from '../ui/tooltip';
 import { MenuToolbar } from '../ui/menu-toolbar';
 import { ImageMenuContent } from './image-menu-content';
 import { useEditorGesture } from '@/editor/utils/use-editor-gesture';
-import { PLACED_INSIDE_THE_PANE } from '@/editor/utils/menu-placement';
+import { PLACED_INSIDE_THE_PANE, TIPPY_MOTION } from '@/editor/utils/menu-placement';
 
 export function ImageBubbleMenu(props: EditorBubbleMenuProps) {
   const { editor } = props;
@@ -28,6 +28,7 @@ export function ImageBubbleMenu(props: EditorBubbleMenuProps) {
       return editor.isActive('logo') || editor.isActive('image');
     },
     tippyOptions: {
+      ...TIPPY_MOTION,
       popperOptions: {
         modifiers: PLACED_INSIDE_THE_PANE,
       },

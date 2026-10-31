@@ -81,7 +81,7 @@ const rule = (...selectors: string[]) => ruleIn(css, ...selectors);
 const FIELD = ["input:not([type='range'])", 'textarea', 'select'];
 const FIELD_FOCUS = ["input:not([type='range']):focus-visible", 'textarea:focus-visible', 'select:focus-visible'];
 const RESTING = ['a', 'button', 'summary', "[tabindex]:not([tabindex='-1'])"];
-const FADE = 'outline-color var(--ds-motion-fast) var(--ds-ease-out)';
+const BLOOM = 'outline-color var(--ds-motion-base) var(--ds-ease-out), outline-offset var(--ds-motion-base) var(--ds-ease-out)';
 
 describe('every focus ring is the same ring, and fades in', () => {
   it('draws the global ring on :focus-visible in the focus token, 2px off the control', () => {
@@ -90,24 +90,25 @@ describe('every focus ring is the same ring, and fades in', () => {
     expect(ring).toContain('outline-offset: 2px;');
   });
 
-  it('rests links, buttons and tabbable elements at a transparent ring of the same width, and fades its colour', () => {
+  it('rests links, buttons and tabbable elements at a transparent ring of the same width on the edge, and blooms it', () => {
     const resting = rule(...RESTING);
     expect(resting, 'outline-style cannot animate, so the ring must already be solid at rest').toContain('outline: 3px solid transparent;');
-    expect(resting).toContain('outline-offset: 2px;');
-    expect(resting).toContain(`transition: ${FADE};`);
+    expect(resting, 'the ring starts on the edge and travels to the 2px offset').toContain('outline-offset: 0;');
+    expect(resting).toContain(`transition: ${BLOOM};`);
   });
 
-  it('rests text fields at the same transparent ring, so the field ring fades rather than switching on', () => {
+  it('rests text fields at the same transparent ring on the border, so the field ring blooms out rather than switching on', () => {
     const resting = rule(...FIELD);
     expect(resting, 'a field that rests with no outline has nothing for the fade to start from').toContain('outline: 3px solid transparent;');
-    expect(resting).toContain('outline-offset: 2px;');
+    expect(resting, 'the ring starts on the border and travels to the 2px offset').toContain('outline-offset: 0;');
   });
 
-  it('lists outline-color in the field transition, beside the border and shadow it already eases', () => {
+  it('eases the field ring colour and offset on the base beat, beside the border and shadow', () => {
     const resting = rule(...FIELD);
-    expect(resting).toContain(FADE);
-    expect(resting).toContain('border-color var(--ds-motion-fast) var(--ds-ease-out)');
-    expect(resting).toContain('box-shadow var(--ds-motion-fast) var(--ds-ease-out)');
+    expect(resting).toContain('outline-color var(--ds-motion-base) var(--ds-ease-out)');
+    expect(resting).toContain('outline-offset var(--ds-motion-base) var(--ds-ease-out)');
+    expect(resting).toContain('border-color var(--ds-motion-base) var(--ds-ease-out)');
+    expect(resting).toContain('box-shadow var(--ds-motion-base) var(--ds-ease-out)');
   });
 
   it('draws the field ring in the same focus token and width as the global one', () => {

@@ -35,7 +35,7 @@ export function SaveStatus({ status, onRetry, className }: { status: AutosaveSta
       <span
         aria-hidden
         className={cn(
-          'flex items-center gap-1 transition-opacity duration-base ease-out motion-reduce:transition-none',
+          'flex items-center gap-1 transition-[opacity,color] duration-base ease-out motion-reduce:transition-none',
           visible ? 'opacity-100' : 'opacity-0',
           status === 'error' ? 'text-danger-ink' : 'text-muted',
         )}
@@ -51,16 +51,26 @@ export function SaveStatus({ status, onRetry, className }: { status: AutosaveSta
         </span>
         {word}
       </span>
-      {status === 'error' ? (
-        // `h-auto` keeps it the height of its text beside the title for a
-        // mouse; `touch` is what lifts it to 44px, and the width with it, for
-        // a thumb. It takes the strip's own size, not the button's: the editor
-        // header sets the strip larger than the default, and a Retry left at
-        // the button's small size read as a smaller word than "Not saved".
-        <Button variant="link" size="sm" touch className="h-auto px-1 text-[length:inherit] pointer-coarse:min-w-11" onClick={onRetry}>
-          Retry
-        </Button>
-      ) : null}
+      {/* Retry stays mounted and opens sideways — the 0fr→1fr trick turned on
+          its side — so the strip grows to make room for it instead of
+          jumping; closed, it is inert as well as clipped. */}
+      <span
+        className={cn(
+          'grid transition-[grid-template-columns,opacity] duration-base ease-out motion-reduce:transition-none',
+          status === 'error' ? 'grid-cols-[1fr] opacity-100' : 'grid-cols-[0fr] opacity-0',
+        )}
+      >
+        <span className="min-w-0 overflow-clip [overflow-clip-margin:0.5rem]" aria-hidden={status !== 'error'} inert={status !== 'error'}>
+          {/* `h-auto` keeps it the height of its text beside the title for a
+              mouse; `touch` is what lifts it to 44px, and the width with it, for
+              a thumb. It takes the strip's own size, not the button's: the editor
+              header sets the strip larger than the default, and a Retry left at
+              the button's small size read as a smaller word than "Not saved". */}
+          <Button variant="link" size="sm" touch className="h-auto px-1 text-[length:inherit] pointer-coarse:min-w-11" onClick={onRetry}>
+            Retry
+          </Button>
+        </span>
+      </span>
       <span className="sr-only" role="status">
         {visible ? word : ''}
       </span>

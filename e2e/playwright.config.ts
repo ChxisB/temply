@@ -55,7 +55,7 @@ export default defineConfig({
       // bubble menus and the keyboard, none of which the phone shell
       // renders. The tablet spec brings its own viewport and pointer, so it
       // would run twice over for nothing.
-      testIgnore: [/setup\//, /specs\/stack\.e2e\.ts$/, /specs\/billing\.e2e\.ts$/, /specs\/brands-default\.e2e\.ts$/, /specs\/editor-desktop\.e2e\.ts$/, /specs\/editor-tablet\.e2e\.ts$/],
+      testIgnore: [/setup\//, /specs\/stack\.e2e\.ts$/, /specs\/billing\.e2e\.ts$/, /specs\/brands-default\.e2e\.ts$/, /specs\/editor-desktop\.e2e\.ts$/, /specs\/motion-editor\.e2e\.ts$/, /specs\/editor-tablet\.e2e\.ts$/],
     },
   ],
   webServer: [

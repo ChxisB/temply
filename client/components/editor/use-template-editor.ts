@@ -123,6 +123,8 @@ export type TemplateEditorModel = {
   flushContent: () => void;
   editorPaneRef: RefObject<HTMLDivElement | null>;
   paneClass: string | undefined; paneHeight: number | undefined;
+  /** The pane a switch is leaving, kept on screen while it fades out. */
+  leaving: ContentMode | null;
   imageUploader: (file: Blob) => Promise<string>;
   pickFromLibrary: () => Promise<string | null>;
   pickerOpen: boolean; settlePick: (url: string | null) => void;
@@ -327,6 +329,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
   // Drives the one-shot enter animation. The editor is hidden rather than
   // unmounted, so showing it again fires no transition of its own.
   const [switching, setSwitching] = useState(false);
+  const [leaving, setLeaving] = useState<ContentMode | null>(null);
   const paneClass = switching ? 'content-pane-in' : undefined;
   const editorPaneRef = useRef<HTMLDivElement>(null);
   const [paneHeight, setPaneHeight] = useState<number>();
@@ -339,6 +342,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     // failure left by another view must not sit over it with a Retry that
     // finds the cache and does nothing.
     setPreviewError(null);
+    setLeaving(mode === next ? null : mode);
     setMode(next);
     setSwitching(true);
   };
@@ -350,7 +354,10 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
 
   useEffect(() => {
     if (!switching) return;
-    const timer = setTimeout(() => setSwitching(false), 220);
+    const timer = setTimeout(() => {
+      setSwitching(false);
+      setLeaving(null);
+    }, 220);
     return () => clearTimeout(timer);
   }, [switching, mode]);
   // What the current HTML was rendered from. Re-entering preview without
@@ -1018,7 +1025,7 @@ export function useTemplateEditor(props: EmailEditorSandboxProps): TemplateEdito
     template, readOnly, isAdmin, beforeStage, onWorkflowChanged: setTemplate,
     subject, setSubject, previewText, setPreviewText, fromName, setFromName, to, setTo, replyTo, setReplyTo,
     theme, setTheme, pageStyle, cardStyle,
-    editor, setEditor, editorContent, flushContent, editorPaneRef, paneClass, paneHeight,
+    editor, setEditor, editorContent, flushContent, editorPaneRef, paneClass, paneHeight, leaving,
     imageUploader, pickFromLibrary, pickerOpen, settlePick,
     mode, changeMode, pendingMode, forceDark, setForceDark,
     previewKeys, previewData, setPreviewData, hasPreviewData, refreshPreviewKeys,

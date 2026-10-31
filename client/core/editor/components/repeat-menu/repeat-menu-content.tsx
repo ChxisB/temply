@@ -108,11 +108,11 @@ export function RepeatMenuContent({ editor }: { editor: Editor }) {
         <div className={cn(rowClass, 'mly:hover:bg-transparent')}>
           <span className="mly:shrink-0 mly:text-xs mly:text-gray-500">Preview rows</span>
           <span className="mly:flex mly:items-center mly:gap-1">
-            <button type="button" aria-label="Fewer preview rows" disabled={previewCount <= 0} onClick={() => stepPreview(-1)} className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:rounded-md mly:hover:bg-soft-gray mly:disabled:opacity-40">
+            <button type="button" aria-label="Fewer preview rows" disabled={previewCount <= 0} onClick={() => stepPreview(-1)} className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:rounded-md mly:transition-[background-color,opacity] mly:duration-fast mly:ease-out mly:hover:bg-soft-gray mly:disabled:opacity-40">
               <MinusIcon className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
             </button>
             <span className="mly:min-w-6 mly:text-center mly:font-mono mly:tabular-nums" aria-live="polite">{previewCount}</span>
-            <button type="button" aria-label="More preview rows" disabled={previewCount >= LIST_ITEMS_MAX} onClick={() => stepPreview(1)} className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:rounded-md mly:hover:bg-soft-gray mly:disabled:opacity-40">
+            <button type="button" aria-label="More preview rows" disabled={previewCount >= LIST_ITEMS_MAX} onClick={() => stepPreview(1)} className="mly:flex mly:size-7 mly:items-center mly:justify-center mly:rounded-md mly:transition-[background-color,opacity] mly:duration-fast mly:ease-out mly:hover:bg-soft-gray mly:disabled:opacity-40">
               <PlusIcon className="mly:h-3 mly:w-3 mly:stroke-[2.5]" />
             </button>
           </span>

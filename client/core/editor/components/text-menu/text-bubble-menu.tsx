@@ -3,6 +3,7 @@ import { ColumnsExtension } from '@/editor/nodes/columns/columns';
 import { SectionExtension } from '@/editor/nodes/section/section';
 import { isCustomNodeSelected } from '@/editor/utils/is-custom-node-selected';
 import { isTextSelected } from '@/editor/utils/is-text-selected';
+import { TIPPY_MOTION } from '@/editor/utils/menu-placement';
 import { BubbleMenu, BubbleMenuProps } from '@tiptap/react';
 import { LucideIcon } from 'lucide-react';
 import { SVGIcon } from '../icons/svg-icon';
@@ -81,6 +82,7 @@ export function TextBubbleMenu(props: TextBubbleMenuProps) {
       return isTextSelected(editor) && !isNestedNodeSelected;
     },
     tippyOptions: {
+      ...TIPPY_MOTION,
       // This menu hangs off the page rather than off the editor's pane, and
       // it is the only one that has to: the popovers it opens are taller
       // than it is, and the Content card clips what leaves it — starting

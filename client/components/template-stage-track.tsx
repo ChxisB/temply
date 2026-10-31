@@ -15,7 +15,7 @@ export function TemplateStageTrack({ stage, liveVersion, className }: {
         {STAGE_ORDER.map((step, index) => (
           <li key={step} aria-current={stage === step ? 'step' : undefined} className="min-w-0">
             <div aria-hidden className={cn('h-1 rounded-full transition-colors duration-base motion-reduce:transition-none', index <= current ? fill[stage] : 'bg-line')} />
-            <span className={cn('mt-2 block text-sm', stage === step ? 'font-bold text-ink' : 'text-muted')}>
+            <span className={cn('mt-2 block text-sm font-semibold', stage === step ? 'text-ink' : 'text-muted')}>
               {STAGE_LABEL[step]}
               {liveVersion != null ? <span className="mt-0.5 block text-xs font-normal tabular-nums text-muted">v{step === 'live' ? liveVersion : liveVersion + 1}</span> : null}
             </span>

@@ -62,11 +62,17 @@ export function ContentPreview({
           forceDark={forceDark}
           autoHeight
         />
-        {isPending && (
-          <div className="absolute inset-0 flex items-center justify-center bg-canvas/60">
-            <Loader2Icon className="size-5 animate-spin text-faint" />
-          </div>
-        )}
+        {/* The veil stays mounted and fades, so a refresh neither flashes on
+            nor snaps off; idle, it lets the pointer through to the frame. */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            'absolute inset-0 flex items-center justify-center bg-canvas/60 transition-opacity duration-base ease-out motion-reduce:transition-none',
+            isPending ? 'opacity-100' : 'pointer-events-none opacity-0',
+          )}
+        >
+          <Loader2Icon className="size-5 animate-spin text-faint motion-reduce:animate-none" />
+        </div>
       </div>
     </div>
   );

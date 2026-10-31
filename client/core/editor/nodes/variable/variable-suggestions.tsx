@@ -2,6 +2,7 @@ import {
   getVariableOptions,
   useVariableOptions,
 } from '@/editor/utils/node-options';
+import { TIPPY_MOTION } from '@/editor/utils/menu-placement';
 import { processVariables } from '@/editor/utils/variable';
 import { ReactRenderer } from '@tiptap/react';
 import { SuggestionKeyDownProps, SuggestionOptions } from '@tiptap/suggestion';
@@ -121,10 +122,21 @@ export function getVariableSuggestions(
             interactive: true,
             trigger: 'manual',
             placement: 'bottom-start',
+            ...TIPPY_MOTION,
+            // Torn down once the exit has played rather than when it is asked
+            // for: the content has to stay for the fade.
+            onHidden: (instance) => {
+              instance.destroy();
+              component.destroy();
+            },
           });
         },
 
         onUpdate(props) {
+          if (!popup?.[0] || popup[0].state.isDestroyed) {
+            return;
+          }
+
           component.updateProps(props);
 
           if (!props.clientRect) {
@@ -150,8 +162,9 @@ export function getVariableSuggestions(
             return;
           }
 
-          popup?.[0].destroy();
-          component.destroy();
+          if (!popup[0].state.isDestroyed) {
+            popup[0].hide();
+          }
         },
       };
     },

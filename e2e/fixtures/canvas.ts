@@ -201,3 +201,24 @@ type SavedDoc = { type: string; content?: unknown[]; attrs?: Record<string, unkn
 export async function docOf(api: ReturnType<typeof makeApi>, id: string): Promise<SavedDoc> {
   return JSON.parse((await api.getTemplate(id)).content) as SavedDoc;
 }
+
+/**
+ * The first preflight check lands a 75px banner above the email a moment
+ * after the editor attaches, and the row it sits in slides open on the base
+ * duration, so the lines under it keep moving for 200ms after the banner is
+ * first seen. A case that reads where something sits, or rests a pointer on
+ * it, waits here for the banner and then for every transition on the page to
+ * end. Only a template without preview text gets the banner, so a case that
+ * waits here builds its document that way.
+ */
+export async function preflightSettled(page: Page): Promise<void> {
+  await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        .map((animation) => animation.finished.then(() => undefined, () => undefined)),
+    ),
+  );
+}

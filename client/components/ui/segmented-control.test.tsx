@@ -61,21 +61,31 @@ describe('SegmentedControl', () => {
     expect(onValueChange.mock.calls[0]?.[0]).toBe('published');
   });
 
-  it('draws the chosen option as a raised, bold pill with a small shadow on a borderless track, in tokens', () => {
+  it('draws the chosen option on one raised pill with a small shadow, sliding in a borderless track, in tokens', () => {
     const { view } = setup('all');
     const track = view.getByRole('radiogroup').className.split(/\s+/);
     expect(track).toContain('bg-track');
     expect(track, 'the track is a groove, not an outlined box').not.toContain('border');
     expect(track.some((name) => name.startsWith('border-'))).toBe(false);
     expect(track).not.toContain('bg-sunken');
+    // The pill is one element behind the options, measured onto the chosen
+    // one, rather than a fill each option paints for itself.
+    const pill = view.getByRole('radiogroup').querySelector(':scope > span[aria-hidden]')!.className.split(/\s+/);
+    for (const needed of ['bg-raised', 'shadow-sm', 'rounded-full', 'duration-base', 'motion-reduce:transition-none']) {
+      expect(pill).toContain(needed);
+    }
     const chosen = radio(view, /^All/).className.split(/\s+/);
-    for (const needed of ['bg-raised', 'text-ink', 'shadow-sm', 'font-bold']) expect(chosen).toContain(needed);
+    expect(chosen).toContain('text-ink');
+    expect(chosen).not.toContain('bg-raised');
     expect(chosen).not.toContain('border');
     const other = radio(view, /^Drafts/).className.split(/\s+/);
     expect(other).toContain('text-ink-soft');
-    expect(other).toContain('font-semibold');
     expect(other).not.toContain('bg-raised');
     expect(other).not.toContain('shadow-sm');
+    // One weight for both, so a choice never nudges its neighbours.
+    expect(chosen).toContain('font-semibold');
+    expect(other).toContain('font-semibold');
+    expect(view.container.innerHTML).not.toContain('font-bold');
   });
 
   it('says which option is chosen to a screen reader as well as to the eye', () => {

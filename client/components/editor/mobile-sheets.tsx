@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BracesIcon } from 'lucide-react';
 import { Button, pressable } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -12,6 +12,7 @@ import { PreviewDataPanel } from '~/components/preview-data-panel';
 import { TemplateThemePanel } from '~/components/template-theme-panel';
 import { TemplateCopyView, TemplateWorkflowControls, visibleCopy } from '~/components/template-workflow-panel';
 import { EmptyState, ErrorState } from '~/components/ui/surfaces';
+import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 import type { TemplateCopy } from '~/lib/template-stage';
 import { CopyHtmlButton, DownloadButton, fileSlug } from './source-actions';
@@ -83,6 +84,8 @@ export function MobileSheets({
   onClose: () => void;
 }) {
   const [eyeTab, setEyeTab] = useState<'preview' | 'html' | 'text'>('preview');
+  const eyeTrack = useRef<HTMLDivElement>(null);
+  const eyePill = useActiveIndicator(eyeTrack, eyeTab);
   const close = (o: boolean) => {
     if (!o) onClose();
   };
@@ -163,22 +166,35 @@ export function MobileSheets({
 
       <BottomSheet open={open === 'eye'} onOpenChange={close} title="Preview" showTitle={false} height="full">
         <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-2 border-b border-line bg-raised px-4 pb-2">
-          {/* The desktop's view switch, as tabs: a raised pill in a track. */}
-          <div role="tablist" aria-label="View" className="flex gap-0.5 rounded-full bg-track p-1">
+          {/* The desktop's view switch, as tabs: one raised pill that slides
+              along a track to the chosen tab. */}
+          <div ref={eyeTrack} role="tablist" aria-label="View" className="relative flex gap-0.5 rounded-full bg-track p-1">
+            <span
+              aria-hidden="true"
+              style={eyePill.style}
+              className={cn(
+                'absolute inset-y-1 left-0 rounded-full bg-raised shadow-xs transition-[transform,width] duration-base ease-out motion-reduce:transition-none',
+                eyePill.ready ? 'opacity-100' : 'opacity-0',
+              )}
+            />
             {(['preview', 'html', 'text'] as const).map((tab) => (
               <button
                 type="button"
                 key={tab}
                 role="tab"
                 aria-selected={eyeTab === tab}
+                data-active={eyeTab === tab ? '' : undefined}
                 // Only the tab changes here: the effect below covers the mode,
                 // and asking for it twice put two renders of the same email on
                 // the wire before the first had answered.
                 onClick={() => setEyeTab(tab)}
                 className={cn(
-                  'h-11 rounded-full px-4 text-ui font-semibold',
+                  'relative h-11 rounded-full px-4 text-ui font-semibold',
                   pressable,
-                  eyeTab === tab ? 'bg-raised text-ink shadow-xs' : 'text-ink-soft hover:text-ink',
+                  eyeTab === tab ? 'text-ink' : 'text-ink-soft hover:text-ink',
+                  // The chosen tab paints its own pill until the sliding one
+                  // has measured it.
+                  eyeTab === tab && !eyePill.ready && 'bg-raised shadow-xs',
                 )}
               >
                 {tab === 'preview' ? 'Preview' : tab === 'html' ? 'HTML' : 'Text'}

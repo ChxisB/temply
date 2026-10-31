@@ -64,7 +64,12 @@ export function EditorActions({ model }: { model: TemplateEditorModel }) {
               onClick={publish}
               title={publishedLabel ?? undefined}
             >
-              {isPublishing ? <Loader2Icon className="animate-spin motion-reduce:animate-none" /> : <GlobeIcon />}
+              {/* The globe and the spinner share one box and cross-fade, as the
+                  save status's icons do, so the button keeps its width in flight. */}
+              <span className="relative size-4 shrink-0 [&_svg]:absolute [&_svg]:inset-0 [&_svg]:transition-opacity [&_svg]:duration-base [&_svg]:ease-out [&_svg]:motion-reduce:transition-none">
+                <GlobeIcon className={isPublishing ? 'opacity-0' : 'opacity-100'} />
+                <Loader2Icon className={isPublishing ? 'animate-spin opacity-100 motion-reduce:animate-none' : 'opacity-0'} />
+              </span>
               {publishArmed ? 'Publish anyway' : 'Publish'}
             </Button>
           )}
@@ -129,19 +134,19 @@ export function EditorActions({ model }: { model: TemplateEditorModel }) {
 
 /**
  * Where the draft stands, beside the template's name: how it compares with
- * what is published, and whether it has been saved. The badge is keyed on the
- * state so a change of state fades the new word in rather than swapping it
- * under the reader; the save status fades rather than unmounts, so it keeps
- * its width and the badge never shifts when it appears. A template with no
- * badge to show draws only the save status, which is the one live region the
- * editor has for autosave.
+ * what is published, and whether it has been saved. The badge is one element
+ * through every state, so a change of state eases its colours from one tone
+ * to the next with the word swapping inside; the save status fades rather
+ * than unmounts, so it keeps its width and the badge never shifts when it
+ * appears. A template with no badge to show draws only the save status, which
+ * is the one live region the editor has for autosave.
  */
 export function EditorStatus({ model }: { model: TemplateEditorModel }) {
-  const { publishBadge, publishStatus, saveStatus, autosave } = model;
+  const { publishBadge, saveStatus, autosave } = model;
   return (
     <>
       {publishBadge ? (
-        <Badge key={publishStatus} tone={publishBadge.tone} dot className="fade-in-mount">
+        <Badge tone={publishBadge.tone} dot className="fade-in-mount transition-[opacity,color,background-color,border-color] duration-base ease-out motion-reduce:transition-none">
           {publishBadge.label}
         </Badge>
       ) : null}

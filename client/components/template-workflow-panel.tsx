@@ -74,8 +74,8 @@ export function TemplateWorkflowControls({ model, copy, onCopy }: {
   return (
     <div className="space-y-4">
       {track}
-      <div className={cn('rounded-xl p-4', tint)}>
-        <p className={cn('text-base font-bold', ink)}>{message}</p>
+      <div className={cn('rounded-xl p-4 transition-colors duration-base ease-out motion-reduce:transition-none', tint)}>
+        <p className={cn('text-base font-bold transition-colors duration-base ease-out motion-reduce:transition-none', ink)}>{message}</p>
         <p className="mt-1 break-words text-sm text-muted">{detail}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">{switcher}{actions}</div>
@@ -159,7 +159,9 @@ export function TemplateWorkflowPanel({ model, copy, onCopy, children }: {
       <Reveal open={shown !== 'draft'} className="max-sm:hidden lg:min-h-0">
         <div className="lg:max-h-full lg:overflow-y-auto">
           {copyOf(row, side) ? (
-            <Card className="mx-4 my-4 space-y-3 lg:mx-7 lg:mt-6">
+            // Keyed on the copy so staged ↔ live fades the new card in rather
+            // than swapping its contents under the reader.
+            <Card key={side} className="fade-in-mount mx-4 my-4 space-y-3 lg:mx-7 lg:mt-6">
               <TemplateCopyView row={row} copy={side} />
               <Button size="sm" variant="link" onClick={() => onCopy('draft')}>Go to draft</Button>
             </Card>

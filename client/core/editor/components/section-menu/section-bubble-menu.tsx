@@ -10,7 +10,7 @@ import { getClosestNodeByName } from '@/editor/utils/columns';
 import { SectionMenuContent } from './section-menu-content';
 import { useEditorGesture } from '@/editor/utils/use-editor-gesture';
 import { layerWillTakeEscape } from '@/editor/utils/escape-layer';
-import { PLACED_INSIDE_THE_PANE } from '@/editor/utils/menu-placement';
+import { PLACED_INSIDE_THE_PANE, TIPPY_MOTION } from '@/editor/utils/menu-placement';
 
 export function SectionBubbleMenu(props: EditorBubbleMenuProps) {
   const { appendTo, editor } = props;
@@ -110,6 +110,7 @@ export function SectionBubbleMenu(props: EditorBubbleMenuProps) {
       return editor.isActive('section');
     },
     tippyOptions: {
+      ...TIPPY_MOTION,
       offset: [0, 8],
       onCreate: (instance: Instance) => {
         tippyRef.current = instance;

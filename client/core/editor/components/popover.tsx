@@ -37,6 +37,10 @@ const PopoverContent = React.forwardRef<
           // (the app's panel rule, components/ui/popover.tsx), the menu's
           // rung on the shadow ladder.
           'mly:z-9999 mly:w-72 mly:rounded-xl mly:bg-panel mly:p-4 mly:text-sm mly:font-normal mly:leading-normal mly:not-italic mly:text-gray-950 mly:shadow-lg ',
+          // The app's anchored-panel motion (globals.css), off the data-state
+          // and data-side Radix sets; Radix keeps the content mounted until
+          // the exit has played.
+          'overlay-panel',
           'mly-editor',
           className
         )}

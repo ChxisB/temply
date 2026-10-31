@@ -18,10 +18,11 @@ import { cn } from '~/lib/classname';
 // assume something that takes :active.
 // Exported for button-shaped controls (option chips) built outside Button.
 // `scale` is its own property in Tailwind v4, so it is listed beside
-// transform or the press would snap instead of settling; `outline-color`
-// and `filter` are listed so the focus fade and the danger hover settle too.
+// transform or the press would snap instead of settling; `outline-color` and
+// `outline-offset` are listed so the focus ring blooms as the base layer's
+// does, and `filter` so the danger hover settles too.
 export const pressable =
-  'transition-[background-color,box-shadow,border-color,color,transform,translate,scale,outline-color,filter] duration-fast ease-out active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transition-none motion-reduce:active:scale-100';
+  'transition-[background-color,box-shadow,border-color,color,transform,translate,scale,outline-color,outline-offset,filter] duration-fast ease-out active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus motion-reduce:transition-none motion-reduce:active:scale-100';
 
 // The same disabled look for a button that stays focusable, marked
 // aria-disabled instead of disabled so the keyboard is not dropped when it

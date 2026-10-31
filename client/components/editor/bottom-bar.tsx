@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle2Icon, LayoutTemplateIcon, MailIcon, PaletteIcon, SlidersHorizontalIcon } from 'lucide-react';
+import { useRef } from 'react';
 import { pressable } from '~/components/ui/button';
 import { cn } from '~/lib/classname';
 
@@ -31,6 +32,11 @@ export function EditorBottomBar({
   onOpenTab: (tab: IdleTab) => void;
 }) {
   const badge = checksCount.errors > 0 ? { n: checksCount.errors, tone: 'danger' as const } : checksCount.warnings > 0 ? { n: checksCount.warnings, tone: 'warn' as const } : null;
+  // The badge stays mounted and shrinks away with its last count still on it,
+  // so clearing the findings never blanks it a frame before it goes.
+  const lastBadge = useRef(badge);
+  if (badge) lastBadge.current = badge;
+  const shownBadge = badge ?? lastBadge.current;
 
   return (
     <div data-editor-bottom-bar className="relative z-40 shrink-0 border-t-[1.5px] border-line bg-raised pb-[env(safe-area-inset-bottom)]">
@@ -53,12 +59,19 @@ export function EditorBottomBar({
           >
             <tab.icon className="size-5" />
             {tab.label}
-            {tab.id === 'checks' && badge ? (
+            {tab.id === 'checks' && shownBadge ? (
               // The Badge recipe, wash and ink: the warn fill never carries
               // text (white on it is 3.2:1). The ring gives a pale wash an
               // edge against the raised bar, which it has no contrast with.
-              <span className={cn('absolute top-1.5 right-3 min-w-4 rounded-full px-1 text-center text-2xs font-semibold ring-1 ring-inset', badge.tone === 'danger' ? 'bg-danger-wash text-danger-ink ring-danger' : 'bg-warn-wash text-warn-ink ring-warn')}>
-                {badge.n}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'absolute top-1.5 right-3 min-w-4 rounded-full px-1 text-center text-2xs font-semibold ring-1 ring-inset transition-[opacity,scale] duration-base ease-spring motion-reduce:transition-none',
+                  badge ? 'scale-100 opacity-100' : 'scale-0 opacity-0',
+                  shownBadge.tone === 'danger' ? 'bg-danger-wash text-danger-ink ring-danger' : 'bg-warn-wash text-warn-ink ring-warn',
+                )}
+              >
+                {shownBadge.n}
               </span>
             ) : null}
           </button>

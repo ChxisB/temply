@@ -68,7 +68,7 @@ export function TemplateThumbnail({ templateId, updatedAt, aspect = THUMBNAIL_AS
       style={{ aspectRatio: aspect }}
     >
       {isError ? (
-        <div className="flex h-full flex-col items-center justify-center gap-1.5">
+        <div className="fade-in-mount flex h-full flex-col items-center justify-center gap-1.5">
           <MailIcon className="size-5 text-faint" />
           <span className="text-sm text-muted">Preview unavailable</span>
         </div>
@@ -85,7 +85,7 @@ export function TemplateThumbnail({ templateId, updatedAt, aspect = THUMBNAIL_AS
           // scrollbar down the card's edge. Deprecated in HTML but the only
           // way in — CSS can't reach inside a sandboxed document.
           scrolling="no"
-          className="border-0"
+          className="fade-in-mount border-0"
           style={{
             width: EMAIL_WIDTH,
             // Pre-scale height that fills the wrapper exactly: with the
@@ -96,7 +96,7 @@ export function TemplateThumbnail({ templateId, updatedAt, aspect = THUMBNAIL_AS
           }}
         />
       ) : (
-        <div className="size-full animate-pulse bg-active" />
+        <div className="size-full animate-pulse bg-active motion-reduce:animate-none" />
       )}
     </div>
   );

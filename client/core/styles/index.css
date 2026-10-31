@@ -96,6 +96,24 @@
   --shadow-md: var(--ds-shadow-md);
   --shadow-lg: var(--ds-shadow-lg);
   --shadow-xl: var(--ds-shadow-xl);
+
+  /* The app's three curves, so editor chrome says `mly:ease-out` and never
+     a cubic-bezier. */
+  --ease-out: var(--ds-ease-out);
+  --ease-in: var(--ds-ease-in);
+  --ease-spring: var(--ds-ease-spring);
+}
+
+/* The three durations, as in app/globals.css: `mly:duration-fast` and never
+   a number. */
+@utility duration-fast {
+  transition-duration: var(--ds-motion-fast);
+}
+@utility duration-base {
+  transition-duration: var(--ds-motion-base);
+}
+@utility duration-slow {
+  transition-duration: var(--ds-motion-slow);
 }
 
 /* The app's hover and line tokens are tuned for its own surfaces; on the

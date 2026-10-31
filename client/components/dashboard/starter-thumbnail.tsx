@@ -52,7 +52,7 @@ export function StarterThumbnail({ starter }: { starter: StarterTemplate }) {
     // Decoration inside the tile's button: clicks fall through to it.
     <div ref={ref} aria-hidden="true" className="pointer-events-none aspect-[8/5] overflow-hidden bg-sunken">
       {isError ? (
-        <div className="flex h-full flex-col items-center justify-center gap-1.5">
+        <div className="fade-in-mount flex h-full flex-col items-center justify-center gap-1.5">
           <MailIcon className="size-5 text-faint" />
           <span className="text-sm text-muted">Preview unavailable</span>
         </div>
@@ -77,7 +77,7 @@ export function StarterThumbnail({ starter }: { starter: StarterTemplate }) {
           }}
         />
       ) : (
-        <div className="size-full animate-pulse bg-active" />
+        <div className="size-full animate-pulse bg-active motion-reduce:animate-none" />
       )}
     </div>
   );

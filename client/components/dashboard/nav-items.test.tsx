@@ -76,15 +76,22 @@ describe('NavLinks', () => {
     pathname = '/dashboard/assets';
     const view = render(<NavLinks />);
     const active = view.getByRole('link', { name: 'Assets' });
-    for (const needed of ['bg-accent-wash', 'text-accent-ink', 'font-bold']) expect(active.className).toContain(needed);
+    expect(active.className).toContain('text-accent-ink');
     expect(active.className).not.toContain('text-muted');
     expect(active.className).not.toContain('hover:bg-hover');
+    // The wash is one element behind the rows, measured onto the current one,
+    // rather than a fill each row paints for itself.
+    const wash = view.getByRole('navigation').querySelector(':scope > span[aria-hidden]');
+    expect(wash?.className).toContain('bg-accent-wash');
+    expect(active.className).not.toContain('bg-accent-wash');
     const idle = view.getByRole('link', { name: 'Brands' });
     for (const needed of ['text-muted', 'font-semibold', 'hover:bg-hover', 'hover:text-ink']) {
       expect(idle.className).toContain(needed);
     }
     expect(idle.className).not.toContain('bg-accent-wash');
-    expect(idle.className).not.toContain('font-bold');
+    // The same weight on both, so a change of page never nudges the labels.
+    expect(active.className).toContain('font-semibold');
+    expect(view.container.innerHTML).not.toContain('font-bold');
     expect(view.container.innerHTML).not.toContain('rail-');
   });
 

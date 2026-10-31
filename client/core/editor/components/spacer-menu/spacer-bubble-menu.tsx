@@ -6,7 +6,7 @@ import { TooltipProvider } from '../ui/tooltip';
 import { MenuToolbar } from '../ui/menu-toolbar';
 import { SpacerMenuContent } from './spacer-menu-content';
 import { useEditorGesture } from '@/editor/utils/use-editor-gesture';
-import { PLACED_INSIDE_THE_PANE } from '@/editor/utils/menu-placement';
+import { PLACED_INSIDE_THE_PANE, TIPPY_MOTION } from '@/editor/utils/menu-placement';
 
 export function SpacerBubbleMenu(props: EditorBubbleMenuProps) {
   const { editor } = props;
@@ -31,8 +31,9 @@ export function SpacerBubbleMenu(props: EditorBubbleMenuProps) {
       return editor.isActive('spacer');
     },
     tippyOptions: {
+      ...TIPPY_MOTION,
       maxWidth: '100%',
-      moveTransition: 'mly:transform 0.15s mly:ease-out',
+      moveTransition: 'transform var(--ds-motion-fast) var(--ds-ease-out)',
       // A spacer sits flush against the block above it, so the default
       // placement drops the toolbar onto that block — usually straight onto a
       // button. The spacer's own band is empty, so a negative distance pulls

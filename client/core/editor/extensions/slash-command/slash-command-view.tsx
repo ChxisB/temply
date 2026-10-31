@@ -17,6 +17,7 @@ import { DEFAULT_SLASH_COMMANDS } from './default-slash-commands';
 import { TooltipProvider } from '@/editor/components/ui/tooltip';
 import { SlashCommandItem } from './slash-command-item';
 import { filterSlashCommands } from './slash-command-search';
+import { TIPPY_MOTION } from '@/editor/utils/menu-placement';
 
 /** The highlighted row is named to the reader by its id, so the row and the
  *  panel above it have to agree on what that id is. */
@@ -197,9 +198,7 @@ const CommandList = forwardRef<SuggestionListRef, CommandListProps>((props, ref)
       <div
         role="status"
         aria-label="Block menu"
-        data-state="open"
-        data-side="top"
-        className="overlay-panel mly:z-50 mly:w-72 mly:rounded-xl mly:bg-panel mly:p-3 mly:text-sm mly:text-gray-500 mly:shadow-lg"
+        className="mly:z-50 mly:w-72 mly:rounded-xl mly:bg-panel mly:p-3 mly:text-sm mly:text-gray-500 mly:shadow-lg"
       >
         No block matches
       </div>
@@ -209,9 +208,7 @@ const CommandList = forwardRef<SuggestionListRef, CommandListProps>((props, ref)
   return (
     <TooltipProvider>
       <div
-        data-state="open"
-        data-side="top"
-        className="overlay-panel mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-xl mly:bg-panel mly:shadow-lg"
+        className="mly:z-50 mly:w-72 mly:overflow-hidden mly:rounded-xl mly:bg-panel mly:shadow-lg"
       >
         {/* The caret never leaves the canvas — the rows are driven with the
             arrow keys and pressed with Enter — so the highlighted row is
@@ -329,6 +326,13 @@ export function getSlashCommandSuggestions(
             interactive: true,
             trigger: 'manual',
             placement: 'top-start',
+            ...TIPPY_MOTION,
+            // Torn down once the exit has played rather than when it is asked
+            // for: the content has to stay for the fade.
+            onHidden: (instance) => {
+              instance.destroy();
+              component?.destroy();
+            },
           });
         },
         onUpdate: (props) => {
@@ -346,10 +350,9 @@ export function getSlashCommandSuggestions(
           if (props.event.key === 'Escape') {
             const currentPopup = popup?.[0];
             if (!currentPopup?.state?.isDestroyed) {
-              currentPopup?.destroy();
+              currentPopup?.hide();
             }
 
-            component?.destroy();
             return true;
           }
 
@@ -362,10 +365,8 @@ export function getSlashCommandSuggestions(
 
           const currentPopup = popup?.[0];
           if (!currentPopup.state.isDestroyed) {
-            currentPopup.destroy();
+            currentPopup.hide();
           }
-
-          component?.destroy();
         },
       };
     },

@@ -25,6 +25,7 @@ import { ResolvedPos, Node as TNode } from '@tiptap/pm/model';
 import { Mapping } from '@tiptap/pm/transform';
 import { Editor } from '@tiptap/core';
 import { Props as TippyProps } from 'tippy.js';
+import { TIPPY_MOTION } from '../../utils/menu-placement';
 
 function getSelectionRanges(
   state: ResolvedPos,
@@ -421,7 +422,7 @@ export function DragHandlePlugin(
           trigger: 'manual',
           placement: 'left-start',
           hideOnClick: false,
-          duration: 100,
+          ...TIPPY_MOTION,
           zIndex: 10,
           popperOptions: {
             modifiers: [

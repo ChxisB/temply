@@ -4,13 +4,21 @@ import { useCallback, useEffect, useRef } from 'react';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
-NProgress.configure({
-  minimum: 0.1,
-  showSpinner: false,
-  trickleSpeed: 200,
-  easing: 'ease',
-  speed: 400,
-});
+// NProgress paints the bar's travel as an inline transition built from `speed`
+// and `easing`, so the motion tokens are read off the root once the DOM is
+// there rather than restated here as numbers. The trickle is its own cadence,
+// not a transition.
+function configureFromTokens() {
+  const style = getComputedStyle(document.documentElement);
+  const base = Number.parseFloat(style.getPropertyValue('--ds-motion-base'));
+  NProgress.configure({
+    minimum: 0.1,
+    showSpinner: false,
+    trickleSpeed: 200,
+    easing: style.getPropertyValue('--ds-ease-out').trim() || 'ease',
+    speed: Number.isFinite(base) ? base : 200,
+  });
+}
 
 export function NavigationLoadingBar() {
   const nprogressStarted = useRef(false);
@@ -28,6 +36,7 @@ export function NavigationLoadingBar() {
   }, []);
 
   useEffect(() => {
+    configureFromTokens();
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
 

@@ -30,7 +30,7 @@ const BaseButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // 12px corners: the toolbars these sit in are 16px with 4px of padding,
     // so a pressed or hovered button follows the toolbar's own curve.
     const baseClass =
-      'mly:inline-flex mly:items-center mly:justify-center mly:rounded-lg mly:text-sm mly:font-medium mly:transition-colors mly:focus-visible:relative mly:focus-visible:z-10 mly:disabled:opacity-50 ';
+      'mly:inline-flex mly:items-center mly:justify-center mly:rounded-lg mly:text-sm mly:font-medium mly:transition-[color,background-color,border-color,opacity] mly:duration-fast mly:ease-out mly:focus-visible:relative mly:focus-visible:z-10 mly:disabled:opacity-50 ';
     const variantClasses = {
       default: 'mly:bg-gray-900 mly:text-gray-50 mly:hover:bg-soft-gray',
       destructive: 'mly:bg-red-500 mly:text-gray-50 mly:hover:bg-red-500/90',

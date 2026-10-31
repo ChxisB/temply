@@ -13,6 +13,7 @@ import {
 import { StarterThumbnail } from '~/components/dashboard/starter-thumbnail';
 import { Tile } from '~/components/ui/item';
 import { useCreateFromStarter } from '~/hooks/use-create-from-starter';
+import { cn } from '~/lib/classname';
 
 /**
  * "New template" opens a gallery rather than an empty editor: the emails a
@@ -68,11 +69,15 @@ export function NewTemplateButton({ disabled = false }: { disabled?: boolean } =
                       ) : (
                         <StarterThumbnail starter={starter} />
                       )}
-                      {busy ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-raised/70">
-                          <Loader2Icon className="size-5 animate-spin text-faint motion-reduce:animate-none" />
-                        </div>
-                      ) : null}
+                      <div
+                        aria-hidden="true"
+                        className={cn(
+                          'absolute inset-0 flex items-center justify-center bg-raised/70 transition-opacity duration-base ease-out motion-reduce:transition-none',
+                          busy ? 'opacity-100' : 'pointer-events-none opacity-0',
+                        )}
+                      >
+                        <Loader2Icon className="size-5 animate-spin text-faint motion-reduce:animate-none" />
+                      </div>
                     </div>
                   }
                   title={starter.name}

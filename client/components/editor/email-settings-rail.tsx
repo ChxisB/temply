@@ -272,32 +272,37 @@ function StatusCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const { wash, Icon, iconClass } = tones[status.tone];
+  const { wash } = tones[status.tone];
   const interactive = status.errors + status.warnings > 0;
   const layout = 'flex w-full items-center gap-3 rounded-card px-4.5 py-4 text-left';
   const body = (
     <>
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-raised [&_svg]:size-5">
-        <Icon aria-hidden="true" className={iconClass} />
+      {/* Every tone's icon is drawn in the one circle and the current one is
+          the one that is opaque, so a verdict cross-fades instead of swapping;
+          the words beside it are keyed on their text so each new one fades in. */}
+      <span className="relative size-9 shrink-0 rounded-full bg-raised [&_svg]:absolute [&_svg]:inset-0 [&_svg]:m-auto [&_svg]:size-5 [&_svg]:transition-opacity [&_svg]:duration-base [&_svg]:ease-out [&_svg]:motion-reduce:transition-none">
+        {(Object.keys(tones) as PreflightTone[]).map((tone) => {
+          const { Icon, iconClass } = tones[tone];
+          return <Icon key={tone} aria-hidden="true" className={cn(iconClass, tone === status.tone ? 'opacity-100' : 'opacity-0')} />;
+        })}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-lg font-bold">{status.title}</span>
+        <span key={status.title} className="fade-in-mount text-lg font-bold">{status.title}</span>
         {status.tone === 'checking' ? (
           // The text-base line is 22px: 14px of bar and 4px above and below.
           <Skeleton className="my-1 h-3.5 w-28" />
         ) : (
-          <span className="text-base">{status.counts}</span>
+          <span key={status.counts} className="fade-in-mount text-base">{status.counts}</span>
         )}
       </span>
-      {interactive ? (
-        <ChevronDownIcon
-          aria-hidden="true"
-          className={cn(
-            'size-4 shrink-0 transition-transform duration-base ease-out motion-reduce:transition-none',
-            expanded && 'rotate-180',
-          )}
-        />
-      ) : null}
+      <ChevronDownIcon
+        aria-hidden="true"
+        className={cn(
+          'size-4 shrink-0 transition-[opacity,rotate] duration-base ease-out starting:opacity-0 motion-reduce:transition-none',
+          interactive ? 'opacity-100' : 'opacity-0',
+          expanded && 'rotate-180',
+        )}
+      />
     </>
   );
   return (

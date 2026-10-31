@@ -11,7 +11,7 @@ export default function SettingsPage() {
   const { clerkAppearance } = useTheme();
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       {/* Clerk's own navbar stays visible: hiding it forced the mobile menu
           row (a separate element) to act as the only navigation at every
           width. With it restored, desktop gets the two-pane layout and narrow

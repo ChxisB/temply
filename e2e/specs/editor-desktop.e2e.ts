@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures/test';
 import type { makeApi } from '../fixtures/api';
-import { bubbleMenu, docOf, expectOnScreen, hoverControl, insertHere, insertViaSlash, newLine, openEditor, slashMenu, slashRow } from '../fixtures/canvas';
+import { bubbleMenu, docOf, expectOnScreen, hoverControl, insertHere, insertViaSlash, newLine, openEditor, slashMenu, slashRow, preflightSettled } from '../fixtures/canvas';
 
 // The canvas is a contenteditable, so ProseMirror's own class names stand in
 // for roles it does not give, and a node view's `data-type` stands in for
@@ -308,7 +308,9 @@ test.describe('editor on the desktop', () => {
     await expectOnScreen(page, colour, 'the Text colour popover');
     await expect(colour.getByRole('button', { name: 'Use #000000' }), 'the presets lead the panel').toBeVisible();
     expect(await surface(colour), 'the colour popover').toEqual(panel);
-    // The panel stands off the toolbar rather than against it.
+    // The panel stands off the toolbar rather than against it. It arrives on
+    // a spring, so where it rests is read once its entrance has played.
+    await colour.evaluate((el) => Promise.all(el.getAnimations().map((animation) => animation.finished)).then(() => undefined));
     const trigger = await menu.getByRole('button', { name: 'Text colour', exact: true }).boundingBox();
     const box = await colour.boundingBox();
     const gap = Math.min(Math.abs(trigger!.y - (box!.y + box!.height)), Math.abs(box!.y - (trigger!.y + trigger!.height)));
@@ -1061,7 +1063,7 @@ test.describe('editor on the desktop', () => {
     // moves down with it: a line wholly on screen before it is cut by the
     // fold after. This document has no preview text, so it always gets the
     // banner, and what is measured below is the layout the customer works in.
-    await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+    await preflightSettled(page);
 
     // The block the insert happens under is the last one resting wholly on
     // screen, with the rest of the canvas below the fold — the state a
@@ -1114,7 +1116,7 @@ test.describe('editor on the desktop', () => {
     // height. Clicked before it, the block is scrolled into view and then
     // pushed past where it was put, so the cases below would be measuring
     // when the banner came. This document has no preview text, so it always does.
-    await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+    await preflightSettled(page);
     const section = pm.locator('table[data-type="section"]');
     await section.locator('p').first().click();
     const menu = bubbleMenu(page, 'Section');
@@ -1164,7 +1166,7 @@ test.describe('editor on the desktop', () => {
     // on the handle when it lands is left 75px above it, and a tooltip arms
     // only on a pointer move, so none would follow. This document has no
     // preview text, so it always gets the banner.
-    await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+    await preflightSettled(page);
 
     // Where the canvas sits is this case's own setup, not something left to
     // whatever scrolled last: a hover only scrolls what is not already in
@@ -1237,7 +1239,7 @@ test.describe('editor on the desktop', () => {
     // after the editor attaches, with no transition (see the handle case
     // above): a pointer resting on Delete when it lands is left 75px above
     // it, and the tooltip it was waiting for never arms.
-    await expect(page.getByRole('button', { name: /^Preflight/ })).toBeVisible();
+    await preflightSettled(page);
 
     const menu = bubbleMenu(page, 'Section');
     // The menu is down until it is asked for, so raising it is what the click

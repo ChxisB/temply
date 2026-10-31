@@ -587,7 +587,7 @@ function PlanContent() {
   const needsPlan = data.plan === 'trial' || data.plan === 'lapsed';
 
   return (
-    <div className="space-y-5">
+    <div className="fade-in-mount space-y-5 motion-reduce:transition-none">
       <div>
         <Reveal open={confirming}>
           <div className="pb-5">

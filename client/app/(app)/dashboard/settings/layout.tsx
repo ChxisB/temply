@@ -3,8 +3,10 @@
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useRef } from 'react';
 import { PageHeader } from '~/components/ui/surfaces';
 import { pressable } from '~/components/ui/button';
+import { useActiveIndicator } from '~/hooks/use-active-indicator';
 import { cn } from '~/lib/classname';
 
 /** Plan and API keys are leaves; Account owns the section root and every
@@ -28,6 +30,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const { orgRole } = useAuth();
   const isAdmin = orgRole === 'org:admin';
   const tabs = TABS.filter((tab) => isAdmin || !tab.adminOnly);
+  const strip = useRef<HTMLElement>(null);
+  const bar = useActiveIndicator(strip, pathname, { inset: 14 });
 
   return (
     <div className="space-y-5">
@@ -36,9 +40,18 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         description={isAdmin ? 'Your account, team, plan and API access.' : 'Your account and your team.'}
       />
 
-      {/* The same tab row as a template's sections: a bold tab on a 3px
-          violet underline, over a 1.5px rule. */}
-      <nav className="-mx-2 flex max-w-full gap-1.5 overflow-x-auto border-b-[1.5px] border-line px-2" aria-label="Settings">
+      {/* The same tab row as a template's sections: an inked tab on a 3px
+          violet underline that slides between tabs, over a 1.5px rule. The
+          underline is inset 14px, the tab's padding, at each end. */}
+      <nav ref={strip} className="relative -mx-2 flex max-w-full gap-1.5 overflow-x-auto border-b-[1.5px] border-line px-2" aria-label="Settings">
+        <span
+          aria-hidden="true"
+          style={bar.style}
+          className={cn(
+            'absolute bottom-0 left-0 h-[3px] rounded-t-[3px] bg-accent transition-[transform,width] duration-base ease-out motion-reduce:transition-none',
+            bar.ready ? 'opacity-100' : 'opacity-0',
+          )}
+        />
         {tabs.map((tab) => {
           // Clerk routes its own pages as sub-paths of the tab that embeds
           // it — Members and Invitations under Team, Security under Account
@@ -57,18 +70,16 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
               key={tab.href}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
+              data-active={isActive ? '' : undefined}
               className={cn(
-                'relative inline-flex h-12 shrink-0 items-center rounded-field px-3.5 text-lg',
+                'relative inline-flex h-12 shrink-0 items-center rounded-field px-3.5 text-lg font-semibold',
                 pressable,
-                isActive ? 'font-bold text-ink' : 'font-semibold text-muted hover:text-ink',
+                isActive ? 'text-ink' : 'text-muted hover:text-ink',
               )}
             >
               {tab.label}
-              {isActive ? (
-                <span
-                  aria-hidden="true"
-                  className="fade-in-mount absolute inset-x-3.5 bottom-0 h-[3px] rounded-t-[3px] bg-accent motion-reduce:transition-none"
-                />
+              {isActive && !bar.ready ? (
+                <span aria-hidden="true" className="absolute inset-x-3.5 bottom-0 h-[3px] rounded-t-[3px] bg-accent" />
               ) : null}
             </Link>
           );
