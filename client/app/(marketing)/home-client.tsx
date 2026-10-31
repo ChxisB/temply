@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { ArrowRightIcon, CheckIcon } from 'lucide-react';
+import { ArrowRightIcon, CheckIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { formatBytes } from '@temply/shared/bytes';
 import {
@@ -180,6 +180,13 @@ export default function HomeContent() {
               <p className="hero-enter max-w-md text-base text-pretty text-muted sm:text-ui" style={enterAt(310)}>
                 {TRIAL_DAYS} days free, then {formatUsd(PRICES_USD.seat)} per person a month. Your app keeps the email provider you already use.
               </p>
+              <p className="hero-enter text-base text-muted sm:text-ui" style={enterAt(350)}>
+                Building an integration?{' '}
+                <Link href="/docs" className="font-semibold text-ink underline-offset-4 hover:underline">
+                  Read the docs
+                </Link>
+                .
+              </p>
             </div>
 
             {/* The entrance and the parallax both write `transform`, so they get
@@ -273,6 +280,63 @@ export default function HomeContent() {
                 </p>
               </Parallax>
             </div>
+          </div>
+        </RevealSection>
+      </section>
+
+      <section id="compare" data-anchor>
+        <RevealSection className={cn(container, 'pb-20 md:pb-28')}>
+          <div className="mx-auto max-w-2xl text-center">
+            <Kicker>Where it fits</Kicker>
+            <h2 className="mt-4 max-w-160 font-display text-38 font-bold tracking-display text-balance text-ink md:text-48">
+              Where Temply fits
+            </h2>
+            <p className="mt-4 max-w-155 text-lg text-pretty text-ink-soft md:text-18">
+              Temply builds the email and renders it; your provider sends it, and a marketing platform is a different tool again. The one line that tells them apart is who puts the email in the inbox.
+            </p>
+          </div>
+
+          {/* The full table lives on /compare. Here it is the one row that
+              places Temply: whether the tool sends. Temply does not, which is
+              why it sits beside the sender you already have rather than
+              replacing it. */}
+          <ul className="mx-auto mt-10 grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3 md:mt-12">
+            {[
+              { name: 'Temply', eg: 'This tool', role: 'Builds and renders the template, then hands your app the HTML and plain text.', sends: false, you: true },
+              { name: 'A sending provider', eg: 'Resend, Postmark, Amazon SES', role: 'Takes the HTML and delivers it to the inbox.', sends: true, you: false },
+              { name: 'A marketing platform', eg: 'Mailchimp, Loops, customer.io', role: 'Owns subscriber lists and campaigns, and sends from its own tools.', sends: true, you: false },
+            ].map((tool) => (
+              <li
+                key={tool.name}
+                className={cn(
+                  'flex flex-col gap-2.5 rounded-panel border p-6 text-left',
+                  tool.you ? 'border-accent bg-accent-wash' : 'border-line bg-raised',
+                )}
+              >
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-sm font-semibold',
+                    tool.you ? 'bg-raised text-accent-ink' : 'bg-sunken text-muted',
+                  )}
+                >
+                  {tool.sends ? (
+                    <CheckIcon aria-hidden className="size-4" />
+                  ) : (
+                    <XIcon aria-hidden className="size-4" />
+                  )}
+                  {tool.sends ? 'Sends the email' : 'Does not send'}
+                </span>
+                <p className="font-display text-lg font-bold tracking-display text-ink">{tool.name}</p>
+                <p className="text-sm text-muted">{tool.eg}</p>
+                <p className="mt-1 text-base text-pretty text-ink-soft">{tool.role}</p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8 text-center">
+            <Button asChild variant="secondary" size="lg">
+              <Link href="/compare">See the full comparison<ArrowRightIcon /></Link>
+            </Button>
           </div>
         </RevealSection>
       </section>

@@ -29,7 +29,7 @@ const mount = () =>
     </ThemeProvider>,
   );
 
-const SECTIONS = ['Features', 'Blocks', 'Pricing', 'Contact'];
+const SECTIONS = ['Features', 'Blocks', 'Compare', 'Pricing', 'Contact'];
 
 /** Clerk's own hint that a session exists, which is all the header reads. */
 function setSignedInHint(value: string) {
@@ -55,14 +55,14 @@ describe('the marketing header', () => {
     for (const token of container.split(' ')) expect(row.className.split(/\s+/)).toContain(token);
   });
 
-  it('offers exactly four sections, in the bar and again in the menu a phone opens', () => {
+  it('offers exactly five sections, in the bar and again in the menu a phone opens', () => {
     const view = mount();
     const navs = view.getAllByRole('navigation', { name: 'Page sections' });
     expect(navs).toHaveLength(2);
     for (const nav of navs) {
       const links = Array.from(nav.querySelectorAll('a'));
       expect(links.map((link) => link.textContent)).toEqual(SECTIONS);
-      expect(links.map((link) => link.getAttribute('href'))).toEqual(['#features', '#blocks', '#pricing', '#contact']);
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['#features', '#blocks', '#compare', '#pricing', '#contact']);
     }
   });
 
@@ -73,6 +73,7 @@ describe('the marketing header', () => {
     expect(Array.from(bar.querySelectorAll('a')).map((link) => link.getAttribute('href'))).toEqual([
       '/#features',
       '/#blocks',
+      '/#compare',
       '/#pricing',
       '/#contact',
     ]);

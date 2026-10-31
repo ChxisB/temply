@@ -20,6 +20,7 @@ import { useHydrated } from '~/hooks/use-hydrated';
 const sections = [
   { label: 'Features', hash: '#features' },
   { label: 'Blocks', hash: '#blocks' },
+  { label: 'Compare', hash: '#compare' },
   { label: 'Pricing', hash: '#pricing' },
   { label: 'Contact', hash: '#contact' },
 ];

@@ -108,7 +108,7 @@ test.describe('the bar', () => {
     const nav = page.getByRole('navigation', { name: 'Page sections' });
     if (isWide(page)) {
       await expect(nav).toHaveCount(1);
-      await expect(nav.getByRole('link')).toHaveText(['Features', 'Blocks', 'Pricing', 'Contact']);
+      await expect(nav.getByRole('link')).toHaveText(['Features', 'Blocks', 'Compare', 'Pricing', 'Contact']);
       await expect(menuButton(page)).toHaveCount(0);
     } else {
       // Closed, the panel is out of the accessibility tree and the bar's own
@@ -233,7 +233,7 @@ test.describe('the bar', () => {
     await page.goto('/terms');
     if (!isWide(page)) await menuButton(page).click();
     const links = isWide(page) ? header(page).getByRole('navigation', { name: 'Page sections' }).getByRole('link') : panelLinks(page);
-    await expect(links).toHaveCount(4);
+    await expect(links).toHaveCount(5);
     await expect(links.filter({ hasText: 'Features' })).toHaveAttribute('href', '/#features');
   });
 });
@@ -259,7 +259,7 @@ test.describe('the menu on a phone', () => {
       release();
       await button.click();
       await expect(button).toHaveAttribute('aria-expanded', 'true');
-      await expect(panelLinks(page)).toHaveCount(4);
+      await expect(panelLinks(page)).toHaveCount(5);
     } finally {
       release();
       await page.unrouteAll({ behavior: 'wait' });
@@ -280,7 +280,7 @@ test.describe('the menu on a phone', () => {
     await expect(button).toHaveAccessibleName('Menu');
     await expect(button).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByRole('navigation', { name: 'Page sections' })).toHaveCount(1);
-    await expect(panelLinks(page)).toHaveText(['Features', 'Blocks', 'Pricing', 'Contact']);
+    await expect(panelLinks(page)).toHaveText(['Features', 'Blocks', 'Compare', 'Pricing', 'Contact']);
     for (const link of await panelLinks(page).all()) {
       expect((await link.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     }
@@ -311,7 +311,7 @@ test.describe('the menu on a phone', () => {
     await expect(button).toHaveAttribute('aria-expanded', 'true');
     // Visibility flips on the first frame of the open, not the instant of the
     // key press: a Tab sent before it would pass over links not yet there.
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
     await page.keyboard.press('Tab');
     await expect(panelLinks(page).first()).toBeFocused();
     await page.keyboard.press('Tab');
@@ -322,7 +322,7 @@ test.describe('the menu on a phone', () => {
     await page.goto('/');
     const button = menuButton(page);
     await button.click();
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
     await page.keyboard.press('Tab');
     await expect(panelLinks(page).first()).toBeFocused();
 
@@ -343,12 +343,12 @@ test.describe('the menu on a phone', () => {
     await page.goto('/');
     const button = menuButton(page);
     await button.click();
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
 
     // The panel is not modal, so a Tab can carry focus out of it. With the
     // menu left open behind a keyboard user who has gone on into the page,
     // nothing would ever close it.
-    for (const index of [0, 1, 2, 3]) {
+    for (const index of [0, 1, 2, 3, 4]) {
       await page.keyboard.press('Tab');
       await expect(panelLinks(page).nth(index)).toBeFocused();
     }
@@ -381,12 +381,12 @@ test.describe('the menu on a phone', () => {
     await page.goto('/');
     const button = menuButton(page);
     await button.click();
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
     await panelLinks(page).first().focus();
     await button.focus();
     await page.getByRole('link', { name: 'Temply' }).first().focus();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
   });
 
   test('leaves Escape to a layer that has already answered it, rather than closing the menu and taking focus', async ({ page }) => {
@@ -456,7 +456,7 @@ test.describe('the menu on a phone', () => {
 
     await page.setViewportSize({ width: 1300, height: 900 });
     await expect(button).toBeHidden();
-    await expect(header(page).getByRole('navigation', { name: 'Page sections' }).getByRole('link')).toHaveCount(4);
+    await expect(header(page).getByRole('navigation', { name: 'Page sections' }).getByRole('link')).toHaveCount(5);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(button).toHaveAttribute('aria-expanded', 'false');
@@ -468,7 +468,7 @@ test.describe('the menu on a phone', () => {
     const main = page.locator('main');
     const before = { main: await main.boundingBox(), bar: await header(page).boundingBox() };
     await menuButton(page).click();
-    await expect(panelLinks(page)).toHaveCount(4);
+    await expect(panelLinks(page)).toHaveCount(5);
     // Let the panel finish opening: a page that shifts does so as it grows.
     await expect.poll(async () => (await panel(page).boundingBox())?.height).toBeGreaterThan(200);
     const after = { main: await main.boundingBox(), bar: await header(page).boundingBox() };
@@ -491,7 +491,7 @@ test.describe('the menu on a phone', () => {
     test(`paints from the ${theme} tokens and fits the screen with the menu open`, async ({ page }) => {
       await open(page, '/', theme);
       await menuButton(page).click();
-      await expect(panelLinks(page)).toHaveCount(4);
+      await expect(panelLinks(page)).toHaveCount(5);
 
       const painted = await page.evaluate(() => {
         const probe = document.createElement('div');
@@ -595,7 +595,7 @@ test.describe('the bar at the narrowest phone', () => {
       expect((await bar.getByRole('link', { name: 'Temply' }).getByRole('img').boundingBox())?.height, `the lockup at ${width}px`).toBeCloseTo(width < 384 ? 24 : 30, 0);
 
       await menuButton(page).click();
-      await expect(panelLinks(page)).toHaveCount(4);
+      await expect(panelLinks(page)).toHaveCount(5);
       const open = await overflow(page);
       expect(open.scroll, `the open menu overflows at ${width}px`).toBeLessThanOrEqual(open.client);
       expect(open.stray, `controls past the edge at ${width}px`).toEqual([]);
